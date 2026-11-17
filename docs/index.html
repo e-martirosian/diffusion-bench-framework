@@ -408,6 +408,39 @@
         line-height: 0.98;
       }
 
+      /* The hero title is the logo kept in sgl-project/sglang (assets/sglang-diffusion). It is loaded from
+         there, so this site, the README and the docs always show the same file. */
+      .hero-logo {
+        margin-top: 6px;
+        line-height: 0;
+      }
+
+      .hero-logo img {
+        display: block;
+        width: min(100%, 580px);
+        height: auto;
+        margin-left: -9px;
+      }
+
+      .hero-logo .on-dark,
+      [data-theme="dark"] .hero-logo .on-light {
+        display: none;
+      }
+
+      [data-theme="dark"] .hero-logo .on-dark {
+        display: block;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) .hero-logo .on-light {
+          display: none;
+        }
+
+        :root:not([data-theme="light"]) .hero-logo .on-dark {
+          display: block;
+        }
+      }
+
       .hero-copy {
         max-width: 460px;
         margin: 26px 0 0;
@@ -2307,7 +2340,10 @@
       <section class="shell hero" id="top">
         <div>
           <p class="label">Native image, video, 3D &amp; robotics serving</p>
-          <h1>SGLang-Diffusion</h1>
+          <h1 class="hero-logo">
+            <img class="on-light" src="https://raw.githubusercontent.com/sgl-project/sglang/main/assets/sglang-diffusion/logo.svg" alt="SGLang-Diffusion" width="800" height="190" />
+            <img class="on-dark" src="https://raw.githubusercontent.com/sgl-project/sglang/main/assets/sglang-diffusion/logo-dark.svg" alt="SGLang-Diffusion" width="800" height="190" />
+          </h1>
           <p class="hero-copy">
             A native serving stack for image, video, 3D generation, and robot policies. The main performance gains come from the
             inference system around the model: batching, disaggregation, memory residency, parallel execution,
