@@ -60,4 +60,8 @@ wave 1
 arms cosmos3_nano_t2v_720p_189f vllm-omni 1 b300 cand-pp2-cfg2 cand-pp2-usp2
 # TRT-LLM #20176: MiniMax-H3 DiT tensor parallelism on two GPUs (the Ulysses profile is the baseline).
 arms minimax_h3_t2va_5s trtllm-visual 1 b300 cand-tp2 cand-tp2-vae2
+wave 2
+# The first TP arms inherited ulysses_size 2 through the profile deep-merge and launched 4 workers on 2 GPUs
+# (wave 1: 68.39 s baseline, both TP arms dead at startup). Fixed arms only; wave 1's baseline stands.
+arms minimax_h3_t2va_5s trtllm-visual 1 cand-tp2 cand-tp2-vae2
 echo "=== AB DONE $(date -Is) ==="

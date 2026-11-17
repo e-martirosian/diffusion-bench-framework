@@ -639,6 +639,8 @@
               "backend": "VANILLA"
             },
             "parallel_config": {
+              "ulysses_size": 1,
+              "parallel_vae_size": 1,
               "tp_size": 2
             },
             "torch_compile_config": {
@@ -670,7 +672,7 @@
           "extra_env": {
             "OMP_NUM_THREADS": "8"
           },
-          "notes": "The upstream TP2 yaml sets skip_warmup true; this keeps the harness's compilation_config so the compile happens before the measured window, as for every row. VALIDATION PENDING (round 2026-11-16, 4xB300)."
+          "notes": "A profile's visual_gen_args are DEEP-MERGED onto the framework entry's, which cannot delete a key: the first run of this arm inherited ulysses_size 2 and parallel_vae_size 2, so n_workers (= cfg x ulysses x ring x tp) came out 4 on 2 GPUs and every worker died with 'Multiple Ranks are using the same GPU' (2026-11-17). ulysses_size and parallel_vae_size are therefore set to 1 here. The upstream TP2 yaml sets skip_warmup true; this keeps the harness's compilation_config so the compile happens before the measured window, as for every row. VALIDATION PENDING (round 2026-11-16, 4xB300)."
         },
         "cand-tp2-vae2": {
           "description": "cand-tp2 plus the parallel VAE decode the Ulysses profile uses (parallel_vae_size 2). Never selected on its own: A/B arm.",
@@ -682,6 +684,7 @@
               "backend": "VANILLA"
             },
             "parallel_config": {
+              "ulysses_size": 1,
               "tp_size": 2,
               "parallel_vae_size": 2
             },
