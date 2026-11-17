@@ -70,5 +70,11 @@ if [[ "$(git -C "${sglang_tree}" rev-parse HEAD)" != "${SGLANG_PIN:?set SGLANG_P
   echo "sglang tree is at $(git -C "${sglang_tree}" rev-parse --short HEAD), not the round pin ${SGLANG_PIN:0:12}" >&2
   exit 1
 fi
+# The runner clears the cards between cases. A job that takes the lock (the A/B and plan runners do) and
+# starts meanwhile would not wait for an unlocked matrix and would kill its servers: this round's matrix
+# held no lock and was only kept apart by launching those jobs after it had finished.
+# shellcheck source=scripts/gpu_job_lock.sh
+source "${DBF_REPO_DIR}/scripts/gpu_job_lock.sh"
+gpu_lock_acquire
 echo "=== ${ROLE} | $(git log --oneline -1) | sglang $(git -C "${sglang_tree}" log --oneline -1) ==="
-exec bash "${DBF_REPO_DIR}/scripts/run_b200_cross_framework_20260912.sh"
+bash "${DBF_REPO_DIR}/scripts/run_b200_cross_framework_20260912.sh"   # not exec: the EXIT trap must release the lock
