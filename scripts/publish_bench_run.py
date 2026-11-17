@@ -148,6 +148,31 @@ def _headline_summary(section: dict, args) -> dict:
     }
 
 
+def _refusal(section: dict) -> str | None:
+    """Why a section must not be published, or None.
+
+    A run whose cells mostly failed to start measures the box, not the
+    frameworks. 2026-11-01's H200 round (a rebuilt HF cache) published 18 failed
+    sglang cells and 0 comparable rows, and replaced the last valid round as the
+    page's headline. A zero count only printed a warning then.
+    """
+    rows = section.get("rows") or []
+    if not rows:
+        return None
+    comparable = sum(
+        1
+        for row in rows
+        if len(measured_frameworks(row)) >= 2 or len(measured_frameworks(row, "qps")) >= 2
+    )
+    if comparable == 0:
+        return f"{section['id']}: none of its {len(rows)} rows has two measured frameworks"
+    failed = [r for r in rows if ((r.get("cells") or {}).get("sglang") or {}).get("status") == "failed"]
+    if 2 * len(failed) > len(rows):
+        reason = str(failed[0]["cells"]["sglang"].get("reason") or "")[:80]
+        return f"{section['id']}: sglang failed on {len(failed)} of {len(rows)} rows (e.g. {reason!r})"
+    return None
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--merged", required=True, type=Path, help="merged artifact from build_report_artifacts")
@@ -254,6 +279,16 @@ def main() -> int:
                 f"publish as all n/a",
                 file=sys.stderr,
             )
+
+    refusals = [why for why in map(_refusal, sections) if why]
+    if refusals:
+        for why in refusals:
+            print(f"error: refusing to publish -- {why}", file=sys.stderr)
+        print(
+            "error: a run like this measures the environment, not the frameworks; fix it and rerun",
+            file=sys.stderr,
+        )
+        return 1
 
     if args.dry_run:
         print("dry-run: nothing written")
