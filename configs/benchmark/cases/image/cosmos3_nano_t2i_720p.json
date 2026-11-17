@@ -642,6 +642,9 @@
     }
   },
   "framework_request_extra": {
+    "lightx2v": {
+      "task": "t2i"
+    },
     "trtllm-visual": {
       "max_sequence_length": 4096,
       "extra_params": {

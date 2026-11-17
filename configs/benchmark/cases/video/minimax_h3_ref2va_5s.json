@@ -340,6 +340,7 @@
     "lightx2v": {
       "status": "supported",
       "reference_image": true,
+      "reference_image_as_list": true,
       "model_cls": "minimax_h3",
       "num_gpus": 2,
       "serve_args": "--model-variant ref2av",

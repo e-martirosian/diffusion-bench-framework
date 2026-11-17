@@ -280,7 +280,8 @@ def fake_post(url, **kwargs):
     if kwargs.get("files"):
         _, (_, handle, _) = next(iter(kwargs["files"].items()))
         image = handle.getvalue()
-    elif body.get("image_path") and not str(body["image_path"]).startswith("data:"):
+    elif isinstance(body.get("image_path"), str) and not body["image_path"].startswith("data:"):
+        # a server-local path; MiniMax-H3's ref2av sends a LIST of inline data URIs, found below
         image = Path(body["image_path"]).read_bytes()
     else:
         image = data_uri_bytes(body)

@@ -1206,6 +1206,11 @@
             "num_gpus": 2,
             "num_inference_steps": 9,
             "guidance_scale": 0.0,
+            "framework_request_extra": {
+                "lightx2v": {
+                    "task": "t2i"
+                }
+            },
             "frameworks": {
                 "sglang": {
                     "serve_args": "--model-type diffusion --warmup-mode server --tp-size 2",
@@ -3113,6 +3118,9 @@
                 }
             },
             "framework_request_extra": {
+                "lightx2v": {
+                    "task": "t2i"
+                },
                 "trtllm-visual": {
                     "max_sequence_length": 4096,
                     "extra_params": {
@@ -3763,6 +3771,9 @@
                 }
             },
             "framework_request_extra": {
+                "lightx2v": {
+                    "task": "t2v"
+                },
                 "trtllm-visual": {
                     "max_sequence_length": 4096,
                     "extra_params": {
@@ -4410,6 +4421,9 @@
                 }
             },
             "framework_request_extra": {
+                "lightx2v": {
+                    "task": "i2v"
+                },
                 "trtllm-visual": {
                     "max_sequence_length": 4096,
                     "extra_params": {
@@ -7140,6 +7154,7 @@
                 },
                 "lightx2v": {
                     "reference_image": true,
+                    "reference_image_as_list": true,
                     "model_cls": "minimax_h3",
                     "num_gpus": 2,
                     "serve_args": "--model-variant ref2av",

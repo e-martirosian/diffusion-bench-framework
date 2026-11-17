@@ -1934,7 +1934,10 @@ def _lightx2v_payload(case: dict, config: dict, is_image: bool) -> dict:
     if case.get("reference_image") or fw_entry.get("reference_image"):
         # Inline, as the other frameworks receive it: a server-local path skipped the
         # upload and decode they pay inside the measured window.
-        payload["image_path"] = "data:image/png;base64," + _get_ref_image_b64(config, case)
+        image = "data:image/png;base64," + _get_ref_image_b64(config, case)
+        # MiniMax-H3's ref2av task takes a LIST of reference images (a bare string is a 422
+        # since the 2026-11-16 refactor); the other tasks keep one path.
+        payload["image_path"] = [image] if fw_entry.get("reference_image_as_list") else image
     return payload
 
 

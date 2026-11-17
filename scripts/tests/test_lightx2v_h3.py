@@ -262,7 +262,12 @@ try:
                 body,
             )
             if task == "ref2av":
-                head, _, b64 = body["image_path"].partition(",")
+                check(
+                    f"{where}: ref2av's image_path is a list of one reference (a bare string is a 422 since #1673)",
+                    isinstance(body["image_path"], list) and len(body["image_path"]) == 1,
+                    type(body["image_path"]).__name__,
+                )
+                head, _, b64 = body["image_path"][0].partition(",")
                 with Image.open(io.BytesIO(base64.b64decode(b64))) as reference:
                     check(
                         f"{where}: the reference arrives inline, prepared (2048 px short edge)",
