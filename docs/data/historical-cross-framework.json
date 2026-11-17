@@ -1,6 +1,6 @@
 {
   "id": "historical-cross-framework-20260610",
-  "updated_at": "2026-11-03",
+  "updated_at": "2026-11-17",
   "frameworks": {
     "sglang": "SGLang-Diffusion",
     "vllm-omni": "vLLM-Omni",
@@ -23,6 +23,873 @@
     "h200_throughput_other_wins": 0
   },
   "sections": [
+    {
+      "id": "b300x4-20261116_single_e2e",
+      "run": "b300x4-20261116",
+      "run_label": "4xB300 cross-framework (latest-vs-latest)",
+      "date": "2026-11-17",
+      "gpu": "4x NVIDIA B300 288GB",
+      "title": "4xB300 cross-framework (latest-vs-latest)",
+      "subtitle": "Steady-state single-request latency, best lossless config per framework (compile on, no caches, no quantization). SGLang-Diffusion fastest in 15/15 comparable cases.",
+      "mode": "single_e2e",
+      "framework_versions": {
+        "sglang": "0.0.0.dev1+g0b098e127 @ 25c1c4394",
+        "vllm-omni": "vllm-omni 0.33.0rc2.dev319+g24e547284 + vllm 0.33.0",
+        "lightx2v": "lightx2v 0.5.0 @ 395e2ac49",
+        "trtllm-visual": "tensorrt_llm 1.4.0rc3",
+        "comfyui": "ComfyUI @ a308f3f1d + torch 2.14.1+cu130",
+        "fastvideo": "FastVideo @ c938a8aa2 + fastvideo-kernel 0.3.5"
+      },
+      "summary": {
+        "sglang_wins": 15,
+        "comparable": 15
+      },
+      "rows": [
+        {
+          "case_id": "flux3_klein_base_t2i_1024",
+          "case": "FLUX.3 Image Klein Base T2I · 2 GPUs",
+          "details": "1024x1024 · 50 steps · cfg 3.5",
+          "gpus": "2 GPU",
+          "mode": "single_e2e",
+          "cells": {
+            "sglang": {
+              "gpus": 2,
+              "profile": "default",
+              "status": "ok",
+              "latency_s": 2.086,
+              "ratio_to_sglang": 1.0
+            },
+            "vllm-omni": {
+              "status": "unsupported",
+              "reason": "No FLUX.3 pipeline on vLLM-Omni main (2026-10-16). It is in the open, approved PR vllm-project/vllm-omni#9007; reclassify once it merges. Measured pre-merge on 2xH200 2026-10-16 at head 389a02a149ce with vllm==0.31.0 (the head's docker/Dockerfile.ci): CFG parallel 2 4.534 s, one GPU 9.101 s (regional compile, FLASH_ATTN). Its FLUX.3 loader reads only a local package directory (model_path = the snapshot dir), and requests need --served-model-name set to the case model."
+            },
+            "lightx2v": {
+              "status": "unsupported",
+              "reason": "LightX2V main has no FLUX.3 serving path (2026-10-15): no flux3 / flux-3-image code or PR in ModelTC/LightX2V; its FLUX coverage ends at FLUX.2."
+            },
+            "trtllm-visual": {
+              "status": "unsupported",
+              "reason": "No FLUX.3 pipeline on TensorRT-LLM main (2026-10-16); NVIDIA/TensorRT-LLM#20430 adds it and is still a draft."
+            },
+            "comfyui": {
+              "gpus": 2,
+              "profile": "default",
+              "status": "ok",
+              "latency_s": 3.255,
+              "ratio_to_sglang": 1.56
+            },
+            "fastvideo": {
+              "status": "unsupported",
+              "reason": "FastVideo main has no FLUX.3 pipeline (2026-10-15): no flux3 code in hao-ai-lab/FastVideo."
+            }
+          },
+          "winner": "sglang",
+          "winner_speedup": "1.56x"
+        },
+        {
+          "case_id": "qwen_image_21_t2i_1024",
+          "case": "Qwen-Image-2.1 T2I 1024 · 1 GPU",
+          "details": "1024x1024 · 40 steps · cfg 1",
+          "gpus": "1 GPU",
+          "mode": "single_e2e",
+          "cells": {
+            "sglang": {
+              "gpus": 1,
+              "profile": "b300-1gpu-resident-fa-async-save",
+              "status": "ok",
+              "latency_s": 2.13,
+              "ratio_to_sglang": 1.0
+            },
+            "vllm-omni": {
+              "gpus": 1,
+              "profile": "blackwell-cudnn-static",
+              "status": "ok",
+              "latency_s": 2.44,
+              "ratio_to_sglang": 1.146
+            },
+            "lightx2v": {
+              "gpus": 1,
+              "profile": "blackwell-sdpa",
+              "status": "ok",
+              "latency_s": 2.478,
+              "ratio_to_sglang": 1.163
+            },
+            "trtllm-visual": {
+              "status": "unsupported",
+              "reason": "TensorRT-LLM VisualGen carries a Qwen-Image pipeline (tensorrt_llm/_torch/visual_gen/models/qwen_image/) but nothing for the 2.1 architecture: a code search for QwenImage21 / Qwen-Image-2.1 over NVIDIA/TensorRT-LLM returns no hits, and the model is absent from pipeline_registry.py. Qwen-Image-2.1 is a distinct architecture (QwenImage21Pipeline / QwenImage21Transformer2DModel / AutoencoderKLQwenImage21 / Qwen3-VL encoder), so the existing Qwen-Image pipeline does not cover it."
+            },
+            "comfyui": {
+              "gpus": 1,
+              "profile": "blackwell-gpuonly-compile",
+              "status": "ok",
+              "latency_s": 3.045,
+              "ratio_to_sglang": 1.43
+            },
+            "fastvideo": {
+              "status": "unsupported",
+              "reason": "No Qwen-Image pipeline in FastVideo main (2b164405c3d1, 2026-10-07)."
+            }
+          },
+          "winner": "sglang",
+          "winner_speedup": "1.15x"
+        },
+        {
+          "case_id": "qwen_image_21_t2i_1024_2gpu",
+          "case": "Qwen-Image-2.1 T2I 1024 · 2 GPUs",
+          "details": "1024x1024 · 40 steps · cfg 1",
+          "gpus": "2 GPU",
+          "mode": "single_e2e",
+          "cells": {
+            "sglang": {
+              "gpus": 2,
+              "profile": "gb300-2gpu-tp2",
+              "status": "ok",
+              "latency_s": 1.319,
+              "ratio_to_sglang": 1.0
+            },
+            "vllm-omni": {
+              "gpus": 2,
+              "profile": "blackwell-cudnn-static",
+              "status": "ok",
+              "latency_s": 1.453,
+              "ratio_to_sglang": 1.102
+            },
+            "lightx2v": {
+              "status": "no_profile",
+              "reason": "No validated two-GPU LightX2V command for Qwen-Image-2.1 yet (its upstream configs for this model are single-GPU) (2026-10-10)."
+            },
+            "trtllm-visual": {
+              "status": "unsupported",
+              "reason": "TensorRT-LLM VisualGen carries a Qwen-Image pipeline (tensorrt_llm/_torch/visual_gen/models/qwen_image/) but nothing for the 2.1 architecture: a code search for QwenImage21 / Qwen-Image-2.1 over NVIDIA/TensorRT-LLM returns no hits, and the model is absent from pipeline_registry.py. Qwen-Image-2.1 is a distinct architecture (QwenImage21Pipeline / QwenImage21Transformer2DModel / AutoencoderKLQwenImage21 / Qwen3-VL encoder), so the existing Qwen-Image pipeline does not cover it."
+            },
+            "comfyui": {
+              "status": "not_run",
+              "reason": "ComfyUI's only multi-GPU path splits CFG branches, and this case runs without CFG, so a two-GPU cell would be its one-GPU cell."
+            },
+            "fastvideo": {
+              "status": "unsupported",
+              "reason": "No Qwen-Image pipeline in FastVideo main (2b164405c3d1, 2026-10-07)."
+            }
+          },
+          "winner": "sglang",
+          "winner_speedup": "1.10x"
+        },
+        {
+          "case_id": "qwen_image_21_edit_1024",
+          "case": "Qwen-Image-2.1 edit 1024 (one reference) · 1 GPU",
+          "details": "1024x1024 · 40 steps · cfg 1",
+          "gpus": "1 GPU",
+          "mode": "single_e2e",
+          "cells": {
+            "sglang": {
+              "gpus": 1,
+              "profile": "b200-1gpu-resident-fa",
+              "status": "ok",
+              "latency_s": 2.562,
+              "ratio_to_sglang": 1.0
+            },
+            "vllm-omni": {
+              "gpus": 1,
+              "profile": "blackwell-cudnn-static",
+              "status": "ok",
+              "latency_s": 2.951,
+              "ratio_to_sglang": 1.152
+            },
+            "lightx2v": {
+              "status": "no_profile",
+              "reason": "LightX2V's Qwen-Image-2.1 integration is validated in this harness for t2i only (lightx2v_task t2i); its image-conditioned path has no validated profile yet (2026-10-10)."
+            },
+            "trtllm-visual": {
+              "status": "unsupported",
+              "reason": "TensorRT-LLM VisualGen carries a Qwen-Image pipeline (tensorrt_llm/_torch/visual_gen/models/qwen_image/) but nothing for the 2.1 architecture: a code search for QwenImage21 / Qwen-Image-2.1 over NVIDIA/TensorRT-LLM returns no hits, and the model is absent from pipeline_registry.py. Qwen-Image-2.1 is a distinct architecture (QwenImage21Pipeline / QwenImage21Transformer2DModel / AutoencoderKLQwenImage21 / Qwen3-VL encoder), so the existing Qwen-Image pipeline does not cover it."
+            },
+            "comfyui": {
+              "status": "no_profile",
+              "reason": "The harness's Qwen-Image-2.1 graph is the official t2i template; an edit graph wiring the reference into its images.image_1 input has not been built and validated yet (2026-10-10)."
+            },
+            "fastvideo": {
+              "status": "unsupported",
+              "reason": "No Qwen-Image pipeline in FastVideo main (2b164405c3d1, 2026-10-07)."
+            }
+          },
+          "winner": "sglang",
+          "winner_speedup": "1.15x"
+        },
+        {
+          "case_id": "zimage_turbo_t2i_1024",
+          "case": "Z-Image-Turbo T2I · 2 GPUs",
+          "details": "1024x1024 · 9 steps · cfg 0",
+          "gpus": "2 GPU",
+          "mode": "single_e2e",
+          "cells": {
+            "sglang": {
+              "gpus": 2,
+              "profile": "b300-speed",
+              "status": "ok",
+              "latency_s": 0.317,
+              "ratio_to_sglang": 1.0
+            },
+            "vllm-omni": {
+              "gpus": 2,
+              "profile": "blackwell-tp2-static",
+              "status": "ok",
+              "latency_s": 0.457,
+              "ratio_to_sglang": 1.442
+            },
+            "lightx2v": {
+              "gpus": 2,
+              "profile": "blackwell-fa2-fusion",
+              "status": "ok",
+              "latency_s": 0.852,
+              "ratio_to_sglang": 2.688
+            },
+            "trtllm-visual": {
+              "status": "not_run",
+              "reason": "Not yet classified. Confirm framework support and add a validated command profile, or mark unsupported."
+            },
+            "comfyui": {
+              "gpus": 1,
+              "profile": "blackwell-gpuonly",
+              "status": "ok",
+              "latency_s": 0.84,
+              "ratio_to_sglang": 2.65
+            },
+            "fastvideo": {
+              "status": "no_profile",
+              "reason": "FastVideo main (2b164405c3d1, 2026-10-07) registers Z-Image-Turbo, but this harness integrates FastVideo for MiniMax-H3 only (2026-10-08); no command validated."
+            }
+          },
+          "winner": "sglang",
+          "winner_speedup": "1.44x"
+        },
+        {
+          "case_id": "ideogram4_t2i_1024_2gpu_tp",
+          "case": "Ideogram-4 (FP8) T2I · 2 GPUs",
+          "details": "1024x1024 · 20 steps · cfg ?",
+          "gpus": "2 GPU",
+          "mode": "single_e2e",
+          "cells": {
+            "sglang": {
+              "gpus": 2,
+              "profile": "b300-speed",
+              "status": "ok",
+              "latency_s": 1.939,
+              "ratio_to_sglang": 1.0
+            },
+            "vllm-omni": {
+              "status": "unsupported",
+              "reason": "Latest vLLM-Omni has no Ideogram-4 serving path (image-gen coverage is FLUX/Qwen-Image/Wan)."
+            },
+            "lightx2v": {
+              "status": "unsupported",
+              "reason": "Latest LightX2V has no Ideogram-4 serving path."
+            },
+            "trtllm-visual": {
+              "status": "unsupported",
+              "reason": "Latest TensorRT-LLM VisualGen has no Ideogram-4 serving path (coverage is FLUX/Wan/LTX-2/Qwen-Image/Cosmos3)."
+            },
+            "comfyui": {
+              "gpus": 1,
+              "profile": "blackwell-gpuonly-compile",
+              "status": "ok",
+              "latency_s": 3.685,
+              "ratio_to_sglang": 1.9
+            },
+            "fastvideo": {
+              "status": "unsupported",
+              "reason": "No Ideogram pipeline in FastVideo main (2b164405c3d1, 2026-10-07)."
+            }
+          },
+          "winner": "sglang",
+          "winner_speedup": "1.90x"
+        },
+        {
+          "case_id": "wan22_t2v_a14b_720p",
+          "case": "Wan2.2 T2V A14B 720p · 4 GPUs",
+          "details": "1280x720x81f · 40 steps · cfg 4",
+          "gpus": "4 GPU",
+          "mode": "single_e2e",
+          "cells": {
+            "sglang": {
+              "gpus": 4,
+              "profile": "b300-noexp",
+              "status": "ok",
+              "latency_s": 89.552,
+              "ratio_to_sglang": 1.0
+            },
+            "vllm-omni": {
+              "gpus": 4,
+              "profile": "blackwell-4gpu-cfg2-usp2-vaepp-devpost",
+              "status": "ok",
+              "latency_s": 97.824,
+              "ratio_to_sglang": 1.092
+            },
+            "lightx2v": {
+              "gpus": 4,
+              "profile": "blackwell-sdpa",
+              "status": "ok",
+              "latency_s": 100.441,
+              "ratio_to_sglang": 1.122
+            },
+            "trtllm-visual": {
+              "gpus": 4,
+              "profile": "blackwell-cudnn",
+              "status": "ok",
+              "latency_s": 94.086,
+              "ratio_to_sglang": 1.051
+            },
+            "comfyui": {
+              "gpus": 2,
+              "profile": "blackwell-gpuonly",
+              "status": "ok",
+              "latency_s": 521.849,
+              "ratio_to_sglang": 5.827
+            },
+            "fastvideo": {
+              "status": "no_profile",
+              "reason": "FastVideo main (2b164405c3d1, 2026-10-07) registers Wan2.2-T2V-A14B (examples/serving/openai_wan22_t2v_a14b.yaml), but this harness integrates FastVideo for MiniMax-H3 only (2026-10-08); no command validated."
+            }
+          },
+          "winner": "sglang",
+          "winner_speedup": "1.05x"
+        },
+        {
+          "case_id": "ltx2.5_twostage_t2v_2gpus",
+          "case": "LTX-2.5 two-stage T2V · 2 GPUs",
+          "details": "1920x1088x121f · 8 steps · cfg 1",
+          "gpus": "2 GPU",
+          "mode": "single_e2e",
+          "cells": {
+            "sglang": {
+              "gpus": 2,
+              "profile": "b300-auto-bcg",
+              "status": "ok",
+              "latency_s": 5.221,
+              "ratio_to_sglang": 1.0
+            },
+            "vllm-omni": {
+              "gpus": 2,
+              "profile": "blackwell-2gpu-distilled-usp2",
+              "status": "ok",
+              "latency_s": 5.861,
+              "ratio_to_sglang": 1.123
+            },
+            "lightx2v": {
+              "status": "unsupported",
+              "reason": "LightX2V's LTX-2.5 runner (ltx2_5, main 19c19614 = HEAD on 2026-10-24) decodes only with the diffusion VAE: LTX25VideoVAE raises 'LTX25VideoVAE requires a CausalDiffusionVAE checkpoint' for anything else (lightx2v/models/video_encoders/hf/ltx2/model.py), and the runner class fixes video_vae_class, so this case's convolutional decode is not reachable from its config. Its distilled two-stage itself would match (one distilled DiT for both stages, the same 8 + 3 sigmas, CFG 1); a diffusion-VAE row would be different, heavier work. Checked 2026-10-24."
+            },
+            "trtllm-visual": {
+              "status": "unsupported",
+              "reason": "TensorRT-LLM 1.4.0rc1 (the newest release candidate, installed) has no LTX-2.5: its VisualGen ltx2 package serves Lightricks/LTX-2 (19B) only, and nothing under tensorrt_llm/_torch/visual_gen loads Gemma-4, LTX-2.5's text encoder. Checked 2026-10-24."
+            },
+            "comfyui": {
+              "status": "no_profile",
+              "reason": "ComfyUI master (1a82e6d0) ships an official LTX-2.5 T2V template (video_ltx2_5_t2v): the same distilled two-stage (8 sigmas, x2 latent upsampler, a 3-sigma tail, CFG 1), but on the int8-convrot DiT and text encoder, with the diffusion VAE (ltx-2.5-video-vae-bf16), a stage-2 schedule starting at 0.85, and a prompt-enhancer node. A bf16 graph with the conv VAE (vae/ltx-2.5-video-vae-conv-bf16) and the official stage-2 sigmas is not built or validated yet. 2026-10-24."
+            },
+            "fastvideo": {
+              "status": "no_profile",
+              "reason": "FastVideo main (fa2d1324) registers LTX-2.5 distilled (FastVideo/LTX-2.5-Distilled-Diffusers, preset ltx2_5_distilled_two_stage), but this harness integrates FastVideo for MiniMax-H3 only (2026-10-08); no command validated."
+            }
+          },
+          "winner": "sglang",
+          "winner_speedup": "1.12x"
+        },
+        {
+          "case_id": "cosmos3_nano_t2i_720p",
+          "case": "Cosmos3-Nano T2I 720p · 2 GPUs",
+          "details": "1280x720 · 35 steps · cfg 6",
+          "gpus": "2 GPU",
+          "mode": "single_e2e",
+          "cells": {
+            "sglang": {
+              "gpus": 2,
+              "profile": "blackwell-2gpu-cfg-parallel",
+              "status": "ok",
+              "latency_s": 0.528,
+              "ratio_to_sglang": 1.0
+            },
+            "vllm-omni": {
+              "gpus": 2,
+              "profile": "blackwell-cudnn-static",
+              "status": "ok",
+              "latency_s": 0.592,
+              "ratio_to_sglang": 1.121
+            },
+            "lightx2v": {
+              "status": "failed",
+              "reason": "500 Server Error: Internal Server Error for url: http://127.0.0.1:61016/v1/tasks/image/sync?poll_interval_seconds=0.02 -- {\"detail\":\"Image inference did not return an encodable image.\"}"
+            },
+            "trtllm-visual": {
+              "gpus": 2,
+              "profile": "default",
+              "status": "ok",
+              "latency_s": 0.599,
+              "ratio_to_sglang": 1.134
+            },
+            "comfyui": {
+              "status": "unsupported",
+              "reason": "ComfyUI core has no Cosmos3: comfy/ldm/cosmos covers Cosmos Predict1 and Predict2 only (CosmosT2V/I2V, CosmosT2IPredict2/I2VPredict2 in comfy/supported_models.py) at master 88ab4a06, 2026-09-25."
+            },
+            "fastvideo": {
+              "status": "unsupported",
+              "reason": "FastVideo main (2b164405c3d1, 2026-10-07) has Cosmos Predict2/2.5 and GEN3C pipelines but no Cosmos3."
+            }
+          },
+          "winner": "sglang",
+          "winner_speedup": "1.12x"
+        },
+        {
+          "case_id": "cosmos3_nano_t2v_720p_189f",
+          "case": "Cosmos3-Nano T2V 720p · 4 GPUs",
+          "details": "1280x720x189f · 35 steps · cfg 6",
+          "gpus": "4 GPU",
+          "mode": "single_e2e",
+          "cells": {
+            "sglang": {
+              "gpus": 4,
+              "profile": "b300-noexp",
+              "status": "ok",
+              "latency_s": 22.807,
+              "ratio_to_sglang": 1.0
+            },
+            "vllm-omni": {
+              "gpus": 4,
+              "profile": "blackwell-cudnn-vaepp",
+              "status": "ok",
+              "latency_s": 26.29,
+              "ratio_to_sglang": 1.153
+            },
+            "lightx2v": {
+              "gpus": 4,
+              "profile": "blackwell-cfg2-sp2-sdpa",
+              "status": "ok",
+              "latency_s": 44.559,
+              "ratio_to_sglang": 1.954
+            },
+            "trtllm-visual": {
+              "gpus": 4,
+              "profile": "default",
+              "status": "ok",
+              "latency_s": 25.861,
+              "ratio_to_sglang": 1.134
+            },
+            "comfyui": {
+              "status": "unsupported",
+              "reason": "ComfyUI core has no Cosmos3: comfy/ldm/cosmos covers Cosmos Predict1 and Predict2 only (CosmosT2V/I2V, CosmosT2IPredict2/I2VPredict2 in comfy/supported_models.py) at master 88ab4a06, 2026-09-25."
+            },
+            "fastvideo": {
+              "status": "unsupported",
+              "reason": "FastVideo main (2b164405c3d1, 2026-10-07) has Cosmos Predict2/2.5 and GEN3C pipelines but no Cosmos3."
+            }
+          },
+          "winner": "sglang",
+          "winner_speedup": "1.13x"
+        },
+        {
+          "case_id": "cosmos3_nano_i2v_720p_189f",
+          "case": "Cosmos3-Nano I2V 720p · 4 GPUs",
+          "details": "1280x720x189f · 35 steps · cfg 6",
+          "gpus": "4 GPU",
+          "mode": "single_e2e",
+          "cells": {
+            "sglang": {
+              "gpus": 4,
+              "profile": "b300-noexp",
+              "status": "ok",
+              "latency_s": 22.807,
+              "ratio_to_sglang": 1.0
+            },
+            "vllm-omni": {
+              "gpus": 4,
+              "profile": "blackwell-cudnn-vaepp",
+              "status": "ok",
+              "latency_s": 25.804,
+              "ratio_to_sglang": 1.131
+            },
+            "lightx2v": {
+              "gpus": 4,
+              "profile": "blackwell-cfg2-sp2-sdpa",
+              "status": "ok",
+              "latency_s": 47.052,
+              "ratio_to_sglang": 2.063
+            },
+            "trtllm-visual": {
+              "gpus": 4,
+              "profile": "default",
+              "status": "ok",
+              "latency_s": 27.876,
+              "ratio_to_sglang": 1.222
+            },
+            "comfyui": {
+              "status": "unsupported",
+              "reason": "ComfyUI core has no Cosmos3: comfy/ldm/cosmos covers Cosmos Predict1 and Predict2 only (CosmosT2V/I2V, CosmosT2IPredict2/I2VPredict2 in comfy/supported_models.py) at master 88ab4a06, 2026-09-25."
+            },
+            "fastvideo": {
+              "status": "unsupported",
+              "reason": "FastVideo main (2b164405c3d1, 2026-10-07) has Cosmos Predict2/2.5 and GEN3C pipelines but no Cosmos3."
+            }
+          },
+          "winner": "sglang",
+          "winner_speedup": "1.13x"
+        },
+        {
+          "case_id": "minimax_h3_t2va_5s",
+          "case": "MiniMax-H3 T2V+A · 2 GPUs",
+          "details": "1344x768x124f · 50 steps · cfg ?",
+          "gpus": "2 GPU",
+          "mode": "single_e2e",
+          "cells": {
+            "sglang": {
+              "gpus": 2,
+              "profile": "b300-noexp",
+              "status": "ok",
+              "latency_s": 62.342,
+              "ratio_to_sglang": 1.0
+            },
+            "vllm-omni": {
+              "gpus": 2,
+              "profile": "blackwell-2gpu-static",
+              "status": "ok",
+              "latency_s": 67.404,
+              "ratio_to_sglang": 1.081
+            },
+            "lightx2v": {
+              "gpus": 2,
+              "profile": "blackwell-sp2-sdpa",
+              "status": "ok",
+              "latency_s": 71.758,
+              "ratio_to_sglang": 1.151
+            },
+            "trtllm-visual": {
+              "gpus": 2,
+              "profile": "blackwell-omp8",
+              "status": "ok",
+              "latency_s": 68.334,
+              "ratio_to_sglang": 1.096
+            },
+            "comfyui": {
+              "gpus": 1,
+              "profile": "blackwell-gpuonly",
+              "status": "ok",
+              "latency_s": 307.046,
+              "ratio_to_sglang": 4.925
+            },
+            "fastvideo": {
+              "gpus": 2,
+              "profile": "blackwell-2gpu",
+              "status": "ok",
+              "latency_s": 75.105,
+              "ratio_to_sglang": 1.205
+            }
+          },
+          "winner": "sglang",
+          "winner_speedup": "1.08x"
+        },
+        {
+          "case_id": "minimax_h3_t2va_5s_4gpu",
+          "case": "MiniMax-H3 T2V+A · 4 GPUs",
+          "details": "1344x768x124f · 50 steps · cfg ?",
+          "gpus": "4 GPU",
+          "mode": "single_e2e",
+          "cells": {
+            "sglang": {
+              "gpus": 4,
+              "profile": "b300-noexp",
+              "status": "ok",
+              "latency_s": 31.638,
+              "ratio_to_sglang": 1.0
+            },
+            "vllm-omni": {
+              "gpus": 4,
+              "profile": "blackwell-4gpu-static",
+              "status": "ok",
+              "latency_s": 36.751,
+              "ratio_to_sglang": 1.162
+            },
+            "lightx2v": {
+              "gpus": 4,
+              "profile": "blackwell-sp4-sdpa",
+              "status": "ok",
+              "latency_s": 36.973,
+              "ratio_to_sglang": 1.169
+            },
+            "trtllm-visual": {
+              "gpus": 4,
+              "profile": "blackwell-fa4-omp8",
+              "status": "ok",
+              "latency_s": 36.505,
+              "ratio_to_sglang": 1.154
+            },
+            "comfyui": {
+              "status": "not_run",
+              "reason": "ComfyUI has no sequence or tensor parallelism (its one multi-GPU path splits CFG branches, and H3 runs without CFG), so a four-GPU cell would be its one-GPU number; that number is in minimax_h3_t2va_5s."
+            },
+            "fastvideo": {
+              "gpus": 4,
+              "profile": "blackwell-4gpu",
+              "status": "ok",
+              "latency_s": 48.851,
+              "ratio_to_sglang": 1.544
+            }
+          },
+          "winner": "sglang",
+          "winner_speedup": "1.15x"
+        },
+        {
+          "case_id": "minimax_h3_ref2va_5s",
+          "case": "MiniMax-H3 Ref2V+A · 2 GPUs",
+          "details": "1344x768x124f · 50 steps · cfg ?",
+          "gpus": "2 GPU",
+          "mode": "single_e2e",
+          "cells": {
+            "sglang": {
+              "gpus": 2,
+              "profile": "b300-noexp",
+              "status": "ok",
+              "latency_s": 95.844,
+              "ratio_to_sglang": 1.0
+            },
+            "vllm-omni": {
+              "gpus": 2,
+              "profile": "blackwell-2gpu-static",
+              "status": "ok",
+              "latency_s": 103.24,
+              "ratio_to_sglang": 1.077
+            },
+            "lightx2v": {
+              "gpus": 2,
+              "profile": "blackwell-sp2-sdpa",
+              "status": "ok",
+              "latency_s": 113.84,
+              "ratio_to_sglang": 1.188
+            },
+            "trtllm-visual": {
+              "gpus": 2,
+              "profile": "blackwell-fa4-omp8",
+              "status": "ok",
+              "latency_s": 106.329,
+              "ratio_to_sglang": 1.109
+            },
+            "comfyui": {
+              "gpus": 1,
+              "profile": "blackwell-gpuonly",
+              "status": "ok",
+              "latency_s": 518.199,
+              "ratio_to_sglang": 5.407
+            },
+            "fastvideo": {
+              "gpus": 2,
+              "profile": "blackwell-2gpu",
+              "status": "ok",
+              "latency_s": 110.498,
+              "ratio_to_sglang": 1.153
+            }
+          },
+          "winner": "sglang",
+          "winner_speedup": "1.08x"
+        },
+        {
+          "case_id": "minimax_h3_fasth3_v2_t2va_5s",
+          "case": "FastH3 8-Step V2 T2V+A (distilled) · 4 GPUs",
+          "details": "1344x768x124f · 8 steps · cfg ?",
+          "gpus": "4 GPU",
+          "mode": "single_e2e",
+          "cells": {
+            "sglang": {
+              "gpus": 4,
+              "profile": "default",
+              "status": "ok",
+              "latency_s": 5.07,
+              "ratio_to_sglang": 1.0
+            },
+            "vllm-omni": {
+              "gpus": 4,
+              "profile": "default",
+              "status": "ok",
+              "latency_s": 7.738,
+              "ratio_to_sglang": 1.526
+            },
+            "lightx2v": {
+              "status": "unsupported",
+              "reason": "Checked 2026-10-08 against LightX2V main 0c2edc12 (2026-10-05): LightX2V cannot serve this checkpoint under its trained contract (fastvideo_inference.json). V2 is trained for VIDEO_SPARSE_ATTN_H3 at 0.8 sparsity on 64-token tiles, and LightX2V has no VSA backend (its sparse attentions -- Sparge, SVG, radial, NBHD, Sol-Attn, sparse Sage/FA4 -- are other methods; dense attention would run a different model). Its H3 scheduler builds only a uniform shifted grid from infer_steps, so the explicit rungs [999, 874, ..., 125] cannot be given (an 8-step grid starts at 1000). LightX2V's own few-step H3 paths (configs/minimax_h3/dmd/: 4- and 8-step LoRAs on the base checkpoint, mostly FP8/INT8) are a different distillation, not this checkpoint, and are not substituted."
+            },
+            "trtllm-visual": {
+              "status": "unsupported",
+              "reason": "trtllm-visual's tracked scope in this harness is image cases; H3 is a video+audio model."
+            },
+            "comfyui": {
+              "status": "no_profile",
+              "reason": "Comfy-Org/workflow_templates templates/video_fastvideo_fasth3_t2v.json exists (since 2026-09-22), but it runs int8 dense attention and VSA keeping 10% of tiles from step 0.2 -- a different numeric class and a different sparsity from the case's BF16 VSA at the trained 80% (64-token tiles). Re-checked 2026-10-22."
+            },
+            "fastvideo": {
+              "gpus": 4,
+              "profile": "blackwell-4gpu",
+              "status": "ok",
+              "latency_s": 9.294,
+              "ratio_to_sglang": 1.833
+            }
+          },
+          "winner": "sglang",
+          "winner_speedup": "1.53x"
+        }
+      ],
+      "reproduce": "scripts/run_b300_full_20261116.sh",
+      "reproduce_link": {
+        "path": "scripts/run_b300_full_20261116.sh",
+        "ref": "083322e27",
+        "url": "https://github.com/mickqian/diffusion-bench-framework/blob/083322e273273764174a4409039df59a1ca24a08/scripts/run_b300_full_20261116.sh"
+      }
+    },
+    {
+      "id": "b300x4-20261116_throughput",
+      "run": "b300x4-20261116",
+      "run_label": "4xB300 cross-framework (latest-vs-latest)",
+      "date": "2026-11-17",
+      "gpu": "4x NVIDIA B300 288GB",
+      "title": "4xB300 cross-framework (latest-vs-latest) — throughput",
+      "subtitle": "High-pressure throughput on a representative pair (one popular image model, one video+audio case) — the matrix is deliberately not swept, see configs/benchmark/workloads.json. SGLang-Diffusion highest QPS in 2/2 comparable cases.",
+      "mode": "throughput",
+      "framework_versions": {
+        "sglang": "0.0.0.dev1+g0b098e127 @ 25c1c4394",
+        "vllm-omni": "vllm-omni 0.33.0rc2.dev319+g24e547284 + vllm 0.33.0",
+        "lightx2v": "lightx2v 0.5.0 @ 395e2ac49",
+        "trtllm-visual": "tensorrt_llm 1.4.0rc3",
+        "comfyui": "ComfyUI @ a308f3f1d + torch 2.14.1+cu130",
+        "fastvideo": "FastVideo @ c938a8aa2 + fastvideo-kernel 0.3.5"
+      },
+      "summary": {
+        "sglang_wins": 2,
+        "comparable": 2
+      },
+      "rows": [
+        {
+          "case_id": "qwen_image_21_t2i_1024",
+          "case": "Qwen-Image-2.1 T2I 1024 · 1 GPU",
+          "details": "1024x1024 · 40 steps · cfg 1",
+          "gpus": "1 GPU",
+          "mode": "throughput",
+          "cells": {
+            "sglang": {
+              "gpus": 1,
+              "profile": "b300-1gpu-resident-fa-async-save",
+              "status": "ok",
+              "qps": 0.4746,
+              "num_requests": 4,
+              "concurrency": 2,
+              "ratio_to_sglang": 1.0
+            },
+            "vllm-omni": {
+              "gpus": 1,
+              "profile": "blackwell-cudnn-static",
+              "status": "ok",
+              "qps": 0.4001,
+              "num_requests": 4,
+              "concurrency": 2,
+              "ratio_to_sglang": 0.843
+            },
+            "lightx2v": {
+              "gpus": 1,
+              "profile": "blackwell-sdpa",
+              "status": "ok",
+              "qps": 0.3988,
+              "num_requests": 4,
+              "concurrency": 2,
+              "ratio_to_sglang": 0.84
+            },
+            "trtllm-visual": {
+              "status": "unsupported",
+              "reason": "TensorRT-LLM VisualGen carries a Qwen-Image pipeline (tensorrt_llm/_torch/visual_gen/models/qwen_image/) but nothing for the 2.1 architecture: a code search for QwenImage21 / Qwen-Image-2.1 over NVIDIA/TensorRT-LLM returns no hits, and the model is absent from pipeline_registry.py. Qwen-Image-2.1 is a distinct architecture (QwenImage21Pipeline / QwenImage21Transformer2DModel / AutoencoderKLQwenImage21 / Qwen3-VL encoder), so the existing Qwen-Image pipeline does not cover it."
+            },
+            "comfyui": {
+              "gpus": 1,
+              "profile": "blackwell-gpuonly-compile",
+              "status": "ok",
+              "qps": 0.319,
+              "num_requests": 4,
+              "concurrency": 2,
+              "ratio_to_sglang": 0.672
+            },
+            "fastvideo": {
+              "status": "unsupported",
+              "reason": "No Qwen-Image pipeline in FastVideo main (2b164405c3d1, 2026-10-07)."
+            }
+          },
+          "winner": "sglang",
+          "winner_speedup": "1.19x"
+        },
+        {
+          "case_id": "minimax_h3_t2va_5s",
+          "case": "MiniMax-H3 T2V+A · 2 GPUs",
+          "details": "1344x768x124f · 50 steps · cfg ?",
+          "gpus": "2 GPU",
+          "mode": "throughput",
+          "cells": {
+            "sglang": {
+              "gpus": 2,
+              "profile": "dp2-throughput",
+              "status": "ok",
+              "qps": 0.0168,
+              "num_requests": 4,
+              "concurrency": 2,
+              "ratio_to_sglang": 1.0
+            },
+            "vllm-omni": {
+              "gpus": 2,
+              "profile": "replica2-throughput",
+              "status": "ok",
+              "qps": 0.0164,
+              "num_requests": 4,
+              "concurrency": 2,
+              "ratio_to_sglang": 0.976
+            },
+            "lightx2v": {
+              "gpus": 2,
+              "profile": "blackwell-sp2-sdpa",
+              "status": "ok",
+              "qps": 0.0139,
+              "num_requests": 4,
+              "concurrency": 2,
+              "ratio_to_sglang": 0.827
+            },
+            "trtllm-visual": {
+              "gpus": 2,
+              "profile": "blackwell-omp8",
+              "status": "ok",
+              "qps": 0.0149,
+              "num_requests": 4,
+              "concurrency": 2,
+              "ratio_to_sglang": 0.887
+            },
+            "comfyui": {
+              "gpus": 1,
+              "profile": "blackwell-gpuonly",
+              "status": "ok",
+              "qps": 0.0033,
+              "num_requests": 4,
+              "concurrency": 2,
+              "ratio_to_sglang": 0.196
+            },
+            "fastvideo": {
+              "gpus": 2,
+              "profile": "blackwell-2gpu",
+              "status": "ok",
+              "qps": 0.0133,
+              "num_requests": 4,
+              "concurrency": 2,
+              "ratio_to_sglang": 0.792
+            }
+          },
+          "winner": "sglang",
+          "winner_speedup": "1.02x"
+        }
+      ],
+      "reproduce": "scripts/run_b300_full_20261116.sh",
+      "reproduce_link": {
+        "path": "scripts/run_b300_full_20261116.sh",
+        "ref": "083322e27",
+        "url": "https://github.com/mickqian/diffusion-bench-framework/blob/083322e273273764174a4409039df59a1ca24a08/scripts/run_b300_full_20261116.sh"
+      }
+    },
     {
       "id": "b300x4-20261022_single_e2e",
       "run": "b300x4-20261022",
