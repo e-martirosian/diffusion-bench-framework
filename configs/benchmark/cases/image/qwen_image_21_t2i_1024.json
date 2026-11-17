@@ -120,10 +120,10 @@
           "upstream_recipe": {
             "repo": "vllm-project/vllm-omni",
             "path": "recipes/Qwen/Qwen-Image-2.1.md",
-            "commit": "b164fea79753",
-            "commit_date": "2026-10-17",
+            "commit": "9ab4fabc74f2",
+            "commit_date": "2026-11-16",
             "section": "Online Serving",
-            "recheck": "Re-checked 2026-10-22: the recipe gained a Qwen-Image-2.1-Turbo four-GPU section and NPU defaults (910b8f07, b164fea7); the base-model serving sections this profile follows are unchanged. Its new exact text-conditioning cache cannot hit the harness's distinct per-request prompts."
+            "recheck": "Re-checked 2026-11-16: three commits since changed no serving command (9ab4fabc up to 10 reference images, 6c8f6930 decode graph-pool lifetime fix, 725c1c9a Ascend MXFP8 KV cache); the 2026-10-22 note stands: the new exact text-conditioning cache cannot hit the harness's distinct per-request prompts."
           }
         },
         "default": {
@@ -132,10 +132,10 @@
           "upstream_recipe": {
             "repo": "vllm-project/vllm-omni",
             "path": "recipes/Qwen/Qwen-Image-2.1.md",
-            "commit": "b164fea79753",
-            "commit_date": "2026-10-17",
+            "commit": "9ab4fabc74f2",
+            "commit_date": "2026-11-16",
             "section": "Online Serving",
-            "recheck": "Re-checked 2026-10-22: the recipe gained a Qwen-Image-2.1-Turbo four-GPU section and NPU defaults (910b8f07, b164fea7); the base-model serving sections this profile follows are unchanged. Its new exact text-conditioning cache cannot hit the harness's distinct per-request prompts."
+            "recheck": "Re-checked 2026-11-16: three commits since changed no serving command (9ab4fabc up to 10 reference images, 6c8f6930 decode graph-pool lifetime fix, 725c1c9a Ascend MXFP8 KV cache); the 2026-10-22 note stands: the new exact text-conditioning cache cannot hit the harness's distinct per-request prompts."
           },
           "num_gpus": 1,
           "serve_args": "",
@@ -150,10 +150,10 @@
           "upstream_recipe": {
             "repo": "vllm-project/vllm-omni",
             "path": "recipes/Qwen/Qwen-Image-2.1.md",
-            "commit": "b164fea79753",
-            "commit_date": "2026-10-17",
+            "commit": "9ab4fabc74f2",
+            "commit_date": "2026-11-16",
             "section": "Online Serving",
-            "recheck": "Re-checked 2026-10-22: the recipe gained a Qwen-Image-2.1-Turbo four-GPU section and NPU defaults (910b8f07, b164fea7); the base-model serving sections this profile follows are unchanged. Its new exact text-conditioning cache cannot hit the harness's distinct per-request prompts."
+            "recheck": "Re-checked 2026-11-16: three commits since changed no serving command (9ab4fabc up to 10 reference images, 6c8f6930 decode graph-pool lifetime fix, 725c1c9a Ascend MXFP8 KV cache); the 2026-10-22 note stands: the new exact text-conditioning cache cannot hit the harness's distinct per-request prompts."
           },
           "serve_args": "--enable-cpu-offload --no-enable-cuda-graph-decode",
           "extra_env": {
@@ -173,10 +173,10 @@
           "upstream_recipe": {
             "repo": "vllm-project/vllm-omni",
             "path": "recipes/Qwen/Qwen-Image-2.1.md",
-            "commit": "b164fea79753",
-            "commit_date": "2026-10-17",
+            "commit": "9ab4fabc74f2",
+            "commit_date": "2026-11-16",
             "section": "Online Serving",
-            "recheck": "Re-checked 2026-10-22: the recipe gained a Qwen-Image-2.1-Turbo four-GPU section and NPU defaults (910b8f07, b164fea7); the base-model serving sections this profile follows are unchanged. Its new exact text-conditioning cache cannot hit the harness's distinct per-request prompts."
+            "recheck": "Re-checked 2026-11-16: three commits since changed no serving command (9ab4fabc up to 10 reference images, 6c8f6930 decode graph-pool lifetime fix, 725c1c9a Ascend MXFP8 KV cache); the 2026-10-22 note stands: the new exact text-conditioning cache cannot hit the harness's distinct per-request prompts."
           },
           "num_gpus": 1,
           "serve_args": "",
@@ -204,10 +204,10 @@
           "upstream_recipe": {
             "repo": "vllm-project/vllm-omni",
             "path": "recipes/Qwen/Qwen-Image-2.1.md",
-            "commit": "b164fea79753",
-            "commit_date": "2026-10-17",
+            "commit": "9ab4fabc74f2",
+            "commit_date": "2026-11-16",
             "section": "Online Serving",
-            "recheck": "Re-checked 2026-10-22: the recipe gained a Qwen-Image-2.1-Turbo four-GPU section and NPU defaults (910b8f07, b164fea7); the base-model serving sections this profile follows are unchanged. Its new exact text-conditioning cache cannot hit the harness's distinct per-request prompts."
+            "recheck": "Re-checked 2026-11-16: three commits since changed no serving command (9ab4fabc up to 10 reference images, 6c8f6930 decode graph-pool lifetime fix, 725c1c9a Ascend MXFP8 KV cache); the 2026-10-22 note stands: the new exact text-conditioning cache cannot hit the harness's distinct per-request prompts."
           },
           "notes": "Derived from `blackwell-cudnn-static` (the profile B300 selects). Audit 2026-10-23 (Cosmos3/Wan2.2 finding 3): vLLM-Omni 0da1d831 defaults to TRTLLM_ATTN on sm100/sm103 at head_dim 128 (vllm_omni/platforms/cuda/platform.py, 'Defaulting to diffusion attention backend TRTLLM_ATTN'), and the profiles force CUDNN_ATTN from a 2026-09 B200 qwen-image measurement on vLLM 0.29. Confirmation arm only: a 2026-10-23 B300 bf16 microbenchmark at the real per-rank shapes had trtllm-gen dense (the kernel behind TRTLLM_ATTN) 5-20% behind cuDNN SDPA and FA4 at every shape, so the other cells keep CUDNN_ATTN. Grep the server log for the TRTLLM_ATTN selection. VALIDATION PENDING (wave 4, 4xB300)."
         }

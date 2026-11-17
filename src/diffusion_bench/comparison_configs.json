@@ -350,10 +350,10 @@
                             "upstream_recipe": {
                                 "repo": "vllm-project/vllm-omni",
                                 "path": "recipes/Qwen/Qwen-Image-2.1.md",
-                                "commit": "b164fea79753",
-                                "commit_date": "2026-10-17",
+                                "commit": "9ab4fabc74f2",
+                                "commit_date": "2026-11-16",
                                 "section": "Online Serving",
-                                "recheck": "Re-checked 2026-10-22: the recipe gained a Qwen-Image-2.1-Turbo four-GPU section and NPU defaults (910b8f07, b164fea7); the base-model serving sections this profile follows are unchanged. Its new exact text-conditioning cache cannot hit the harness's distinct per-request prompts."
+                                "recheck": "Re-checked 2026-11-16: three commits since changed no serving command (9ab4fabc up to 10 reference images, 6c8f6930 decode graph-pool lifetime fix, 725c1c9a Ascend MXFP8 KV cache); the 2026-10-22 note stands: the new exact text-conditioning cache cannot hit the harness's distinct per-request prompts."
                             }
                         },
                         "default": {
@@ -362,10 +362,10 @@
                             "upstream_recipe": {
                                 "repo": "vllm-project/vllm-omni",
                                 "path": "recipes/Qwen/Qwen-Image-2.1.md",
-                                "commit": "b164fea79753",
-                                "commit_date": "2026-10-17",
+                                "commit": "9ab4fabc74f2",
+                                "commit_date": "2026-11-16",
                                 "section": "Online Serving",
-                                "recheck": "Re-checked 2026-10-22: the recipe gained a Qwen-Image-2.1-Turbo four-GPU section and NPU defaults (910b8f07, b164fea7); the base-model serving sections this profile follows are unchanged. Its new exact text-conditioning cache cannot hit the harness's distinct per-request prompts."
+                                "recheck": "Re-checked 2026-11-16: three commits since changed no serving command (9ab4fabc up to 10 reference images, 6c8f6930 decode graph-pool lifetime fix, 725c1c9a Ascend MXFP8 KV cache); the 2026-10-22 note stands: the new exact text-conditioning cache cannot hit the harness's distinct per-request prompts."
                             },
                             "num_gpus": 1,
                             "serve_args": "",
@@ -380,10 +380,10 @@
                             "upstream_recipe": {
                                 "repo": "vllm-project/vllm-omni",
                                 "path": "recipes/Qwen/Qwen-Image-2.1.md",
-                                "commit": "b164fea79753",
-                                "commit_date": "2026-10-17",
+                                "commit": "9ab4fabc74f2",
+                                "commit_date": "2026-11-16",
                                 "section": "Online Serving",
-                                "recheck": "Re-checked 2026-10-22: the recipe gained a Qwen-Image-2.1-Turbo four-GPU section and NPU defaults (910b8f07, b164fea7); the base-model serving sections this profile follows are unchanged. Its new exact text-conditioning cache cannot hit the harness's distinct per-request prompts."
+                                "recheck": "Re-checked 2026-11-16: three commits since changed no serving command (9ab4fabc up to 10 reference images, 6c8f6930 decode graph-pool lifetime fix, 725c1c9a Ascend MXFP8 KV cache); the 2026-10-22 note stands: the new exact text-conditioning cache cannot hit the harness's distinct per-request prompts."
                             },
                             "serve_args": "--enable-cpu-offload --no-enable-cuda-graph-decode",
                             "extra_env": {
@@ -403,10 +403,10 @@
                             "upstream_recipe": {
                                 "repo": "vllm-project/vllm-omni",
                                 "path": "recipes/Qwen/Qwen-Image-2.1.md",
-                                "commit": "b164fea79753",
-                                "commit_date": "2026-10-17",
+                                "commit": "9ab4fabc74f2",
+                                "commit_date": "2026-11-16",
                                 "section": "Online Serving",
-                                "recheck": "Re-checked 2026-10-22: the recipe gained a Qwen-Image-2.1-Turbo four-GPU section and NPU defaults (910b8f07, b164fea7); the base-model serving sections this profile follows are unchanged. Its new exact text-conditioning cache cannot hit the harness's distinct per-request prompts."
+                                "recheck": "Re-checked 2026-11-16: three commits since changed no serving command (9ab4fabc up to 10 reference images, 6c8f6930 decode graph-pool lifetime fix, 725c1c9a Ascend MXFP8 KV cache); the 2026-10-22 note stands: the new exact text-conditioning cache cannot hit the harness's distinct per-request prompts."
                             },
                             "num_gpus": 1,
                             "serve_args": "",
@@ -434,10 +434,10 @@
                             "upstream_recipe": {
                                 "repo": "vllm-project/vllm-omni",
                                 "path": "recipes/Qwen/Qwen-Image-2.1.md",
-                                "commit": "b164fea79753",
-                                "commit_date": "2026-10-17",
+                                "commit": "9ab4fabc74f2",
+                                "commit_date": "2026-11-16",
                                 "section": "Online Serving",
-                                "recheck": "Re-checked 2026-10-22: the recipe gained a Qwen-Image-2.1-Turbo four-GPU section and NPU defaults (910b8f07, b164fea7); the base-model serving sections this profile follows are unchanged. Its new exact text-conditioning cache cannot hit the harness's distinct per-request prompts."
+                                "recheck": "Re-checked 2026-11-16: three commits since changed no serving command (9ab4fabc up to 10 reference images, 6c8f6930 decode graph-pool lifetime fix, 725c1c9a Ascend MXFP8 KV cache); the 2026-10-22 note stands: the new exact text-conditioning cache cannot hit the harness's distinct per-request prompts."
                             },
                             "notes": "Derived from `blackwell-cudnn-static` (the profile B300 selects). Audit 2026-10-23 (Cosmos3/Wan2.2 finding 3): vLLM-Omni 0da1d831 defaults to TRTLLM_ATTN on sm100/sm103 at head_dim 128 (vllm_omni/platforms/cuda/platform.py, 'Defaulting to diffusion attention backend TRTLLM_ATTN'), and the profiles force CUDNN_ATTN from a 2026-09 B200 qwen-image measurement on vLLM 0.29. Confirmation arm only: a 2026-10-23 B300 bf16 microbenchmark at the real per-rank shapes had trtllm-gen dense (the kernel behind TRTLLM_ATTN) 5-20% behind cuDNN SDPA and FA4 at every shape, so the other cells keep CUDNN_ATTN. Grep the server log for the TRTLLM_ATTN selection. VALIDATION PENDING (wave 4, 4xB300)."
                         }
@@ -889,10 +889,10 @@
                             "upstream_recipe": {
                                 "repo": "vllm-project/vllm-omni",
                                 "path": "recipes/Qwen/Qwen-Image-2.1.md",
-                                "commit": "b164fea79753",
-                                "commit_date": "2026-10-17",
+                                "commit": "9ab4fabc74f2",
+                                "commit_date": "2026-11-16",
                                 "section": "Online Serving",
-                                "recheck": "Re-checked 2026-10-22: the recipe gained a Qwen-Image-2.1-Turbo four-GPU section and NPU defaults (910b8f07, b164fea7); the base-model serving sections this profile follows are unchanged. Its new exact text-conditioning cache cannot hit the harness's distinct per-request prompts."
+                                "recheck": "Re-checked 2026-11-16: three commits since changed no serving command (9ab4fabc up to 10 reference images, 6c8f6930 decode graph-pool lifetime fix, 725c1c9a Ascend MXFP8 KV cache); the 2026-10-22 note stands: the new exact text-conditioning cache cannot hit the harness's distinct per-request prompts."
                             }
                         },
                         "default": {
@@ -901,10 +901,10 @@
                             "upstream_recipe": {
                                 "repo": "vllm-project/vllm-omni",
                                 "path": "recipes/Qwen/Qwen-Image-2.1.md",
-                                "commit": "b164fea79753",
-                                "commit_date": "2026-10-17",
+                                "commit": "9ab4fabc74f2",
+                                "commit_date": "2026-11-16",
                                 "section": "Online Serving",
-                                "recheck": "Re-checked 2026-10-22: the recipe gained a Qwen-Image-2.1-Turbo four-GPU section and NPU defaults (910b8f07, b164fea7); the base-model serving sections this profile follows are unchanged. Its new exact text-conditioning cache cannot hit the harness's distinct per-request prompts."
+                                "recheck": "Re-checked 2026-11-16: three commits since changed no serving command (9ab4fabc up to 10 reference images, 6c8f6930 decode graph-pool lifetime fix, 725c1c9a Ascend MXFP8 KV cache); the 2026-10-22 note stands: the new exact text-conditioning cache cannot hit the harness's distinct per-request prompts."
                             },
                             "num_gpus": 2,
                             "serve_args": "--usp 2",
@@ -922,10 +922,10 @@
                             "upstream_recipe": {
                                 "repo": "vllm-project/vllm-omni",
                                 "path": "recipes/Qwen/Qwen-Image-2.1.md",
-                                "commit": "b164fea79753",
-                                "commit_date": "2026-10-17",
+                                "commit": "9ab4fabc74f2",
+                                "commit_date": "2026-11-16",
                                 "section": "Online Serving",
-                                "recheck": "Re-checked 2026-10-22: the recipe gained a Qwen-Image-2.1-Turbo four-GPU section and NPU defaults (910b8f07, b164fea7); the base-model serving sections this profile follows are unchanged. Its new exact text-conditioning cache cannot hit the harness's distinct per-request prompts."
+                                "recheck": "Re-checked 2026-11-16: three commits since changed no serving command (9ab4fabc up to 10 reference images, 6c8f6930 decode graph-pool lifetime fix, 725c1c9a Ascend MXFP8 KV cache); the 2026-10-22 note stands: the new exact text-conditioning cache cannot hit the harness's distinct per-request prompts."
                             },
                             "num_gpus": 2,
                             "serve_args": "--usp 2",
@@ -953,10 +953,10 @@
                             "upstream_recipe": {
                                 "repo": "vllm-project/vllm-omni",
                                 "path": "recipes/Qwen/Qwen-Image-2.1.md",
-                                "commit": "b164fea79753",
-                                "commit_date": "2026-10-17",
+                                "commit": "9ab4fabc74f2",
+                                "commit_date": "2026-11-16",
                                 "section": "Online Serving",
-                                "recheck": "Re-checked 2026-10-22: the recipe gained a Qwen-Image-2.1-Turbo four-GPU section and NPU defaults (910b8f07, b164fea7); the base-model serving sections this profile follows are unchanged. Its new exact text-conditioning cache cannot hit the harness's distinct per-request prompts."
+                                "recheck": "Re-checked 2026-11-16: three commits since changed no serving command (9ab4fabc up to 10 reference images, 6c8f6930 decode graph-pool lifetime fix, 725c1c9a Ascend MXFP8 KV cache); the 2026-10-22 note stands: the new exact text-conditioning cache cannot hit the harness's distinct per-request prompts."
                             },
                             "notes": "Derived from `blackwell-cudnn-static` (the profile B300 selects). Audit 2026-10-23 (image finding 2): the pinned recipe's measured multi-GPU path for Qwen-Image-2.1 is TP (recipes/Qwen/Qwen-Image-2.1.md: H200 TP1 7.30 / TP2 4.89 / TP4 5.12 s; features matrix SP ❓, TP ✅), never measured here; sglang's own TP2 beat its Ulysses-2 by 17% on this box. cuDNN attention and static compile kept. VALIDATION PENDING (wave 4, 4xB300)."
                         },
@@ -970,10 +970,10 @@
                             "upstream_recipe": {
                                 "repo": "vllm-project/vllm-omni",
                                 "path": "recipes/Qwen/Qwen-Image-2.1.md",
-                                "commit": "b164fea79753",
-                                "commit_date": "2026-10-17",
+                                "commit": "9ab4fabc74f2",
+                                "commit_date": "2026-11-16",
                                 "section": "Online Serving",
-                                "recheck": "Re-checked 2026-10-22: the recipe gained a Qwen-Image-2.1-Turbo four-GPU section and NPU defaults (910b8f07, b164fea7); the base-model serving sections this profile follows are unchanged. Its new exact text-conditioning cache cannot hit the harness's distinct per-request prompts."
+                                "recheck": "Re-checked 2026-11-16: three commits since changed no serving command (9ab4fabc up to 10 reference images, 6c8f6930 decode graph-pool lifetime fix, 725c1c9a Ascend MXFP8 KV cache); the 2026-10-22 note stands: the new exact text-conditioning cache cannot hit the harness's distinct per-request prompts."
                             },
                             "notes": "Derived from `blackwell-cudnn-static` (the profile B300 selects). Audit 2026-10-23 (image finding 2): recipes/Qwen/Qwen-Image-2.1.md documents --ulysses-a2a-permute for the Ulysses path; never measured here. cuDNN attention and static compile kept. VALIDATION PENDING (wave 4, 4xB300)."
                         }
@@ -1104,10 +1104,10 @@
                             "upstream_recipe": {
                                 "repo": "vllm-project/vllm-omni",
                                 "path": "recipes/Qwen/Qwen-Image-2.1.md",
-                                "commit": "b164fea79753",
-                                "commit_date": "2026-10-17",
+                                "commit": "9ab4fabc74f2",
+                                "commit_date": "2026-11-16",
                                 "section": "Online Serving",
-                                "recheck": "Re-checked 2026-10-22: the recipe gained a Qwen-Image-2.1-Turbo four-GPU section and NPU defaults (910b8f07, b164fea7); the base-model serving sections this profile follows are unchanged. Its new exact text-conditioning cache cannot hit the harness's distinct per-request prompts."
+                                "recheck": "Re-checked 2026-11-16: three commits since changed no serving command (9ab4fabc up to 10 reference images, 6c8f6930 decode graph-pool lifetime fix, 725c1c9a Ascend MXFP8 KV cache); the 2026-10-22 note stands: the new exact text-conditioning cache cannot hit the harness's distinct per-request prompts."
                             }
                         },
                         "default": {
@@ -1116,10 +1116,10 @@
                             "upstream_recipe": {
                                 "repo": "vllm-project/vllm-omni",
                                 "path": "recipes/Qwen/Qwen-Image-2.1.md",
-                                "commit": "b164fea79753",
-                                "commit_date": "2026-10-17",
+                                "commit": "9ab4fabc74f2",
+                                "commit_date": "2026-11-16",
                                 "section": "Online Serving",
-                                "recheck": "Re-checked 2026-10-22: the recipe gained a Qwen-Image-2.1-Turbo four-GPU section and NPU defaults (910b8f07, b164fea7); the base-model serving sections this profile follows are unchanged. Its new exact text-conditioning cache cannot hit the harness's distinct per-request prompts."
+                                "recheck": "Re-checked 2026-11-16: three commits since changed no serving command (9ab4fabc up to 10 reference images, 6c8f6930 decode graph-pool lifetime fix, 725c1c9a Ascend MXFP8 KV cache); the 2026-10-22 note stands: the new exact text-conditioning cache cannot hit the harness's distinct per-request prompts."
                             },
                             "num_gpus": 1,
                             "serve_args": "",
@@ -1134,10 +1134,10 @@
                             "upstream_recipe": {
                                 "repo": "vllm-project/vllm-omni",
                                 "path": "recipes/Qwen/Qwen-Image-2.1.md",
-                                "commit": "b164fea79753",
-                                "commit_date": "2026-10-17",
+                                "commit": "9ab4fabc74f2",
+                                "commit_date": "2026-11-16",
                                 "section": "Online Serving",
-                                "recheck": "Re-checked 2026-10-22: the recipe gained a Qwen-Image-2.1-Turbo four-GPU section and NPU defaults (910b8f07, b164fea7); the base-model serving sections this profile follows are unchanged. Its new exact text-conditioning cache cannot hit the harness's distinct per-request prompts."
+                                "recheck": "Re-checked 2026-11-16: three commits since changed no serving command (9ab4fabc up to 10 reference images, 6c8f6930 decode graph-pool lifetime fix, 725c1c9a Ascend MXFP8 KV cache); the 2026-10-22 note stands: the new exact text-conditioning cache cannot hit the harness's distinct per-request prompts."
                             },
                             "serve_args": "--enable-cpu-offload --no-enable-cuda-graph-decode",
                             "extra_env": {
@@ -1157,10 +1157,10 @@
                             "upstream_recipe": {
                                 "repo": "vllm-project/vllm-omni",
                                 "path": "recipes/Qwen/Qwen-Image-2.1.md",
-                                "commit": "b164fea79753",
-                                "commit_date": "2026-10-17",
+                                "commit": "9ab4fabc74f2",
+                                "commit_date": "2026-11-16",
                                 "section": "Online Serving",
-                                "recheck": "Re-checked 2026-10-22: the recipe gained a Qwen-Image-2.1-Turbo four-GPU section and NPU defaults (910b8f07, b164fea7); the base-model serving sections this profile follows are unchanged. Its new exact text-conditioning cache cannot hit the harness's distinct per-request prompts."
+                                "recheck": "Re-checked 2026-11-16: three commits since changed no serving command (9ab4fabc up to 10 reference images, 6c8f6930 decode graph-pool lifetime fix, 725c1c9a Ascend MXFP8 KV cache); the 2026-10-22 note stands: the new exact text-conditioning cache cannot hit the harness's distinct per-request prompts."
                             },
                             "num_gpus": 1,
                             "serve_args": "",
@@ -3423,9 +3423,10 @@
                             "upstream_recipe": {
                                 "repo": "NVIDIA/TensorRT-LLM",
                                 "path": "examples/visual_gen/configs/cosmos3_t2v_bf16_gb200_nvl72.yaml",
-                                "commit": "0372799d1543",
-                                "commit_date": "2026-10-19",
-                                "section": "Blackwell BF16 config: attention_config.backend FA4"
+                                "commit": "b8219bf37065",
+                                "commit_date": "2026-07-01",
+                                "section": "Blackwell BF16 config: attention_config.backend FA4",
+                                "recheck": "Corrected 2026-11-16: the recorded commit is not in this file's history. Its last change is b8219bf3 (2026-07-01, the VisualGen NVL72 tech blog), so the profile was derived from this content."
                             },
                             "notes": "4xB300 A/B 2026-10-22: 1.031/0.960 s against VANILLA 0.599/0.599 s; VANILLA stays."
                         },
@@ -3463,9 +3464,10 @@
                             "upstream_recipe": {
                                 "repo": "NVIDIA/TensorRT-LLM",
                                 "path": "examples/visual_gen/configs/cosmos3_t2v_bf16_gb200_nvl72.yaml",
-                                "commit": "0372799d1543",
-                                "commit_date": "2026-10-19",
-                                "section": "Blackwell BF16 config: attention_config.backend FA4"
+                                "commit": "b8219bf37065",
+                                "commit_date": "2026-07-01",
+                                "section": "Blackwell BF16 config: attention_config.backend FA4",
+                                "recheck": "Corrected 2026-11-16: the recorded commit is not in this file's history. Its last change is b8219bf3 (2026-07-01, the VisualGen NVL72 tech blog), so the profile was derived from this content."
                             },
                             "notes": "4xB300 2026-10-22: server exited before health check in both rounds (CUDA graphs on Cosmos3 T2I)."
                         },
@@ -3891,9 +3893,10 @@
                             "upstream_recipe": {
                                 "repo": "vllm-project/vllm-omni",
                                 "path": "recipes/cosmos3/Cosmos3-Nano.md",
-                                "commit": "765002061878",
-                                "commit_date": "2026-09-24",
-                                "section": "1x H200 141GB / B300 (Online serving), scaled per #5712"
+                                "commit": "40b1153fe356",
+                                "commit_date": "2026-11-13",
+                                "section": "1x H200 141GB / B300 (Online serving), scaled per #5712",
+                                "recheck": "Re-checked 2026-11-16: two commits since. #4637 (45d7c005) adds `--pipeline-parallel-size 2` for a two-GPU deployment, measured here as the cand-pp2 arms; 40b1153f only documents low-precision attention (FlashInfer fp8 VO / SageAttention), which is lossy and stays off."
                             },
                             "notes": "PR #5712 (47776fd350f5) benchmarks 4-GPU T2V with CFG 2, Ulysses 2, VAE patch parallel 4 spatial_shard_width and opt-in device postprocess (bytes identical for Cosmos3). SeaCache, the channels_last VAE fast path and fp8 are lossy and stay off. VALIDATION PENDING (round 2026-10-22, 4xB300)."
                         },
@@ -3908,9 +3911,10 @@
                             "upstream_recipe": {
                                 "repo": "vllm-project/vllm-omni",
                                 "path": "recipes/cosmos3/Cosmos3-Nano.md",
-                                "commit": "765002061878",
-                                "commit_date": "2026-09-24",
-                                "section": "1x H200 141GB / B300 (Online serving), scaled per #5712"
+                                "commit": "40b1153fe356",
+                                "commit_date": "2026-11-13",
+                                "section": "1x H200 141GB / B300 (Online serving), scaled per #5712",
+                                "recheck": "Re-checked 2026-11-16: two commits since. #4637 (45d7c005) adds `--pipeline-parallel-size 2` for a two-GPU deployment, measured here as the cand-pp2 arms; 40b1153f only documents low-precision attention (FlashInfer fp8 VO / SageAttention), which is lossy and stays off."
                             },
                             "notes": "PR #5712 (47776fd350f5) benchmarks 4-GPU T2V with CFG 2, Ulysses 2, VAE patch parallel 4 spatial_shard_width and opt-in device postprocess (bytes identical for Cosmos3). SeaCache, the channels_last VAE fast path and fp8 are lossy and stay off. VALIDATION PENDING (round 2026-10-22, 2xH200/4xH200)."
                         },
@@ -4055,6 +4059,7 @@
                         "enable_cfg": true,
                         "rms_norm_type": "one-pass",
                         "attn_rms_norm_type": "one-pass",
+                        "model_variant": "omni",
                         "rope_type": "cosmos3_rope",
                         "self_attn_type": "torch_sdpa",
                         "causal_self_attn_type": "torch_sdpa",
@@ -4095,9 +4100,10 @@
                             "upstream_recipe": {
                                 "repo": "ModelTC/LightX2V",
                                 "path": "configs/cosmos3/cosmos3_nano_omni.json",
-                                "commit": "65935cad",
-                                "commit_date": "2026-09-24",
-                                "section": "Nano omni config with cosmos3_nano_omni_t2v_cfg_ulysses_8gpu.json's CFG x Ulysses layout, scaled to 2 x 2"
+                                "commit": "395e2ac49f21",
+                                "commit_date": "2026-11-16",
+                                "section": "Nano omni config with cosmos3_nano_omni_t2v_cfg_ulysses_8gpu.json's CFG x Ulysses layout, scaled to 2 x 2",
+                                "recheck": "Re-checked 2026-11-16: #1673 (395e2ac4, 'LightX2V Refactor') adds `model_variant: omni` to this config and the Cosmos3 loader now requires it (`Cosmos3 requires model_variant='omni', ...`), so the profile's lightx2v_config carries it; no other key of the profile moved."
                             },
                             "notes": "Onboarded 2026-10-23 from the audits (image finding 3, Cosmos3/Wan2.2 finding 6): LightX2V 19c19614 has RUNNER_REGISTER('cosmos3') with tasks t2i/t2v/i2v (lightx2v/models/runners/cosmos3/cosmos3_runner.py) and configs/cosmos3/cosmos3_nano_omni.json matches this case: 35 steps (the harness writes infer_steps from the case), sample_guide_scale 6.0, sample_shift 10, 720x1280, resolution and duration templates off, one-pass norms, cosmos3_rope; offload off. Attention: torch_sdpa, LightX2V's own default for Cosmos3 (transformer_weights.py) and cuDNN / flash SDPA on B300; the upstream configs name flash_attn3 (Hopper-only) or flash_attn2 (the sm80 path). Every attention call is one sequence (_infer_attn passes a single cu_seqlens segment), so torch_sdpa ignoring cu_seqlens is exact. Text is tokenized to its real length (no padding), as in the other rows. Compile: Cosmos3TransformerInfer never calls init_compile/run_block at 19c19614, so use_compile is ignored and the transformer runs eager, LightX2V's only path. The negative prompt comes from the request (the case's), as for the other rows. VALIDATION PENDING (wave 4, 4xB300). First measured by the wave-4 A/B (scripts/run_b300_ab_20261022.sh, WAVE=4)."
                         }
@@ -4216,9 +4222,10 @@
                             "upstream_recipe": {
                                 "repo": "NVIDIA/TensorRT-LLM",
                                 "path": "examples/visual_gen/configs/cosmos3_t2v_bf16_gb200_nvl72.yaml",
-                                "commit": "0372799d1543",
-                                "commit_date": "2026-10-19",
-                                "section": "Blackwell BF16 config: attention_config.backend FA4"
+                                "commit": "b8219bf37065",
+                                "commit_date": "2026-07-01",
+                                "section": "Blackwell BF16 config: attention_config.backend FA4",
+                                "recheck": "Corrected 2026-11-16: the recorded commit is not in this file's history. Its last change is b8219bf3 (2026-07-01, the VisualGen NVL72 tech blog), so the profile was derived from this content."
                             },
                             "notes": "4xB300 A/B 2026-10-22: 26.31 s against VANILLA 26.02 s; VANILLA stays."
                         },
@@ -4489,9 +4496,10 @@
                             "upstream_recipe": {
                                 "repo": "vllm-project/vllm-omni",
                                 "path": "recipes/cosmos3/Cosmos3-Nano.md",
-                                "commit": "765002061878",
-                                "commit_date": "2026-09-24",
-                                "section": "1x H200 141GB / B300 (Online serving), scaled per #5712"
+                                "commit": "40b1153fe356",
+                                "commit_date": "2026-11-13",
+                                "section": "1x H200 141GB / B300 (Online serving), scaled per #5712",
+                                "recheck": "Re-checked 2026-11-16: two commits since. #4637 (45d7c005) adds `--pipeline-parallel-size 2` for a two-GPU deployment, measured here as the cand-pp2 arms; 40b1153f only documents low-precision attention (FlashInfer fp8 VO / SageAttention), which is lossy and stays off."
                             },
                             "notes": "PR #5712 (47776fd350f5) benchmarks 4-GPU T2V with CFG 2, Ulysses 2, VAE patch parallel 4 spatial_shard_width and opt-in device postprocess (bytes identical for Cosmos3). SeaCache, the channels_last VAE fast path and fp8 are lossy and stay off. VALIDATION PENDING (round 2026-10-22, 4xB300)."
                         },
@@ -4506,9 +4514,10 @@
                             "upstream_recipe": {
                                 "repo": "vllm-project/vllm-omni",
                                 "path": "recipes/cosmos3/Cosmos3-Nano.md",
-                                "commit": "765002061878",
-                                "commit_date": "2026-09-24",
-                                "section": "1x H200 141GB / B300 (Online serving), scaled per #5712"
+                                "commit": "40b1153fe356",
+                                "commit_date": "2026-11-13",
+                                "section": "1x H200 141GB / B300 (Online serving), scaled per #5712",
+                                "recheck": "Re-checked 2026-11-16: two commits since. #4637 (45d7c005) adds `--pipeline-parallel-size 2` for a two-GPU deployment, measured here as the cand-pp2 arms; 40b1153f only documents low-precision attention (FlashInfer fp8 VO / SageAttention), which is lossy and stays off."
                             },
                             "notes": "PR #5712 (47776fd350f5) benchmarks 4-GPU T2V with CFG 2, Ulysses 2, VAE patch parallel 4 spatial_shard_width and opt-in device postprocess (bytes identical for Cosmos3). SeaCache, the channels_last VAE fast path and fp8 are lossy and stay off. VALIDATION PENDING (round 2026-10-22, 2xH200/4xH200)."
                         },
@@ -4640,6 +4649,7 @@
                         "enable_cfg": true,
                         "rms_norm_type": "one-pass",
                         "attn_rms_norm_type": "one-pass",
+                        "model_variant": "omni",
                         "rope_type": "cosmos3_rope",
                         "self_attn_type": "torch_sdpa",
                         "causal_self_attn_type": "torch_sdpa",
@@ -4680,9 +4690,10 @@
                             "upstream_recipe": {
                                 "repo": "ModelTC/LightX2V",
                                 "path": "configs/cosmos3/cosmos3_nano_omni.json",
-                                "commit": "65935cad",
-                                "commit_date": "2026-09-24",
-                                "section": "Nano omni config (scripts/cosmos3/cosmos3_nano_omni_i2v.sh) with the CFG x Ulysses layout scaled to 2 x 2"
+                                "commit": "395e2ac49f21",
+                                "commit_date": "2026-11-16",
+                                "section": "Nano omni config (scripts/cosmos3/cosmos3_nano_omni_i2v.sh) with the CFG x Ulysses layout scaled to 2 x 2",
+                                "recheck": "Re-checked 2026-11-16: #1673 (395e2ac4, 'LightX2V Refactor') adds `model_variant: omni` to this config and the Cosmos3 loader now requires it (`Cosmos3 requires model_variant='omni', ...`), so the profile's lightx2v_config carries it; no other key of the profile moved."
                             },
                             "notes": "Onboarded 2026-10-23 from the audits (image finding 3, Cosmos3/Wan2.2 finding 6): LightX2V 19c19614 has RUNNER_REGISTER('cosmos3') with tasks t2i/t2v/i2v (lightx2v/models/runners/cosmos3/cosmos3_runner.py) and configs/cosmos3/cosmos3_nano_omni.json matches this case: 35 steps (the harness writes infer_steps from the case), sample_guide_scale 6.0, sample_shift 10, 720x1280, resolution and duration templates off, one-pass norms, cosmos3_rope; offload off. Attention: torch_sdpa, LightX2V's own default for Cosmos3 (transformer_weights.py) and cuDNN / flash SDPA on B300; the upstream configs name flash_attn3 (Hopper-only) or flash_attn2 (the sm80 path). Every attention call is one sequence (_infer_attn passes a single cu_seqlens segment), so torch_sdpa ignoring cu_seqlens is exact. Text is tokenized to its real length (no padding), as in the other rows. Compile: Cosmos3TransformerInfer never calls init_compile/run_block at 19c19614, so use_compile is ignored and the transformer runs eager, LightX2V's only path. The reference arrives as image_path (a data URI). Two differences from sglang, both LightX2V's own: it resizes the image straight to 1280x720 (no aspect-preserving crop: numerics only), and VAE-encodes it repeated across all 189 frames before keeping the first latent (_prepare_i2v_condition_latents), the extra ~1.9 s TRT-LLM also pays. VALIDATION PENDING (wave 4, 4xB300). First measured by the wave-4 A/B (scripts/run_b300_ab_20261022.sh, WAVE=4)."
                         }
@@ -4801,9 +4812,10 @@
                             "upstream_recipe": {
                                 "repo": "NVIDIA/TensorRT-LLM",
                                 "path": "examples/visual_gen/configs/cosmos3_t2v_bf16_gb200_nvl72.yaml",
-                                "commit": "0372799d1543",
-                                "commit_date": "2026-10-19",
-                                "section": "Blackwell BF16 config: attention_config.backend FA4"
+                                "commit": "b8219bf37065",
+                                "commit_date": "2026-07-01",
+                                "section": "Blackwell BF16 config: attention_config.backend FA4",
+                                "recheck": "Corrected 2026-11-16: the recorded commit is not in this file's history. Its last change is b8219bf3 (2026-07-01, the VisualGen NVL72 tech blog), so the profile was derived from this content."
                             },
                             "notes": "4xB300 A/B 2026-10-22: 28.41 s against VANILLA 28.13 s; VANILLA stays."
                         }
@@ -5009,10 +5021,10 @@
                             "upstream_recipe": {
                                 "repo": "vllm-project/vllm-omni",
                                 "path": "recipes/MiniMaxAI/MiniMax-H3.md",
-                                "commit": "95b1d97f2ec2",
-                                "commit_date": "2026-10-21",
+                                "commit": "b8f128171463",
+                                "commit_date": "2026-11-14",
                                 "section": "Two 24/32 GB GPUs: TP2 distributed layerwise offload",
-                                "recheck": "Re-checked 2026-10-22: the only change since the profile was written moved the FastH3 sections to recipes/FastVideo/ (95b1d97f); the base H3 serving sections are unchanged. The previously recorded f69b1f2b1 was a repo HEAD, not a commit to this file."
+                                "recheck": "Re-checked 2026-11-16: 13 commits since add no new base serving command; they add a consumer 2x24 GB Ref2VA command, ControlNet, Cache-DiT/TaylorSeer, LoRA, LiteVAE, Open-H3-Regenerate-2K and attention schedules (lossy or other tasks, all opt-in), and align vLLM-Omni with vLLM 0.33.0 (#9648)."
                             }
                         },
                         "default": {
@@ -5021,10 +5033,10 @@
                             "upstream_recipe": {
                                 "repo": "vllm-project/vllm-omni",
                                 "path": "recipes/MiniMaxAI/MiniMax-H3.md",
-                                "commit": "95b1d97f2ec2",
-                                "commit_date": "2026-10-21",
+                                "commit": "b8f128171463",
+                                "commit_date": "2026-11-14",
                                 "section": "Two 24/32 GB GPUs: TP2 distributed layerwise offload",
-                                "recheck": "Re-checked 2026-10-22: the only change since the profile was written moved the FastH3 sections to recipes/FastVideo/ (95b1d97f); the base H3 serving sections are unchanged. The previously recorded f69b1f2b1 was a repo HEAD, not a commit to this file."
+                                "recheck": "Re-checked 2026-11-16: 13 commits since add no new base serving command; they add a consumer 2x24 GB Ref2VA command, ControlNet, Cache-DiT/TaylorSeer, LoRA, LiteVAE, Open-H3-Regenerate-2K and attention schedules (lossy or other tasks, all opt-in), and align vLLM-Omni with vLLM 0.33.0 (#9648)."
                             },
                             "num_gpus": 2,
                             "serve_args": "--trust-remote-code --task-type fl2va --num-gpus 2 --tensor-parallel-size 2 --usp 1 --ring 1 --text-encoder-tp-size 2 --vae-patch-parallel-size 2 --vae-parallel-mode tile --vae-use-tiling",
@@ -5042,10 +5054,10 @@
                             "upstream_recipe": {
                                 "repo": "vllm-project/vllm-omni",
                                 "path": "recipes/MiniMaxAI/MiniMax-H3.md",
-                                "commit": "95b1d97f2ec2",
-                                "commit_date": "2026-10-21",
+                                "commit": "b8f128171463",
+                                "commit_date": "2026-11-14",
                                 "section": "Two 24/32 GB GPUs: TP2 distributed layerwise offload",
-                                "recheck": "Re-checked 2026-10-22: the only change since the profile was written moved the FastH3 sections to recipes/FastVideo/ (95b1d97f); the base H3 serving sections are unchanged. The previously recorded f69b1f2b1 was a repo HEAD, not a commit to this file."
+                                "recheck": "Re-checked 2026-11-16: 13 commits since add no new base serving command; they add a consumer 2x24 GB Ref2VA command, ControlNet, Cache-DiT/TaylorSeer, LoRA, LiteVAE, Open-H3-Regenerate-2K and attention schedules (lossy or other tasks, all opt-in), and align vLLM-Omni with vLLM 0.33.0 (#9648)."
                             },
                             "num_gpus": 2,
                             "serve_args": "--trust-remote-code --task-type fl2va --num-gpus 2 --tensor-parallel-size 2 --usp 1 --ring 1 --text-encoder-tp-size 2 --vae-patch-parallel-size 2 --vae-parallel-mode tile --vae-use-tiling --diffusion-attention-backend CUDNN_ATTN",
@@ -5065,10 +5077,10 @@
                             "upstream_recipe": {
                                 "repo": "vllm-project/vllm-omni",
                                 "path": "recipes/MiniMaxAI/MiniMax-H3.md",
-                                "commit": "95b1d97f2ec2",
-                                "commit_date": "2026-10-21",
+                                "commit": "b8f128171463",
+                                "commit_date": "2026-11-14",
                                 "section": "Two 24/32 GB GPUs: TP2 distributed layerwise offload",
-                                "recheck": "Re-checked 2026-10-22: the only change since the profile was written moved the FastH3 sections to recipes/FastVideo/ (95b1d97f); the base H3 serving sections are unchanged. The previously recorded f69b1f2b1 was a repo HEAD, not a commit to this file."
+                                "recheck": "Re-checked 2026-11-16: 13 commits since add no new base serving command; they add a consumer 2x24 GB Ref2VA command, ControlNet, Cache-DiT/TaylorSeer, LoRA, LiteVAE, Open-H3-Regenerate-2K and attention schedules (lossy or other tasks, all opt-in), and align vLLM-Omni with vLLM 0.33.0 (#9648)."
                             },
                             "extra_env": {
                                 "VLLM_WORKER_MULTIPROC_METHOD": "spawn",
@@ -5092,10 +5104,10 @@
                             "upstream_recipe": {
                                 "repo": "vllm-project/vllm-omni",
                                 "path": "recipes/MiniMaxAI/MiniMax-H3.md",
-                                "commit": "95b1d97f2ec2",
-                                "commit_date": "2026-10-21",
+                                "commit": "b8f128171463",
+                                "commit_date": "2026-11-14",
                                 "section": "Four GPUs: throughput-oriented combined service",
-                                "recheck": "Re-checked 2026-10-22: the only change since the profile was written moved the FastH3 sections to recipes/FastVideo/ (95b1d97f); the base H3 serving sections are unchanged. The previously recorded f69b1f2b1 was a repo HEAD, not a commit to this file."
+                                "recheck": "Re-checked 2026-11-16: 13 commits since add no new base serving command; they add a consumer 2x24 GB Ref2VA command, ControlNet, Cache-DiT/TaylorSeer, LoRA, LiteVAE, Open-H3-Regenerate-2K and attention schedules (lossy or other tasks, all opt-in), and align vLLM-Omni with vLLM 0.33.0 (#9648)."
                             },
                             "num_gpus": 2,
                             "serve_args": "--trust-remote-code --task-type fl2va --num-gpus 2 --usp 2 --ring 1 --vae-patch-parallel-size 2 --vae-parallel-mode tile --vae-use-tiling",
@@ -5126,10 +5138,10 @@
                             "upstream_recipe": {
                                 "repo": "vllm-project/vllm-omni",
                                 "path": "recipes/MiniMaxAI/MiniMax-H3.md",
-                                "commit": "95b1d97f2ec2",
-                                "commit_date": "2026-10-21",
+                                "commit": "b8f128171463",
+                                "commit_date": "2026-11-14",
                                 "section": "ROCm four GPUs",
-                                "recheck": "Re-checked 2026-10-22: the only change since the profile was written moved the FastH3 sections to recipes/FastVideo/ (95b1d97f); the base H3 serving sections are unchanged. The previously recorded f69b1f2b1 was a repo HEAD, not a commit to this file."
+                                "recheck": "Re-checked 2026-11-16: 13 commits since add no new base serving command; they add a consumer 2x24 GB Ref2VA command, ControlNet, Cache-DiT/TaylorSeer, LoRA, LiteVAE, Open-H3-Regenerate-2K and attention schedules (lossy or other tasks, all opt-in), and align vLLM-Omni with vLLM 0.33.0 (#9648)."
                             },
                             "num_gpus": 2,
                             "serve_args": "--trust-remote-code --task-type fl2va --num-gpus 2 --usp 2 --ring 1 --text-encoder-tp-size 2 --vae-patch-parallel-size 2 --vae-parallel-mode tile --vae-use-tiling --diffusion-attention-backend FLASH_ATTN",
@@ -5154,9 +5166,10 @@
                             "upstream_recipe": {
                                 "repo": "vllm-project/vllm-omni",
                                 "path": "recipes/MiniMaxAI/MiniMax-H3.md",
-                                "commit": "95b1d97f2ec2",
-                                "commit_date": "2026-10-21",
-                                "section": "Four GPUs: throughput-oriented combined service (no offload, Ulysses, tiled VAE patch parallel, regional compile), scaled to 2 GPUs"
+                                "commit": "b8f128171463",
+                                "commit_date": "2026-11-14",
+                                "section": "Four GPUs: throughput-oriented combined service (no offload, Ulysses, tiled VAE patch parallel, regional compile), scaled to 2 GPUs",
+                                "recheck": "Re-checked 2026-11-16: 13 commits since add no new base serving command; they add a consumer 2x24 GB Ref2VA command, ControlNet, Cache-DiT/TaylorSeer, LoRA, LiteVAE, Open-H3-Regenerate-2K and attention schedules (lossy or other tasks, all opt-in), and align vLLM-Omni with vLLM 0.33.0 (#9648)."
                             },
                             "notes": "Derived from `blackwell-2gpu-static` (the profile B300 selects). Audit 2026-10-23 (H3 finding 5): the selected command is the consumer RTX recipe's placement (TP2) without its offload; the recipe's high-memory pattern (recipes/MiniMaxAI/MiniMax-H3.md 'Four GPUs: throughput-oriented combined service': no offload, Ulysses, tiled VAE patch parallel, regional compile, Ring and TP 1) was last measured as USP2 on B200 at an older build (79.4 vs 73.55 s), never on B300 or 0da1d831. Scaled to 2 GPUs; text-encoder TP 2 and static compile kept from the selected profile. Attention stays CUDNN_ATTN rather than the recipe's TRTLLM_ATTN default: the 2026-10-23 B300 microbenchmark had trtllm-gen 5-20% behind cuDNN at the H3 shapes. VALIDATION PENDING (wave 4, 4xB300)."
                         },
@@ -5171,10 +5184,10 @@
                             "upstream_recipe": {
                                 "repo": "vllm-project/vllm-omni",
                                 "path": "recipes/MiniMaxAI/MiniMax-H3.md",
-                                "commit": "95b1d97f2ec2",
-                                "commit_date": "2026-10-21",
+                                "commit": "b8f128171463",
+                                "commit_date": "2026-11-14",
                                 "section": "Two 24/32 GB GPUs: TP2 distributed layerwise offload",
-                                "recheck": "Re-checked 2026-10-22: the only change since the profile was written moved the FastH3 sections to recipes/FastVideo/ (95b1d97f); the base H3 serving sections are unchanged. The previously recorded f69b1f2b1 was a repo HEAD, not a commit to this file."
+                                "recheck": "Re-checked 2026-11-16: 13 commits since add no new base serving command; they add a consumer 2x24 GB Ref2VA command, ControlNet, Cache-DiT/TaylorSeer, LoRA, LiteVAE, Open-H3-Regenerate-2K and attention schedules (lossy or other tasks, all opt-in), and align vLLM-Omni with vLLM 0.33.0 (#9648)."
                             }
                         },
                         "replica2-throughput": {
@@ -5373,9 +5386,10 @@
                             "upstream_recipe": {
                                 "repo": "NVIDIA/TensorRT-LLM",
                                 "path": "examples/visual_gen/configs/minimax-h3-bf16-8gpu.yaml",
-                                "commit": "92d23a83799d",
-                                "commit_date": "2026-10-09",
-                                "section": "BF16 multi-GPU config scaled to pure Ulysses 2"
+                                "commit": "a8ce1074a66b",
+                                "commit_date": "2026-10-28",
+                                "section": "BF16 multi-GPU config scaled to pure Ulysses 2",
+                                "recheck": "Re-checked 2026-11-16: #20176 (a8ce1074) repurposed the 8-GPU file to 2-GPU pure Ulysses (ulysses_size 2, parallel_vae_size 2) and added a DiT tensor-parallel file (tp_size 2, no CUDA graph, VANILLA); the Ulysses degree is chosen per case here, and TP2 is measured as the cand-tp2 arm."
                             },
                             "extra_env": {
                                 "OMP_NUM_THREADS": "8"
@@ -5397,9 +5411,10 @@
                             "upstream_recipe": {
                                 "repo": "NVIDIA/TensorRT-LLM",
                                 "path": "examples/visual_gen/configs/minimax-h3-bf16-8gpu.yaml",
-                                "commit": "92d23a83799d",
-                                "commit_date": "2026-10-09",
-                                "section": "BF16 multi-GPU config scaled to pure Ulysses 2"
+                                "commit": "a8ce1074a66b",
+                                "commit_date": "2026-10-28",
+                                "section": "BF16 multi-GPU config scaled to pure Ulysses 2",
+                                "recheck": "Re-checked 2026-11-16: #20176 (a8ce1074) repurposed the 8-GPU file to 2-GPU pure Ulysses (ulysses_size 2, parallel_vae_size 2) and added a DiT tensor-parallel file (tp_size 2, no CUDA graph, VANILLA); the Ulysses degree is chosen per case here, and TP2 is measured as the cand-tp2 arm."
                             },
                             "notes": "H3 multi-GPU is pure Ulysses (cfg_size 1: guidance-distilled); CUDA graphs, caches and a non-empty negative prompt are rejected; num_frames must be 17n+5 (124); MiniMaxH3Scheduler counts sigma grid points, so 50 = 49 evaluations, the 49 forwards sglang is sent; flow shifts fixed at 12/3 like the harness. Audio returns as AAC in the MP4. VANILLA attention is torch SDPA (FlashAttention on Hopper); no cache_config or quant_config, so the row is BF16 and cache-free; compile at the case shape so the first request does not recompile; JSON to /v1/videos/sync (or /v1/images/generations), whose reply is the media itself. The YAML is passed with --visual_gen_args (trtllm-serve has no --extra_visual_gen_options). VALIDATION PENDING (round 2026-10-22, 2xH200/4xH200). Blackwell: VANILLA beat FA4 on H3 T2VA 2-GPU, 74.33 against 76.63 s (4xB300 A/B, 2026-10-22), so it is selected there too."
                         },
@@ -5438,9 +5453,10 @@
                             "upstream_recipe": {
                                 "repo": "NVIDIA/TensorRT-LLM",
                                 "path": "examples/visual_gen/configs/minimax-h3-bf16-8gpu.yaml",
-                                "commit": "92d23a83799d",
-                                "commit_date": "2026-10-09",
-                                "section": "BF16 multi-GPU config scaled to pure Ulysses 2"
+                                "commit": "a8ce1074a66b",
+                                "commit_date": "2026-10-28",
+                                "section": "BF16 multi-GPU config scaled to pure Ulysses 2",
+                                "recheck": "Re-checked 2026-11-16: #20176 (a8ce1074) repurposed the 8-GPU file to 2-GPU pure Ulysses (ulysses_size 2, parallel_vae_size 2) and added a DiT tensor-parallel file (tp_size 2, no CUDA graph, VANILLA); the Ulysses degree is chosen per case here, and TP2 is measured as the cand-tp2 arm."
                             },
                             "notes": "H3 T2VA 2-GPU A/B on 4xB300 (2026-10-22): FA4 76.63 s against VANILLA 74.33 s, so the default (VANILLA) stays selected on Blackwell for H3. Kept for future A/Bs."
                         },
@@ -5452,9 +5468,10 @@
                             "upstream_recipe": {
                                 "repo": "NVIDIA/TensorRT-LLM",
                                 "path": "examples/visual_gen/configs/minimax-h3-bf16-8gpu.yaml",
-                                "commit": "92d23a83799d",
-                                "commit_date": "2026-10-09",
-                                "section": "BF16 multi-GPU config scaled to pure Ulysses 2"
+                                "commit": "a8ce1074a66b",
+                                "commit_date": "2026-10-28",
+                                "section": "BF16 multi-GPU config scaled to pure Ulysses 2",
+                                "recheck": "Re-checked 2026-11-16: #20176 (a8ce1074) repurposed the 8-GPU file to 2-GPU pure Ulysses (ulysses_size 2, parallel_vae_size 2) and added a DiT tensor-parallel file (tp_size 2, no CUDA graph, VANILLA); the Ulysses degree is chosen per case here, and TP2 is measured as the cand-tp2 arm."
                             },
                             "extra_env": {
                                 "OMP_NUM_THREADS": "8"
@@ -5899,10 +5916,10 @@
                             "upstream_recipe": {
                                 "repo": "vllm-project/vllm-omni",
                                 "path": "recipes/MiniMaxAI/MiniMax-H3.md",
-                                "commit": "95b1d97f2ec2",
-                                "commit_date": "2026-10-21",
+                                "commit": "b8f128171463",
+                                "commit_date": "2026-11-14",
                                 "section": "Four GPUs: throughput-oriented combined service",
-                                "recheck": "Re-checked 2026-10-22: the only change since the profile was written moved the FastH3 sections to recipes/FastVideo/ (95b1d97f); the base H3 serving sections are unchanged. The previously recorded f69b1f2b1 was a repo HEAD, not a commit to this file."
+                                "recheck": "Re-checked 2026-11-16: 13 commits since add no new base serving command; they add a consumer 2x24 GB Ref2VA command, ControlNet, Cache-DiT/TaylorSeer, LoRA, LiteVAE, Open-H3-Regenerate-2K and attention schedules (lossy or other tasks, all opt-in), and align vLLM-Omni with vLLM 0.33.0 (#9648)."
                             },
                             "num_gpus": 4,
                             "serve_args": "--trust-remote-code --task-type fl2va --num-gpus 4 --usp 4 --ring 1 --vae-patch-parallel-size 4 --vae-parallel-mode tile --vae-use-tiling",
@@ -5919,10 +5936,10 @@
                             "upstream_recipe": {
                                 "repo": "vllm-project/vllm-omni",
                                 "path": "recipes/MiniMaxAI/MiniMax-H3.md",
-                                "commit": "95b1d97f2ec2",
-                                "commit_date": "2026-10-21",
+                                "commit": "b8f128171463",
+                                "commit_date": "2026-11-14",
                                 "section": "ROCm four GPUs",
-                                "recheck": "Re-checked 2026-10-22: the only change since the profile was written moved the FastH3 sections to recipes/FastVideo/ (95b1d97f); the base H3 serving sections are unchanged. The previously recorded f69b1f2b1 was a repo HEAD, not a commit to this file."
+                                "recheck": "Re-checked 2026-11-16: 13 commits since add no new base serving command; they add a consumer 2x24 GB Ref2VA command, ControlNet, Cache-DiT/TaylorSeer, LoRA, LiteVAE, Open-H3-Regenerate-2K and attention schedules (lossy or other tasks, all opt-in), and align vLLM-Omni with vLLM 0.33.0 (#9648)."
                             },
                             "num_gpus": 4,
                             "serve_args": "--trust-remote-code --task-type fl2va --num-gpus 4 --usp 4 --ring 1 --text-encoder-tp-size 4 --vae-patch-parallel-size 4 --vae-parallel-mode tile --vae-use-tiling --diffusion-attention-backend FLASH_ATTN",
@@ -6150,9 +6167,10 @@
                             "upstream_recipe": {
                                 "repo": "NVIDIA/TensorRT-LLM",
                                 "path": "examples/visual_gen/configs/minimax-h3-bf16-8gpu.yaml",
-                                "commit": "92d23a83799d",
-                                "commit_date": "2026-10-09",
-                                "section": "BF16 multi-GPU config scaled to pure Ulysses 4"
+                                "commit": "a8ce1074a66b",
+                                "commit_date": "2026-10-28",
+                                "section": "BF16 multi-GPU config scaled to pure Ulysses 4",
+                                "recheck": "Re-checked 2026-11-16: #20176 (a8ce1074) repurposed the 8-GPU file to 2-GPU pure Ulysses (ulysses_size 2, parallel_vae_size 2) and added a DiT tensor-parallel file (tp_size 2, no CUDA graph, VANILLA); the Ulysses degree is chosen per case here, and TP2 is measured as the cand-tp2 arm."
                             },
                             "extra_env": {
                                 "OMP_NUM_THREADS": "8"
@@ -6174,9 +6192,10 @@
                             "upstream_recipe": {
                                 "repo": "NVIDIA/TensorRT-LLM",
                                 "path": "examples/visual_gen/configs/minimax-h3-bf16-8gpu.yaml",
-                                "commit": "92d23a83799d",
-                                "commit_date": "2026-10-09",
-                                "section": "BF16 multi-GPU config scaled to pure Ulysses 4"
+                                "commit": "a8ce1074a66b",
+                                "commit_date": "2026-10-28",
+                                "section": "BF16 multi-GPU config scaled to pure Ulysses 4",
+                                "recheck": "Re-checked 2026-11-16: #20176 (a8ce1074) repurposed the 8-GPU file to 2-GPU pure Ulysses (ulysses_size 2, parallel_vae_size 2) and added a DiT tensor-parallel file (tp_size 2, no CUDA graph, VANILLA); the Ulysses degree is chosen per case here, and TP2 is measured as the cand-tp2 arm."
                             },
                             "notes": "H3 multi-GPU is pure Ulysses (cfg_size 1: guidance-distilled); CUDA graphs, caches and a non-empty negative prompt are rejected; num_frames must be 17n+5 (124); MiniMaxH3Scheduler counts sigma grid points, so 50 = 49 evaluations, the 49 forwards sglang is sent; flow shifts fixed at 12/3 like the harness. Audio returns as AAC in the MP4. VANILLA attention is torch SDPA (FlashAttention on Hopper); no cache_config or quant_config, so the row is BF16 and cache-free; compile at the case shape so the first request does not recompile; JSON to /v1/videos/sync (or /v1/images/generations), whose reply is the media itself. The YAML is passed with --visual_gen_args (trtllm-serve has no --extra_visual_gen_options). VALIDATION PENDING (round 2026-10-22, 2xH200/4xH200). Blackwell: VANILLA beat FA4 on H3 T2VA 2-GPU, 74.33 against 76.63 s (4xB300 A/B, 2026-10-22), so it is selected there too."
                         },
@@ -6215,9 +6234,10 @@
                             "upstream_recipe": {
                                 "repo": "NVIDIA/TensorRT-LLM",
                                 "path": "examples/visual_gen/configs/minimax-h3-bf16-8gpu.yaml",
-                                "commit": "92d23a83799d",
-                                "commit_date": "2026-10-09",
-                                "section": "BF16 multi-GPU config scaled to pure Ulysses 4"
+                                "commit": "a8ce1074a66b",
+                                "commit_date": "2026-10-28",
+                                "section": "BF16 multi-GPU config scaled to pure Ulysses 4",
+                                "recheck": "Re-checked 2026-11-16: #20176 (a8ce1074) repurposed the 8-GPU file to 2-GPU pure Ulysses (ulysses_size 2, parallel_vae_size 2) and added a DiT tensor-parallel file (tp_size 2, no CUDA graph, VANILLA); the Ulysses degree is chosen per case here, and TP2 is measured as the cand-tp2 arm."
                             },
                             "notes": "H3 T2VA 2-GPU A/B on 4xB300 (2026-10-22): FA4 76.63 s against VANILLA 74.33 s, so the default (VANILLA) stays selected on Blackwell for H3. Kept for future A/Bs."
                         },
@@ -6256,9 +6276,10 @@
                             "upstream_recipe": {
                                 "repo": "NVIDIA/TensorRT-LLM",
                                 "path": "examples/visual_gen/configs/minimax-h3-bf16-8gpu.yaml",
-                                "commit": "92d23a83799d",
-                                "commit_date": "2026-10-09",
-                                "section": "BF16 multi-GPU config scaled to pure Ulysses 4"
+                                "commit": "a8ce1074a66b",
+                                "commit_date": "2026-10-28",
+                                "section": "BF16 multi-GPU config scaled to pure Ulysses 4",
+                                "recheck": "Re-checked 2026-11-16: #20176 (a8ce1074) repurposed the 8-GPU file to 2-GPU pure Ulysses (ulysses_size 2, parallel_vae_size 2) and added a DiT tensor-parallel file (tp_size 2, no CUDA graph, VANILLA); the Ulysses degree is chosen per case here, and TP2 is measured as the cand-tp2 arm."
                             },
                             "extra_env": {
                                 "OMP_NUM_THREADS": "8"
@@ -6793,10 +6814,10 @@
                             "upstream_recipe": {
                                 "repo": "vllm-project/vllm-omni",
                                 "path": "recipes/MiniMaxAI/MiniMax-H3.md",
-                                "commit": "95b1d97f2ec2",
-                                "commit_date": "2026-10-21",
+                                "commit": "b8f128171463",
+                                "commit_date": "2026-11-14",
                                 "section": "Two 24/32 GB GPUs: TP2 distributed layerwise offload",
-                                "recheck": "Re-checked 2026-10-22: the only change since the profile was written moved the FastH3 sections to recipes/FastVideo/ (95b1d97f); the base H3 serving sections are unchanged. The previously recorded f69b1f2b1 was a repo HEAD, not a commit to this file."
+                                "recheck": "Re-checked 2026-11-16: 13 commits since add no new base serving command; they add a consumer 2x24 GB Ref2VA command, ControlNet, Cache-DiT/TaylorSeer, LoRA, LiteVAE, Open-H3-Regenerate-2K and attention schedules (lossy or other tasks, all opt-in), and align vLLM-Omni with vLLM 0.33.0 (#9648)."
                             }
                         },
                         "default": {
@@ -6805,10 +6826,10 @@
                             "upstream_recipe": {
                                 "repo": "vllm-project/vllm-omni",
                                 "path": "recipes/MiniMaxAI/MiniMax-H3.md",
-                                "commit": "95b1d97f2ec2",
-                                "commit_date": "2026-10-21",
+                                "commit": "b8f128171463",
+                                "commit_date": "2026-11-14",
                                 "section": "Two 24/32 GB GPUs: TP2 distributed layerwise offload",
-                                "recheck": "Re-checked 2026-10-22: the only change since the profile was written moved the FastH3 sections to recipes/FastVideo/ (95b1d97f); the base H3 serving sections are unchanged. The previously recorded f69b1f2b1 was a repo HEAD, not a commit to this file."
+                                "recheck": "Re-checked 2026-11-16: 13 commits since add no new base serving command; they add a consumer 2x24 GB Ref2VA command, ControlNet, Cache-DiT/TaylorSeer, LoRA, LiteVAE, Open-H3-Regenerate-2K and attention schedules (lossy or other tasks, all opt-in), and align vLLM-Omni with vLLM 0.33.0 (#9648)."
                             },
                             "num_gpus": 2,
                             "serve_args": "--trust-remote-code --task-type ref2va --num-gpus 2 --tensor-parallel-size 2 --usp 1 --ring 1 --text-encoder-tp-size 2 --vae-patch-parallel-size 2 --vae-parallel-mode tile --vae-use-tiling",
@@ -6826,10 +6847,10 @@
                             "upstream_recipe": {
                                 "repo": "vllm-project/vllm-omni",
                                 "path": "recipes/MiniMaxAI/MiniMax-H3.md",
-                                "commit": "95b1d97f2ec2",
-                                "commit_date": "2026-10-21",
+                                "commit": "b8f128171463",
+                                "commit_date": "2026-11-14",
                                 "section": "Two 24/32 GB GPUs: TP2 distributed layerwise offload",
-                                "recheck": "Re-checked 2026-10-22: the only change since the profile was written moved the FastH3 sections to recipes/FastVideo/ (95b1d97f); the base H3 serving sections are unchanged. The previously recorded f69b1f2b1 was a repo HEAD, not a commit to this file."
+                                "recheck": "Re-checked 2026-11-16: 13 commits since add no new base serving command; they add a consumer 2x24 GB Ref2VA command, ControlNet, Cache-DiT/TaylorSeer, LoRA, LiteVAE, Open-H3-Regenerate-2K and attention schedules (lossy or other tasks, all opt-in), and align vLLM-Omni with vLLM 0.33.0 (#9648)."
                             },
                             "num_gpus": 2,
                             "serve_args": "--trust-remote-code --task-type ref2va --num-gpus 2 --tensor-parallel-size 2 --usp 1 --ring 1 --text-encoder-tp-size 2 --vae-patch-parallel-size 2 --vae-parallel-mode tile --vae-use-tiling --diffusion-attention-backend CUDNN_ATTN",
@@ -6849,10 +6870,10 @@
                             "upstream_recipe": {
                                 "repo": "vllm-project/vllm-omni",
                                 "path": "recipes/MiniMaxAI/MiniMax-H3.md",
-                                "commit": "95b1d97f2ec2",
-                                "commit_date": "2026-10-21",
+                                "commit": "b8f128171463",
+                                "commit_date": "2026-11-14",
                                 "section": "Two 24/32 GB GPUs: TP2 distributed layerwise offload",
-                                "recheck": "Re-checked 2026-10-22: the only change since the profile was written moved the FastH3 sections to recipes/FastVideo/ (95b1d97f); the base H3 serving sections are unchanged. The previously recorded f69b1f2b1 was a repo HEAD, not a commit to this file."
+                                "recheck": "Re-checked 2026-11-16: 13 commits since add no new base serving command; they add a consumer 2x24 GB Ref2VA command, ControlNet, Cache-DiT/TaylorSeer, LoRA, LiteVAE, Open-H3-Regenerate-2K and attention schedules (lossy or other tasks, all opt-in), and align vLLM-Omni with vLLM 0.33.0 (#9648)."
                             },
                             "extra_env": {
                                 "VLLM_WORKER_MULTIPROC_METHOD": "spawn",
@@ -6876,10 +6897,10 @@
                             "upstream_recipe": {
                                 "repo": "vllm-project/vllm-omni",
                                 "path": "recipes/MiniMaxAI/MiniMax-H3.md",
-                                "commit": "95b1d97f2ec2",
-                                "commit_date": "2026-10-21",
+                                "commit": "b8f128171463",
+                                "commit_date": "2026-11-14",
                                 "section": "Four GPUs: throughput-oriented combined service",
-                                "recheck": "Re-checked 2026-10-22: the only change since the profile was written moved the FastH3 sections to recipes/FastVideo/ (95b1d97f); the base H3 serving sections are unchanged. The previously recorded f69b1f2b1 was a repo HEAD, not a commit to this file."
+                                "recheck": "Re-checked 2026-11-16: 13 commits since add no new base serving command; they add a consumer 2x24 GB Ref2VA command, ControlNet, Cache-DiT/TaylorSeer, LoRA, LiteVAE, Open-H3-Regenerate-2K and attention schedules (lossy or other tasks, all opt-in), and align vLLM-Omni with vLLM 0.33.0 (#9648)."
                             },
                             "num_gpus": 2,
                             "serve_args": "--trust-remote-code --task-type ref2va --num-gpus 2 --usp 2 --ring 1 --vae-patch-parallel-size 2 --vae-parallel-mode tile --vae-use-tiling",
@@ -6910,10 +6931,10 @@
                             "upstream_recipe": {
                                 "repo": "vllm-project/vllm-omni",
                                 "path": "recipes/MiniMaxAI/MiniMax-H3.md",
-                                "commit": "95b1d97f2ec2",
-                                "commit_date": "2026-10-21",
+                                "commit": "b8f128171463",
+                                "commit_date": "2026-11-14",
                                 "section": "ROCm four GPUs",
-                                "recheck": "Re-checked 2026-10-22: the only change since the profile was written moved the FastH3 sections to recipes/FastVideo/ (95b1d97f); the base H3 serving sections are unchanged. The previously recorded f69b1f2b1 was a repo HEAD, not a commit to this file."
+                                "recheck": "Re-checked 2026-11-16: 13 commits since add no new base serving command; they add a consumer 2x24 GB Ref2VA command, ControlNet, Cache-DiT/TaylorSeer, LoRA, LiteVAE, Open-H3-Regenerate-2K and attention schedules (lossy or other tasks, all opt-in), and align vLLM-Omni with vLLM 0.33.0 (#9648)."
                             },
                             "num_gpus": 2,
                             "serve_args": "--trust-remote-code --task-type ref2va --num-gpus 2 --usp 2 --ring 1 --text-encoder-tp-size 2 --vae-patch-parallel-size 2 --vae-parallel-mode tile --vae-use-tiling --diffusion-attention-backend FLASH_ATTN",
@@ -6938,9 +6959,10 @@
                             "upstream_recipe": {
                                 "repo": "vllm-project/vllm-omni",
                                 "path": "recipes/MiniMaxAI/MiniMax-H3.md",
-                                "commit": "95b1d97f2ec2",
-                                "commit_date": "2026-10-21",
-                                "section": "Four GPUs: throughput-oriented combined service (no offload, Ulysses, tiled VAE patch parallel, regional compile), scaled to 2 GPUs"
+                                "commit": "b8f128171463",
+                                "commit_date": "2026-11-14",
+                                "section": "Four GPUs: throughput-oriented combined service (no offload, Ulysses, tiled VAE patch parallel, regional compile), scaled to 2 GPUs",
+                                "recheck": "Re-checked 2026-11-16: 13 commits since add no new base serving command; they add a consumer 2x24 GB Ref2VA command, ControlNet, Cache-DiT/TaylorSeer, LoRA, LiteVAE, Open-H3-Regenerate-2K and attention schedules (lossy or other tasks, all opt-in), and align vLLM-Omni with vLLM 0.33.0 (#9648)."
                             },
                             "notes": "Derived from `blackwell-2gpu-static` (the profile B300 selects). Audit 2026-10-23 (H3 finding 5): the selected command is the consumer RTX recipe's placement (TP2) without its offload; the recipe's high-memory pattern (recipes/MiniMaxAI/MiniMax-H3.md 'Four GPUs: throughput-oriented combined service': no offload, Ulysses, tiled VAE patch parallel, regional compile, Ring and TP 1) was last measured as USP2 on B200 at an older build (79.4 vs 73.55 s), never on B300 or 0da1d831. Scaled to 2 GPUs; text-encoder TP 2 and static compile kept from the selected profile. Attention stays CUDNN_ATTN rather than the recipe's TRTLLM_ATTN default: the 2026-10-23 B300 microbenchmark had trtllm-gen 5-20% behind cuDNN at the H3 shapes. VALIDATION PENDING (wave 4, 4xB300)."
                         }

@@ -177,9 +177,10 @@
           "upstream_recipe": {
             "repo": "vllm-project/vllm-omni",
             "path": "recipes/cosmos3/Cosmos3-Nano.md",
-            "commit": "765002061878",
-            "commit_date": "2026-09-24",
-            "section": "1x H200 141GB / B300 (Online serving), scaled per #5712"
+            "commit": "40b1153fe356",
+            "commit_date": "2026-11-13",
+            "section": "1x H200 141GB / B300 (Online serving), scaled per #5712",
+            "recheck": "Re-checked 2026-11-16: two commits since. #4637 (45d7c005) adds `--pipeline-parallel-size 2` for a two-GPU deployment, measured here as the cand-pp2 arms; 40b1153f only documents low-precision attention (FlashInfer fp8 VO / SageAttention), which is lossy and stays off."
           },
           "notes": "PR #5712 (47776fd350f5) benchmarks 4-GPU T2V with CFG 2, Ulysses 2, VAE patch parallel 4 spatial_shard_width and opt-in device postprocess (bytes identical for Cosmos3). SeaCache, the channels_last VAE fast path and fp8 are lossy and stay off. VALIDATION PENDING (round 2026-10-22, 4xB300)."
         },
@@ -194,9 +195,10 @@
           "upstream_recipe": {
             "repo": "vllm-project/vllm-omni",
             "path": "recipes/cosmos3/Cosmos3-Nano.md",
-            "commit": "765002061878",
-            "commit_date": "2026-09-24",
-            "section": "1x H200 141GB / B300 (Online serving), scaled per #5712"
+            "commit": "40b1153fe356",
+            "commit_date": "2026-11-13",
+            "section": "1x H200 141GB / B300 (Online serving), scaled per #5712",
+            "recheck": "Re-checked 2026-11-16: two commits since. #4637 (45d7c005) adds `--pipeline-parallel-size 2` for a two-GPU deployment, measured here as the cand-pp2 arms; 40b1153f only documents low-precision attention (FlashInfer fp8 VO / SageAttention), which is lossy and stays off."
           },
           "notes": "PR #5712 (47776fd350f5) benchmarks 4-GPU T2V with CFG 2, Ulysses 2, VAE patch parallel 4 spatial_shard_width and opt-in device postprocess (bytes identical for Cosmos3). SeaCache, the channels_last VAE fast path and fp8 are lossy and stay off. VALIDATION PENDING (round 2026-10-22, 2xH200/4xH200)."
         },
@@ -343,6 +345,7 @@
         "enable_cfg": true,
         "rms_norm_type": "one-pass",
         "attn_rms_norm_type": "one-pass",
+        "model_variant": "omni",
         "rope_type": "cosmos3_rope",
         "self_attn_type": "torch_sdpa",
         "causal_self_attn_type": "torch_sdpa",
@@ -383,9 +386,10 @@
           "upstream_recipe": {
             "repo": "ModelTC/LightX2V",
             "path": "configs/cosmos3/cosmos3_nano_omni.json",
-            "commit": "65935cad",
-            "commit_date": "2026-09-24",
-            "section": "Nano omni config (scripts/cosmos3/cosmos3_nano_omni_i2v.sh) with the CFG x Ulysses layout scaled to 2 x 2"
+            "commit": "395e2ac49f21",
+            "commit_date": "2026-11-16",
+            "section": "Nano omni config (scripts/cosmos3/cosmos3_nano_omni_i2v.sh) with the CFG x Ulysses layout scaled to 2 x 2",
+            "recheck": "Re-checked 2026-11-16: #1673 (395e2ac4, 'LightX2V Refactor') adds `model_variant: omni` to this config and the Cosmos3 loader now requires it (`Cosmos3 requires model_variant='omni', ...`), so the profile's lightx2v_config carries it; no other key of the profile moved."
           },
           "notes": "Onboarded 2026-10-23 from the audits (image finding 3, Cosmos3/Wan2.2 finding 6): LightX2V 19c19614 has RUNNER_REGISTER('cosmos3') with tasks t2i/t2v/i2v (lightx2v/models/runners/cosmos3/cosmos3_runner.py) and configs/cosmos3/cosmos3_nano_omni.json matches this case: 35 steps (the harness writes infer_steps from the case), sample_guide_scale 6.0, sample_shift 10, 720x1280, resolution and duration templates off, one-pass norms, cosmos3_rope; offload off. Attention: torch_sdpa, LightX2V's own default for Cosmos3 (transformer_weights.py) and cuDNN / flash SDPA on B300; the upstream configs name flash_attn3 (Hopper-only) or flash_attn2 (the sm80 path). Every attention call is one sequence (_infer_attn passes a single cu_seqlens segment), so torch_sdpa ignoring cu_seqlens is exact. Text is tokenized to its real length (no padding), as in the other rows. Compile: Cosmos3TransformerInfer never calls init_compile/run_block at 19c19614, so use_compile is ignored and the transformer runs eager, LightX2V's only path. The reference arrives as image_path (a data URI). Two differences from sglang, both LightX2V's own: it resizes the image straight to 1280x720 (no aspect-preserving crop: numerics only), and VAE-encodes it repeated across all 189 frames before keeping the first latent (_prepare_i2v_condition_latents), the extra ~1.9 s TRT-LLM also pays. VALIDATION PENDING (wave 4, 4xB300). First measured by the wave-4 A/B (scripts/run_b300_ab_20261022.sh, WAVE=4)."
         }
@@ -505,9 +509,10 @@
           "upstream_recipe": {
             "repo": "NVIDIA/TensorRT-LLM",
             "path": "examples/visual_gen/configs/cosmos3_t2v_bf16_gb200_nvl72.yaml",
-            "commit": "0372799d1543",
-            "commit_date": "2026-10-19",
-            "section": "Blackwell BF16 config: attention_config.backend FA4"
+            "commit": "b8219bf37065",
+            "commit_date": "2026-07-01",
+            "section": "Blackwell BF16 config: attention_config.backend FA4",
+            "recheck": "Corrected 2026-11-16: the recorded commit is not in this file's history. Its last change is b8219bf3 (2026-07-01, the VisualGen NVL72 tech blog), so the profile was derived from this content."
           },
           "notes": "4xB300 A/B 2026-10-22: 28.41 s against VANILLA 28.13 s; VANILLA stays."
         }

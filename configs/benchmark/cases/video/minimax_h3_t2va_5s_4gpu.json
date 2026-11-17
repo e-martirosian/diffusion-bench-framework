@@ -134,10 +134,10 @@
           "upstream_recipe": {
             "repo": "vllm-project/vllm-omni",
             "path": "recipes/MiniMaxAI/MiniMax-H3.md",
-            "commit": "95b1d97f2ec2",
-            "commit_date": "2026-10-21",
+            "commit": "b8f128171463",
+            "commit_date": "2026-11-14",
             "section": "Four GPUs: throughput-oriented combined service",
-            "recheck": "Re-checked 2026-10-22: the only change since the profile was written moved the FastH3 sections to recipes/FastVideo/ (95b1d97f); the base H3 serving sections are unchanged. The previously recorded f69b1f2b1 was a repo HEAD, not a commit to this file."
+            "recheck": "Re-checked 2026-11-16: 13 commits since add no new base serving command; they add a consumer 2x24 GB Ref2VA command, ControlNet, Cache-DiT/TaylorSeer, LoRA, LiteVAE, Open-H3-Regenerate-2K and attention schedules (lossy or other tasks, all opt-in), and align vLLM-Omni with vLLM 0.33.0 (#9648)."
           },
           "num_gpus": 4,
           "serve_args": "--trust-remote-code --task-type fl2va --num-gpus 4 --usp 4 --ring 1 --vae-patch-parallel-size 4 --vae-parallel-mode tile --vae-use-tiling",
@@ -154,10 +154,10 @@
           "upstream_recipe": {
             "repo": "vllm-project/vllm-omni",
             "path": "recipes/MiniMaxAI/MiniMax-H3.md",
-            "commit": "95b1d97f2ec2",
-            "commit_date": "2026-10-21",
+            "commit": "b8f128171463",
+            "commit_date": "2026-11-14",
             "section": "ROCm four GPUs",
-            "recheck": "Re-checked 2026-10-22: the only change since the profile was written moved the FastH3 sections to recipes/FastVideo/ (95b1d97f); the base H3 serving sections are unchanged. The previously recorded f69b1f2b1 was a repo HEAD, not a commit to this file."
+            "recheck": "Re-checked 2026-11-16: 13 commits since add no new base serving command; they add a consumer 2x24 GB Ref2VA command, ControlNet, Cache-DiT/TaylorSeer, LoRA, LiteVAE, Open-H3-Regenerate-2K and attention schedules (lossy or other tasks, all opt-in), and align vLLM-Omni with vLLM 0.33.0 (#9648)."
           },
           "num_gpus": 4,
           "serve_args": "--trust-remote-code --task-type fl2va --num-gpus 4 --usp 4 --ring 1 --text-encoder-tp-size 4 --vae-patch-parallel-size 4 --vae-parallel-mode tile --vae-use-tiling --diffusion-attention-backend FLASH_ATTN",
@@ -387,9 +387,10 @@
           "upstream_recipe": {
             "repo": "NVIDIA/TensorRT-LLM",
             "path": "examples/visual_gen/configs/minimax-h3-bf16-8gpu.yaml",
-            "commit": "92d23a83799d",
-            "commit_date": "2026-10-09",
-            "section": "BF16 multi-GPU config scaled to pure Ulysses 4"
+            "commit": "a8ce1074a66b",
+            "commit_date": "2026-10-28",
+            "section": "BF16 multi-GPU config scaled to pure Ulysses 4",
+            "recheck": "Re-checked 2026-11-16: #20176 (a8ce1074) repurposed the 8-GPU file to 2-GPU pure Ulysses (ulysses_size 2, parallel_vae_size 2) and added a DiT tensor-parallel file (tp_size 2, no CUDA graph, VANILLA); the Ulysses degree is chosen per case here, and TP2 is measured as the cand-tp2 arm."
           },
           "extra_env": {
             "OMP_NUM_THREADS": "8"
@@ -411,9 +412,10 @@
           "upstream_recipe": {
             "repo": "NVIDIA/TensorRT-LLM",
             "path": "examples/visual_gen/configs/minimax-h3-bf16-8gpu.yaml",
-            "commit": "92d23a83799d",
-            "commit_date": "2026-10-09",
-            "section": "BF16 multi-GPU config scaled to pure Ulysses 4"
+            "commit": "a8ce1074a66b",
+            "commit_date": "2026-10-28",
+            "section": "BF16 multi-GPU config scaled to pure Ulysses 4",
+            "recheck": "Re-checked 2026-11-16: #20176 (a8ce1074) repurposed the 8-GPU file to 2-GPU pure Ulysses (ulysses_size 2, parallel_vae_size 2) and added a DiT tensor-parallel file (tp_size 2, no CUDA graph, VANILLA); the Ulysses degree is chosen per case here, and TP2 is measured as the cand-tp2 arm."
           },
           "notes": "H3 multi-GPU is pure Ulysses (cfg_size 1: guidance-distilled); CUDA graphs, caches and a non-empty negative prompt are rejected; num_frames must be 17n+5 (124); MiniMaxH3Scheduler counts sigma grid points, so 50 = 49 evaluations, the 49 forwards sglang is sent; flow shifts fixed at 12/3 like the harness. Audio returns as AAC in the MP4. VANILLA attention is torch SDPA (FlashAttention on Hopper); no cache_config or quant_config, so the row is BF16 and cache-free; compile at the case shape so the first request does not recompile; JSON to /v1/videos/sync (or /v1/images/generations), whose reply is the media itself. The YAML is passed with --visual_gen_args (trtllm-serve has no --extra_visual_gen_options). VALIDATION PENDING (round 2026-10-22, 2xH200/4xH200). Blackwell: VANILLA beat FA4 on H3 T2VA 2-GPU, 74.33 against 76.63 s (4xB300 A/B, 2026-10-22), so it is selected there too."
         },
@@ -452,9 +454,10 @@
           "upstream_recipe": {
             "repo": "NVIDIA/TensorRT-LLM",
             "path": "examples/visual_gen/configs/minimax-h3-bf16-8gpu.yaml",
-            "commit": "92d23a83799d",
-            "commit_date": "2026-10-09",
-            "section": "BF16 multi-GPU config scaled to pure Ulysses 4"
+            "commit": "a8ce1074a66b",
+            "commit_date": "2026-10-28",
+            "section": "BF16 multi-GPU config scaled to pure Ulysses 4",
+            "recheck": "Re-checked 2026-11-16: #20176 (a8ce1074) repurposed the 8-GPU file to 2-GPU pure Ulysses (ulysses_size 2, parallel_vae_size 2) and added a DiT tensor-parallel file (tp_size 2, no CUDA graph, VANILLA); the Ulysses degree is chosen per case here, and TP2 is measured as the cand-tp2 arm."
           },
           "notes": "H3 T2VA 2-GPU A/B on 4xB300 (2026-10-22): FA4 76.63 s against VANILLA 74.33 s, so the default (VANILLA) stays selected on Blackwell for H3. Kept for future A/Bs."
         },
@@ -493,9 +496,10 @@
           "upstream_recipe": {
             "repo": "NVIDIA/TensorRT-LLM",
             "path": "examples/visual_gen/configs/minimax-h3-bf16-8gpu.yaml",
-            "commit": "92d23a83799d",
-            "commit_date": "2026-10-09",
-            "section": "BF16 multi-GPU config scaled to pure Ulysses 4"
+            "commit": "a8ce1074a66b",
+            "commit_date": "2026-10-28",
+            "section": "BF16 multi-GPU config scaled to pure Ulysses 4",
+            "recheck": "Re-checked 2026-11-16: #20176 (a8ce1074) repurposed the 8-GPU file to 2-GPU pure Ulysses (ulysses_size 2, parallel_vae_size 2) and added a DiT tensor-parallel file (tp_size 2, no CUDA graph, VANILLA); the Ulysses degree is chosen per case here, and TP2 is measured as the cand-tp2 arm."
           },
           "extra_env": {
             "OMP_NUM_THREADS": "8"
