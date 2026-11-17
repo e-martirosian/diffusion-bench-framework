@@ -3318,6 +3318,70 @@
                         }
                     }
                 },
+                "lightx2v": {
+                    "reason": "LightX2V 19c19614 serves Cosmos3 (cosmos3 runner, configs/cosmos3/cosmos3_nano_omni.json), but only a Blackwell profile exists (2026-10-23); Hopper and AMD need their own attention choice and a measurement.",
+                    "model_cls": "cosmos3",
+                    "lightx2v_task": "t2i",
+                    "num_gpus": 2,
+                    "serve_args": "",
+                    "extra_env": {},
+                    "lightx2v_config": {
+                        "sample_guide_scale": 6.0,
+                        "sample_shift": 10.0,
+                        "size": [
+                            720,
+                            1280
+                        ],
+                        "enable_cfg": true,
+                        "rms_norm_type": "one-pass",
+                        "attn_rms_norm_type": "one-pass",
+                        "model_variant": "omni",
+                        "rope_type": "cosmos3_rope",
+                        "self_attn_type": "torch_sdpa",
+                        "causal_self_attn_type": "torch_sdpa",
+                        "add_resolution_template": false,
+                        "add_duration_template": false,
+                        "cpu_offload": false,
+                        "vae_cpu_offload": false,
+                        "lazy_load": false,
+                        "unload_modules": false,
+                        "num_frames": 1,
+                        "parallel": {
+                            "cfg_p_size": 2
+                        }
+                    },
+                    "model_allow_patterns": [
+                        "transformer/*",
+                        "vae/*",
+                        "scheduler/*",
+                        "text_tokenizer/*",
+                        "*.json",
+                        "*.txt"
+                    ],
+                    "command_profiles": {
+                        "blackwell-cfg2-sdpa": {
+                            "description": "Blackwell LightX2V Cosmos3 t2i: the upstream Nano omni config, torch SDPA, CFG parallel 2, resident.",
+                            "hardware": [
+                                "b200",
+                                "gb200",
+                                "b300",
+                                "gb300"
+                            ],
+                            "framework_ref": "lightx2v main 19c19614b067 (2026-10-21)",
+                            "num_gpus": 2,
+                            "serve_args": "",
+                            "upstream_recipe": {
+                                "repo": "ModelTC/LightX2V",
+                                "path": "configs/cosmos3/cosmos3_nano_omni.json",
+                                "commit": "395e2ac49f21",
+                                "commit_date": "2026-11-16",
+                                "section": "Nano omni config, num_frames 1 for the runner's t2i task, CFG parallel 2 (cfg_p_size, as cosmos3_nano_omni_t2v_cfg_ulysses_8gpu.json)",
+                                "recheck": "Re-checked 2026-11-16: #1673 (395e2ac4, 'LightX2V Refactor') adds `model_variant: omni` to this config and the Cosmos3 loader now requires it (`Cosmos3 requires model_variant='omni', ...`), so the profile's lightx2v_config carries it; no other key of the profile moved."
+                            },
+                            "notes": "Onboarded 2026-10-23 from the audits (image finding 3, Cosmos3/Wan2.2 finding 6): LightX2V 19c19614 has RUNNER_REGISTER('cosmos3') with tasks t2i/t2v/i2v (lightx2v/models/runners/cosmos3/cosmos3_runner.py) and configs/cosmos3/cosmos3_nano_omni.json matches this case: 35 steps (the harness writes infer_steps from the case), sample_guide_scale 6.0, sample_shift 10, 720x1280, resolution and duration templates off, one-pass norms, cosmos3_rope; offload off. Attention: torch_sdpa, LightX2V's own default for Cosmos3 (transformer_weights.py) and cuDNN / flash SDPA on B300; the upstream configs name flash_attn3 (Hopper-only) or flash_attn2 (the sm80 path). Every attention call is one sequence (_infer_attn passes a single cu_seqlens segment), so torch_sdpa ignoring cu_seqlens is exact. Text is tokenized to its real length (no padding), as in the other rows. Compile: Cosmos3TransformerInfer never calls init_compile/run_block at 19c19614, so use_compile is ignored and the transformer runs eager, LightX2V's only path. The response is the sync image endpoint's PNG (pipeline_image_encode.py). Its scheduler has no guidance interval, so LightX2V applies CFG on all 35 steps where sglang, TRT-LLM and vLLM-Omni apply it on the 33 inside the T2I window (400, 1000): MORE work for LightX2V, though latency-neutral under CFG parallel (the uncond rank runs alongside). VALIDATION PENDING (wave 4, 4xB300). First measured by the wave-4 A/B (scripts/run_b300_ab_20261022.sh, WAVE=4)."
+                        }
+                    }
+                },
                 "trtllm-visual": {
                     "num_gpus": 2,
                     "serve_args": "",
@@ -3664,8 +3728,8 @@
                         "reason": "LightX2V 19c19614's cosmos3 runner answers /v1/tasks/image/sync with HTTP 500 'Image inference did not return in-memory PNG bytes (result_png)' (4xB300, 2026-10-23): its T2I task does not populate the sync endpoint's in-memory PNG."
                     },
                     "b300": {
-                        "status": "failed",
-                        "reason": "LightX2V 19c19614's cosmos3 runner answers /v1/tasks/image/sync with HTTP 500 'Image inference did not return in-memory PNG bytes (result_png)' (4xB300, 2026-10-23): its T2I task does not populate the sync endpoint's in-memory PNG."
+                        "status": "supported",
+                        "reason": "Re-opened 2026-11-16 to measure: the HTTP 500 on /v1/tasks/image/sync ('Image inference did not return in-memory PNG bytes (result_png)', LightX2V 19c19614, 4xB300, 2026-10-23) predates the refactor (#1673) that rewrote the sync route. If it still fails, the row records the failure."
                     },
                     "gb300": {
                         "status": "failed",

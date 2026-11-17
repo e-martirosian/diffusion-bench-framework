@@ -237,8 +237,8 @@
           "reason": "LightX2V 19c19614's cosmos3 runner answers /v1/tasks/image/sync with HTTP 500 'Image inference did not return in-memory PNG bytes (result_png)' (4xB300, 2026-10-23): its T2I task does not populate the sync endpoint's in-memory PNG."
         },
         "b300": {
-          "status": "failed",
-          "reason": "LightX2V 19c19614's cosmos3 runner answers /v1/tasks/image/sync with HTTP 500 'Image inference did not return in-memory PNG bytes (result_png)' (4xB300, 2026-10-23): its T2I task does not populate the sync endpoint's in-memory PNG."
+          "status": "supported",
+          "reason": "Re-opened 2026-11-16 to measure: the HTTP 500 on /v1/tasks/image/sync ('Image inference did not return in-memory PNG bytes (result_png)', LightX2V 19c19614, 4xB300, 2026-10-23) predates the refactor (#1673) that rewrote the sync route. If it still fails, the row records the failure."
         },
         "gb300": {
           "status": "failed",
