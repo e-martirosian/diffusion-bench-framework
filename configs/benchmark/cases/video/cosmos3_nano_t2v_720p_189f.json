@@ -341,6 +341,24 @@
           },
           "num_gpus": 4,
           "notes": " VALIDATION PENDING (round 2026-10-22, 4xB300)."
+        },
+        "cand-pp2-cfg2": {
+          "description": "Pipeline parallel 2 x CFG parallel 2 (vllm-omni #4637, the recipe's `--pipeline-parallel-size 2`), in place of CFG 2 x Ulysses 2. Never selected on its own: A/B arm.",
+          "serve_args": "--num-gpus 4 --cfg-parallel-size 2 --pipeline-parallel-size 2 --model-class-name Cosmos3OmniDiffusersPipeline --stage-init-timeout 900 --init-timeout 1800 --no-guardrails --diffusion-attention-backend CUDNN_ATTN --cache-backend none --vae-patch-parallel-size 4 --vae-parallel-mode spatial_shard_width --video-output-transport {\"enable_device_postprocess\":true} --no-diffusion-compile-dynamic",
+          "extra_env": {
+            "DIFFUSION_ATTENTION_BACKEND": "CUDNN_ATTN"
+          },
+          "num_gpus": 4,
+          "notes": "The recipe documents PP only for two GPUs and validates it for T2V/I2V; it rejects `--cache-backend` and `--enable-cpu-offload` under PP (neither is used here). VALIDATION PENDING (round 2026-11-16, 4xB300)."
+        },
+        "cand-pp2-usp2": {
+          "description": "Pipeline parallel 2 x Ulysses 2 (CFG off), the other 4-GPU split PP allows. Never selected on its own: A/B arm.",
+          "serve_args": "--num-gpus 4 --ulysses-degree 2 --pipeline-parallel-size 2 --model-class-name Cosmos3OmniDiffusersPipeline --stage-init-timeout 900 --init-timeout 1800 --no-guardrails --diffusion-attention-backend CUDNN_ATTN --cache-backend none --vae-patch-parallel-size 4 --vae-parallel-mode spatial_shard_width --video-output-transport {\"enable_device_postprocess\":true} --no-diffusion-compile-dynamic",
+          "extra_env": {
+            "DIFFUSION_ATTENTION_BACKEND": "CUDNN_ATTN"
+          },
+          "num_gpus": 4,
+          "notes": "With CFG parallel off each rank computes both guidance branches for its pipeline stage. VALIDATION PENDING (round 2026-11-16, 4xB300)."
         }
       }
     },

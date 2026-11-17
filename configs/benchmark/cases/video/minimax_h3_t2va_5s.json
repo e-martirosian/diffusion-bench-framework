@@ -536,7 +536,7 @@
           "serve_args": "",
           "upstream_recipe": {
             "repo": "NVIDIA/TensorRT-LLM",
-            "path": "examples/visual_gen/configs/minimax-h3-bf16-8gpu.yaml",
+            "path": "examples/visual_gen/configs/minimax-h3-bf16-2gpu.yaml",
             "commit": "a8ce1074a66b",
             "commit_date": "2026-10-28",
             "section": "BF16 multi-GPU config scaled to pure Ulysses 2",
@@ -561,7 +561,7 @@
           "serve_args": "",
           "upstream_recipe": {
             "repo": "NVIDIA/TensorRT-LLM",
-            "path": "examples/visual_gen/configs/minimax-h3-bf16-8gpu.yaml",
+            "path": "examples/visual_gen/configs/minimax-h3-bf16-2gpu.yaml",
             "commit": "a8ce1074a66b",
             "commit_date": "2026-10-28",
             "section": "BF16 multi-GPU config scaled to pure Ulysses 2",
@@ -603,7 +603,7 @@
           },
           "upstream_recipe": {
             "repo": "NVIDIA/TensorRT-LLM",
-            "path": "examples/visual_gen/configs/minimax-h3-bf16-8gpu.yaml",
+            "path": "examples/visual_gen/configs/minimax-h3-bf16-2gpu.yaml",
             "commit": "a8ce1074a66b",
             "commit_date": "2026-10-28",
             "section": "BF16 multi-GPU config scaled to pure Ulysses 2",
@@ -618,7 +618,7 @@
           "serve_args": "",
           "upstream_recipe": {
             "repo": "NVIDIA/TensorRT-LLM",
-            "path": "examples/visual_gen/configs/minimax-h3-bf16-8gpu.yaml",
+            "path": "examples/visual_gen/configs/minimax-h3-bf16-2gpu.yaml",
             "commit": "a8ce1074a66b",
             "commit_date": "2026-10-28",
             "section": "BF16 multi-GPU config scaled to pure Ulysses 2",
@@ -628,6 +628,93 @@
             "OMP_NUM_THREADS": "8"
           },
           "notes": "Derived from `default` (the profile B300 selects). Audit 2026-10-23 (H3 finding 1): TRT-LLM spends 5 s (2 GPU), 8 s (Ref2VA) and 11 s (4 GPU) on the CPU before its denoise loop (row_timestep_plan: torch.full, scatters and torch.unique over the whole sequence per step, on every rank) while its workers share the host's cores with OMP_NUM_THREADS unset. The harness sets OMP_NUM_THREADS for no framework; sglang caps its workers itself (min(16, cores / GPUs), gpu_worker._worker_cpu_intra_op_threads), vLLM-Omni's workers take 1 (set_multiprocessing_worker_envs) and LightX2V's torchrun sets 1, while TRT-LLM and FastVideo keep one thread per core in every worker. VALIDATION PENDING (wave 4, 4xB300)."
+        },
+        "cand-tp2": {
+          "description": "DiT tensor parallelism on two GPUs, as in the upstream recipe's new minimax-h3 TP2 yaml (tensorrt-llm#20176): tp_size 2, the text encoder replicated, VAE decode not parallel. VANILLA and OMP_NUM_THREADS=8 as the selected profile. Never selected on its own: A/B arm.",
+          "framework_ref": "tensorrt-llm 1.4.0rc3",
+          "num_gpus": 2,
+          "serve_args": "",
+          "visual_gen_args": {
+            "attention_config": {
+              "backend": "VANILLA"
+            },
+            "parallel_config": {
+              "tp_size": 2
+            },
+            "torch_compile_config": {
+              "enable": true
+            },
+            "cuda_graph_config": {
+              "enable": false
+            },
+            "compilation_config": {
+              "resolutions": [
+                [
+                  768,
+                  1344
+                ]
+              ],
+              "num_frames": [
+                124
+              ],
+              "skip_warmup": false
+            }
+          },
+          "upstream_recipe": {
+            "repo": "NVIDIA/TensorRT-LLM",
+            "path": "examples/visual_gen/configs/minimax-h3-bf16-tp2.yaml",
+            "commit": "a8ce1074a66b",
+            "commit_date": "2026-10-28",
+            "section": "DiT tensor parallelism on two GPUs"
+          },
+          "extra_env": {
+            "OMP_NUM_THREADS": "8"
+          },
+          "notes": "The upstream TP2 yaml sets skip_warmup true; this keeps the harness's compilation_config so the compile happens before the measured window, as for every row. VALIDATION PENDING (round 2026-11-16, 4xB300)."
+        },
+        "cand-tp2-vae2": {
+          "description": "cand-tp2 plus the parallel VAE decode the Ulysses profile uses (parallel_vae_size 2). Never selected on its own: A/B arm.",
+          "framework_ref": "tensorrt-llm 1.4.0rc3",
+          "num_gpus": 2,
+          "serve_args": "",
+          "visual_gen_args": {
+            "attention_config": {
+              "backend": "VANILLA"
+            },
+            "parallel_config": {
+              "tp_size": 2,
+              "parallel_vae_size": 2
+            },
+            "torch_compile_config": {
+              "enable": true
+            },
+            "cuda_graph_config": {
+              "enable": false
+            },
+            "compilation_config": {
+              "resolutions": [
+                [
+                  768,
+                  1344
+                ]
+              ],
+              "num_frames": [
+                124
+              ],
+              "skip_warmup": false
+            }
+          },
+          "upstream_recipe": {
+            "repo": "NVIDIA/TensorRT-LLM",
+            "path": "examples/visual_gen/configs/minimax-h3-bf16-tp2.yaml",
+            "commit": "a8ce1074a66b",
+            "commit_date": "2026-10-28",
+            "section": "DiT tensor parallelism on two GPUs, plus the Ulysses profile's parallel VAE (not in the recipe)"
+          },
+          "extra_env": {
+            "OMP_NUM_THREADS": "8"
+          },
+          "notes": "Not in the upstream recipe: tests whether tensor parallelism and the VAE split compose in VisualGen. A startup error is the answer. VALIDATION PENDING (round 2026-11-16, 4xB300)."
         }
       },
       "extra_env_reason": "The harness exports PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True. Under it, the CUDA IPC handle TRT-LLM's rank 0 hands its media over with needs pidfd_getfd in the server process, which RunPod containers deny: every request logged 'pidfd_getfd: Operation not permitted' and hung to the read timeout (4xB300, 2026-10-22). Plain segments use cudaIpcMemHandle instead."

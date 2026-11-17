@@ -386,7 +386,7 @@
           },
           "upstream_recipe": {
             "repo": "NVIDIA/TensorRT-LLM",
-            "path": "examples/visual_gen/configs/minimax-h3-bf16-8gpu.yaml",
+            "path": "examples/visual_gen/configs/minimax-h3-bf16-2gpu.yaml",
             "commit": "a8ce1074a66b",
             "commit_date": "2026-10-28",
             "section": "BF16 multi-GPU config scaled to pure Ulysses 4",
@@ -411,7 +411,7 @@
           "serve_args": "",
           "upstream_recipe": {
             "repo": "NVIDIA/TensorRT-LLM",
-            "path": "examples/visual_gen/configs/minimax-h3-bf16-8gpu.yaml",
+            "path": "examples/visual_gen/configs/minimax-h3-bf16-2gpu.yaml",
             "commit": "a8ce1074a66b",
             "commit_date": "2026-10-28",
             "section": "BF16 multi-GPU config scaled to pure Ulysses 4",
@@ -453,7 +453,7 @@
           },
           "upstream_recipe": {
             "repo": "NVIDIA/TensorRT-LLM",
-            "path": "examples/visual_gen/configs/minimax-h3-bf16-8gpu.yaml",
+            "path": "examples/visual_gen/configs/minimax-h3-bf16-2gpu.yaml",
             "commit": "a8ce1074a66b",
             "commit_date": "2026-10-28",
             "section": "BF16 multi-GPU config scaled to pure Ulysses 4",
@@ -495,7 +495,7 @@
           },
           "upstream_recipe": {
             "repo": "NVIDIA/TensorRT-LLM",
-            "path": "examples/visual_gen/configs/minimax-h3-bf16-8gpu.yaml",
+            "path": "examples/visual_gen/configs/minimax-h3-bf16-2gpu.yaml",
             "commit": "a8ce1074a66b",
             "commit_date": "2026-10-28",
             "section": "BF16 multi-GPU config scaled to pure Ulysses 4",
