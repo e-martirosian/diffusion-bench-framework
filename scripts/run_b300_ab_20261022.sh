@@ -51,8 +51,10 @@ arms() {  # <case> <framework> <rounds> <arms...>; WAVE=<n> / AB_CASES=<regex> s
   if [[ -n "${AB_DRY_RUN:-}" ]]; then
     echo "PLAN wave=${wave} port=${port} ${case_id} ${fw} rounds=${rounds} arms=$*"
   else
+    # the wave is in the tag: two waves arming one cell would otherwise overwrite each other's results.
+    # (A comment between a `\` continuation and the command ends the assignment statement: the arm
+    # runner then started with empty ARMS_CASE/ARMS_FW/ARMS and died on its first line.)
     ARMS_CASE="${case_id}" ARMS_FW="${fw}" ARMS="$*" ROUNDS="${rounds}" \
-      # the wave is in the tag: two waves arming one cell would otherwise overwrite each other's results
       bash "${DBF_REPO_DIR}/scripts/run_competitor_arms.sh" "${TAG}_w${wave}_${fw}" "${port}"
   fi
   port=$((port + 100))
