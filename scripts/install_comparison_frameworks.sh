@@ -77,6 +77,7 @@ write_desired_stamp() {
         echo "lightx2v_sgl_kernel_install_spec=${LIGHTX2V_SGL_KERNEL_INSTALL_SPEC:-sglang-kernel==0.4.4}"
         echo "lightx2v_hf_xet_install_spec=${LIGHTX2V_HF_XET_INSTALL_SPEC:-hf-xet}"
         echo "lightx2v_librosa_install_spec=${LIGHTX2V_LIBROSA_INSTALL_SPEC:-librosa}"
+        echo "lightx2v_httpx_install_spec=${LIGHTX2V_HTTPX_INSTALL_SPEC:-httpx}"
         echo "torch_cuda_arch_list=${TORCH_CUDA_ARCH_LIST:-9.0}"
         ;;
       trtllm-visual)
@@ -333,6 +334,10 @@ PY
     python3 -m pip install --no-deps "${LIGHTX2V_SGL_KERNEL_INSTALL_SPEC:-sglang-kernel==0.4.4}"
     python3 -m pip install --upgrade --upgrade-strategy only-if-needed "${LIGHTX2V_LIBROSA_INSTALL_SPEC:-librosa}"
     python3 -m pip install --upgrade --force-reinstall pyzmq
+    # LightX2V's server imports httpx (api/deps.py, services/file_service.py, since the 2026-11-16
+    # refactor #1673) without declaring it: its own image gets httpx through vllm. Without it the
+    # health check below fails on `import lightx2v.server.main` after the 16-minute flash-attn build.
+    python3 -m pip install --upgrade --upgrade-strategy only-if-needed "${LIGHTX2V_HTTPX_INSTALL_SPEC:-httpx}"
     # flash-attn==2.8.3's cute submodule statically references
     # cutlass.cute.core.ThrMma at import time; nvidia-cutlass-dsl (pulled
     # transitively via flashinfer-python, unpinned >=4.5.0) removed that
