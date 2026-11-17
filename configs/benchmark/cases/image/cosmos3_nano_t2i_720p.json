@@ -230,19 +230,19 @@
       "status_by_hardware": {
         "b200": {
           "status": "failed",
-          "reason": "LightX2V 19c19614's cosmos3 runner answers /v1/tasks/image/sync with HTTP 500 'Image inference did not return in-memory PNG bytes (result_png)' (4xB300, 2026-10-23): its T2I task does not populate the sync endpoint's in-memory PNG."
+          "reason": "LightX2V's cosmos3 runner answers /v1/tasks/image/sync with HTTP 500 (4xB300: 19c19614 'did not return in-memory PNG bytes' 2026-10-23, 395e2ac4 'did not return an encodable image' 2026-11-17): the T2I task returns a (1, 3, 1, 720, 1280) video-shaped tensor and the route's PNG encoder rejects it ('Unsupported tensor shape'); the shape is not hardware-dependent."
         },
         "gb200": {
           "status": "failed",
-          "reason": "LightX2V 19c19614's cosmos3 runner answers /v1/tasks/image/sync with HTTP 500 'Image inference did not return in-memory PNG bytes (result_png)' (4xB300, 2026-10-23): its T2I task does not populate the sync endpoint's in-memory PNG."
+          "reason": "LightX2V's cosmos3 runner answers /v1/tasks/image/sync with HTTP 500 (4xB300: 19c19614 'did not return in-memory PNG bytes' 2026-10-23, 395e2ac4 'did not return an encodable image' 2026-11-17): the T2I task returns a (1, 3, 1, 720, 1280) video-shaped tensor and the route's PNG encoder rejects it ('Unsupported tensor shape'); the shape is not hardware-dependent."
         },
         "b300": {
-          "status": "supported",
-          "reason": "Re-opened 2026-11-16 to measure: the HTTP 500 on /v1/tasks/image/sync ('Image inference did not return in-memory PNG bytes (result_png)', LightX2V 19c19614, 4xB300, 2026-10-23) predates the refactor (#1673) that rewrote the sync route. If it still fails, the row records the failure."
+          "status": "failed",
+          "reason": "LightX2V 395e2ac4's cosmos3 runner answers /v1/tasks/image/sync with HTTP 500 'Image inference did not return an encodable image' (4xB300, 2026-11-17, re-measured after the refactor #1673): the T2I task returns a (1, 3, 1, 720, 1280) video-shaped tensor and the route's PNG encoder (pipeline_image_encode._tensor_to_png_bytes) rejects it ('Unsupported tensor shape')."
         },
         "gb300": {
           "status": "failed",
-          "reason": "LightX2V 19c19614's cosmos3 runner answers /v1/tasks/image/sync with HTTP 500 'Image inference did not return in-memory PNG bytes (result_png)' (4xB300, 2026-10-23): its T2I task does not populate the sync endpoint's in-memory PNG."
+          "reason": "LightX2V's cosmos3 runner answers /v1/tasks/image/sync with HTTP 500 (4xB300: 19c19614 'did not return in-memory PNG bytes' 2026-10-23, 395e2ac4 'did not return an encodable image' 2026-11-17): the T2I task returns a (1, 3, 1, 720, 1280) video-shaped tensor and the route's PNG encoder rejects it ('Unsupported tensor shape'); the shape is not hardware-dependent."
         }
       },
       "model_cls": "cosmos3",
