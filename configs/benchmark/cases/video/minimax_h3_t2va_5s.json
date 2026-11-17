@@ -672,7 +672,7 @@
           "extra_env": {
             "OMP_NUM_THREADS": "8"
           },
-          "notes": "A profile's visual_gen_args are DEEP-MERGED onto the framework entry's, which cannot delete a key: the first run of this arm inherited ulysses_size 2 and parallel_vae_size 2, so n_workers (= cfg x ulysses x ring x tp) came out 4 on 2 GPUs and every worker died with 'Multiple Ranks are using the same GPU' (2026-11-17). ulysses_size and parallel_vae_size are therefore set to 1 here. The upstream TP2 yaml sets skip_warmup true; this keeps the harness's compilation_config so the compile happens before the measured window, as for every row. VALIDATION PENDING (round 2026-11-16, 4xB300)."
+          "notes": "A profile's visual_gen_args are DEEP-MERGED onto the framework entry's, which cannot delete a key: the first run of this arm inherited ulysses_size 2 and parallel_vae_size 2, so n_workers (= cfg x ulysses x ring x tp) came out 4 on 2 GPUs and every worker died with 'Multiple Ranks are using the same GPU' (2026-11-17). ulysses_size and parallel_vae_size are therefore set to 1 here. The upstream TP2 yaml sets skip_warmup true; this keeps the harness's compilation_config so the compile happens before the measured window, as for every row. MEASURED 2026-11-17 on b300r1116 (4xB300, harness single_e2e, one round, a fresh server per arm, after the fix above): 68.64 s against 68.39 s for the selected blackwell-omp8 (Ulysses 2, measured in the same pass). A tie, not promoted."
         },
         "cand-tp2-vae2": {
           "description": "cand-tp2 plus the parallel VAE decode the Ulysses profile uses (parallel_vae_size 2). Never selected on its own: A/B arm.",
@@ -717,7 +717,7 @@
           "extra_env": {
             "OMP_NUM_THREADS": "8"
           },
-          "notes": "Not in the upstream recipe: tests whether tensor parallelism and the VAE split compose in VisualGen. A startup error is the answer. VALIDATION PENDING (round 2026-11-16, 4xB300)."
+          "notes": "Not in the upstream recipe: tests whether tensor parallelism and the VAE split compose in VisualGen. A startup error is the answer. MEASURED 2026-11-17 on b300r1116 (4xB300, harness single_e2e, one round, a fresh server per arm, after the fix to cand-tp2): it starts, so the two compose, and 67.87 s against 68.39 s for the selected blackwell-omp8 (Ulysses 2; -0.8%, inside run-to-run noise). Not promoted."
         }
       },
       "extra_env_reason": "The harness exports PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True. Under it, the CUDA IPC handle TRT-LLM's rank 0 hands its media over with needs pidfd_getfd in the server process, which RunPod containers deny: every request logged 'pidfd_getfd: Operation not permitted' and hung to the read timeout (4xB300, 2026-10-22). Plain segments use cudaIpcMemHandle instead."

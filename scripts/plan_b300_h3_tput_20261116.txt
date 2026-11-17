@@ -1,0 +1,12 @@
+# 2026-11-16 round: MiniMax-H3 T2V+A throughput on two GPUs (harness: 4 requests at concurrency 2),
+# measured after the matrix because the matrix's auto-selected profiles compare sglang U2 with vLLM-Omni TP2.
+# The fair pair is each framework's multi-replica mode, selected by name: sglang dp2-throughput (D)
+# against vLLM-Omni replica2-throughput (V); one fresh server per arm, order D V | V D | D V.
+#   DBF_STATE_DIR=/workspace/r1116 PLAN=scripts/plan_b300_h3_tput_20261116.txt PLAN_TAG=h3t1116 \
+#     bash scripts/run_plan_ab.sh
+h-d-r1 sglang minimax_h3_t2va_5s throughput 0,1 dp2-throughput
+h-v-r1 vllm-omni minimax_h3_t2va_5s throughput 0,1 replica2-throughput
+h-v-r2 vllm-omni minimax_h3_t2va_5s throughput 0,1 replica2-throughput
+h-d-r2 sglang minimax_h3_t2va_5s throughput 0,1 dp2-throughput
+h-d-r3 sglang minimax_h3_t2va_5s throughput 0,1 dp2-throughput
+h-v-r3 vllm-omni minimax_h3_t2va_5s throughput 0,1 replica2-throughput

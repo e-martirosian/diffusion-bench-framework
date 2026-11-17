@@ -349,7 +349,7 @@
             "DIFFUSION_ATTENTION_BACKEND": "CUDNN_ATTN"
           },
           "num_gpus": 4,
-          "notes": "The recipe documents PP only for two GPUs and validates it for T2V/I2V; it rejects `--cache-backend` and `--enable-cpu-offload` under PP (neither is used here). VALIDATION PENDING (round 2026-11-16, 4xB300)."
+          "notes": "The recipe documents PP only for two GPUs and validates it for T2V/I2V; it rejects `--cache-backend` and `--enable-cpu-offload` under PP (neither is used here). MEASURED 2026-11-17 on b300r1116 (4xB300, harness single_e2e, one round, a fresh server per arm): 44.41 s against 26.29 s for the selected blackwell-cudnn-vaepp (CFG 2 x Ulysses 2). Not promoted."
         },
         "cand-pp2-usp2": {
           "description": "Pipeline parallel 2 x Ulysses 2 (CFG off), the other 4-GPU split PP allows. Never selected on its own: A/B arm.",
@@ -358,7 +358,7 @@
             "DIFFUSION_ATTENTION_BACKEND": "CUDNN_ATTN"
           },
           "num_gpus": 4,
-          "notes": "With CFG parallel off each rank computes both guidance branches for its pipeline stage. VALIDATION PENDING (round 2026-11-16, 4xB300)."
+          "notes": "With CFG parallel off each rank computes both guidance branches for its pipeline stage. MEASURED 2026-11-17 on b300r1116 (4xB300, harness single_e2e, one round, a fresh server per arm): 36.86 s against 26.29 s for the selected blackwell-cudnn-vaepp (CFG 2 x Ulysses 2). Not promoted."
         }
       }
     },
