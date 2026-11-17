@@ -153,7 +153,10 @@ for case_id in "${CASES[@]}"; do
         > "${LOG_DIR}/run_${TAG}_${case_id}.runlog" 2>&1
     rc=$?
     kill_own_gpus
-    summary=$(grep -hE 'req/s|single_e2e' "${LOG_DIR}/run_${TAG}_${case_id}.runlog" 2>/dev/null | tail -2 | tr '\n' ' ')
+    # The harness's own SUMMARY table, not a grep for 'req/s': that also matches a server's
+    # warmup progress bar ("0/1 [00:00<?, ?req/s]"), so a finished case read as a log fragment.
+    summary=$(sed -n '/^SUMMARY/,$p' "${LOG_DIR}/run_${TAG}_${case_id}.runlog" 2>/dev/null \
+        | grep -E '^  [A-Za-z0-9_.]+ +\| ' | tr -s ' ' | tr '\n' ';')
     echo "RESULT $case_id rc=$rc $summary"
     port=$((port + 1))
 done
