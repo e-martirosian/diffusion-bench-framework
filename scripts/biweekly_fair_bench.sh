@@ -102,10 +102,11 @@ log "=== biweekly fair bench ${STAMP} ==="
 VLLM_LATEST="$(curl -sL https://pypi.org/pypi/vllm/json | "${PY}" -c 'import json,sys;print(json.load(sys.stdin)["info"]["version"])' 2>/dev/null)"
 LX2V_LATEST="$(git ls-remote https://github.com/ModelTC/LightX2V.git refs/heads/main 2>/dev/null | cut -c1-12)"
 # TRT-LLM release candidates live only on NVIDIA's index; PyPI carries stable
-# only. Sort numerically -- rc9 sorts above rc24 as a string.
+# only. Version-sort the WHOLE string: sorting on the rc number alone ranks
+# 1.3.0rc29 above 1.4.0rc3 and benchmarks a stale competitor as "latest".
 TRT_LATEST="$(curl -sL https://pypi.nvidia.com/tensorrt-llm/ 2>/dev/null \
-  | grep -oE 'tensorrt_llm-[0-9.]+rc[0-9]+' | sed 's/tensorrt_llm-//' \
-  | sort -t c -k2 -V | tail -1)"
+  | grep -oE 'tensorrt_llm-[0-9]+\.[0-9]+\.[0-9]+rc[0-9]+' | sed 's/tensorrt_llm-//' \
+  | sort -u -V | tail -1)"
 [[ -n "${VLLM_LATEST}" ]] || { log "FATAL: could not resolve latest vllm"; exit 1; }
 [[ -n "${LX2V_LATEST}" ]] || { log "FATAL: could not resolve LightX2V main"; exit 1; }
 [[ -n "${TRT_LATEST}" ]] || { log "FATAL: could not resolve latest tensorrt-llm rc"; exit 1; }
