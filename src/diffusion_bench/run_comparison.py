@@ -250,6 +250,7 @@ FRAMEWORK_PROFILE_RUNTIME_KEYS = SGLANG_PROFILE_RUNTIME_KEYS | {
     "http_request",
     "comfyui",
     "visual_gen_args",
+    "request_extra",
 }
 
 # Downloaded reference images keyed by URL; per-request variant files keyed by
@@ -1116,6 +1117,7 @@ def _resolve_framework_config(
         "serve_args": resolved.get("serve_args", ""),
         "num_gpus": resolved.get("num_gpus"),
         "extra_env_keys": sorted((resolved.get("extra_env") or {}).keys()),
+        "request_extra": resolved.get("request_extra"),
         # Rows measured before 2026-09-30 lack this: every request repeated one
         # prompt and reference image, which sglang's conditioning cache answered.
         "request_inputs": REQUEST_INPUTS,
@@ -1452,6 +1454,21 @@ def _request_extra(case: dict, framework: str, config: dict | None = None) -> di
         # instead of a URL the server downloads inside the measured window.
         uri = "data:image/png;base64," + _get_ref_image_b64(config or {}, case)
         merged = _substitute_ref_image(merged, uri)
+    return merged
+
+
+def _case_with_profile_request_extra(case: dict, framework: str, fw_cfg: dict) -> dict:
+    """`case` with the selected profile's `request_extra` laid over that framework's request extras.
+
+    A feature a framework takes per request (vLLM-Omni's `extra_params.preencode_mp4`) can then be an A/B arm or a
+    hardware-specific selection like any serve argument.
+    """
+    extra = _without_comments(fw_cfg.get("request_extra") or {})
+    if not extra:
+        return case
+    merged = copy.deepcopy(case)
+    per_framework = merged.setdefault("framework_request_extra", {})
+    per_framework[framework] = _deep_merge(per_framework.get(framework) or {}, extra)
     return merged
 
 
@@ -3705,7 +3722,9 @@ def run_comparison(
             )
             if fw_name not in fw_cases:
                 fw_cases[fw_name] = []
-            fw_cases[fw_name].append((case, resolved_fw_cfg))
+            fw_cases[fw_name].append(
+                (_case_with_profile_request_extra(case, fw_name, resolved_fw_cfg), resolved_fw_cfg)
+            )
 
     results = []
     throughput_results = []

@@ -126,6 +126,17 @@ offloaded on datacenter hardware without one (see KNOWN_COMPETITOR_VIOLATIONS).
 | flux3_klein_base_t2i_1024 | sglang | mi355x | `default` |  |  |  | `--model-type diffusion --warmup-mode server --enable-cfg-parallel --performance-mode speed` |  |
 | flux3_klein_base_t2i_1024 | sglang | rtx4090 | `default` |  |  |  | `--model-type diffusion --warmup-mode server --enable-cfg-parallel --performance-mode speed` |  |
 | flux3_klein_base_t2i_1024 | sglang | rtx5090 | `default` |  |  |  | `--model-type diffusion --warmup-mode server --enable-cfg-parallel --performance-mode speed` |  |
+| flux3_klein_base_t2i_1024 | vllm-omni | b200 | `default` |  |  |  | `--served-model-name black-forest-labs/flux-3-image-klein-base --num-gpus 2 --cfg-parallel-size 2` |  |
+| flux3_klein_base_t2i_1024 | vllm-omni | b300 | `default` |  |  |  | `--served-model-name black-forest-labs/flux-3-image-klein-base --num-gpus 2 --cfg-parallel-size 2` |  |
+| flux3_klein_base_t2i_1024 | vllm-omni | gb200 | `default` |  |  |  | `--served-model-name black-forest-labs/flux-3-image-klein-base --num-gpus 2 --cfg-parallel-size 2` |  |
+| flux3_klein_base_t2i_1024 | vllm-omni | gb300 | `default` |  |  |  | `--served-model-name black-forest-labs/flux-3-image-klein-base --num-gpus 2 --cfg-parallel-size 2` |  |
+| flux3_klein_base_t2i_1024 | vllm-omni | h100 | `default` |  |  |  | `--served-model-name black-forest-labs/flux-3-image-klein-base --num-gpus 2 --cfg-parallel-size 2` |  |
+| flux3_klein_base_t2i_1024 | vllm-omni | h200 | `default` |  |  |  | `--served-model-name black-forest-labs/flux-3-image-klein-base --num-gpus 2 --cfg-parallel-size 2` |  |
+| flux3_klein_base_t2i_1024 | vllm-omni | mi300x | `default` |  |  |  | `--served-model-name black-forest-labs/flux-3-image-klein-base --num-gpus 2 --cfg-parallel-size 2` |  |
+| flux3_klein_base_t2i_1024 | vllm-omni | mi350x | `default` |  |  |  | `--served-model-name black-forest-labs/flux-3-image-klein-base --num-gpus 2 --cfg-parallel-size 2` |  |
+| flux3_klein_base_t2i_1024 | vllm-omni | mi355x | `default` |  |  |  | `--served-model-name black-forest-labs/flux-3-image-klein-base --num-gpus 2 --cfg-parallel-size 2` |  |
+| flux3_klein_base_t2i_1024 | vllm-omni | rtx4090 | `default` |  |  |  | `--served-model-name black-forest-labs/flux-3-image-klein-base --num-gpus 2 --cfg-parallel-size 2` |  |
+| flux3_klein_base_t2i_1024 | vllm-omni | rtx5090 | `default` |  |  |  | `--served-model-name black-forest-labs/flux-3-image-klein-base --num-gpus 2 --cfg-parallel-size 2` |  |
 | flux3_klein_base_t2i_1024 | comfyui | b200 | `default` | yes |  | Comfy-Org/workflow_templates@369c1ed12496 (2026-10-17) | `--gpu-only` | `workflow=flux3_klein_base_t2i.json compile=false` |
 | flux3_klein_base_t2i_1024 | comfyui | b300 | `default` | yes |  | Comfy-Org/workflow_templates@369c1ed12496 (2026-10-17) | `--gpu-only` | `workflow=flux3_klein_base_t2i.json compile=false` |
 | flux3_klein_base_t2i_1024 | comfyui | gb200 | `default` | yes |  | Comfy-Org/workflow_templates@369c1ed12496 (2026-10-17) | `--gpu-only` | `workflow=flux3_klein_base_t2i.json compile=false` |

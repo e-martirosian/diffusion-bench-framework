@@ -766,6 +766,22 @@
           },
           "description": "blackwell-omp8 plus parallel_config.async_ulysses: the Q/K/V projections overlap with the cross-rank all-to-all on a side stream. Never selected on its own: A/B arm.",
           "notes": "A profile's visual_gen_args are DEEP-MERGED onto the framework entry's, so this arm keeps the framework entry's ulysses_size and parallel_vae_size and adds only the async flag. Upstream (tensorrt-llm #20333, merged 2026-10-23, after rc1): MiniMax-H3 with async_ulysses on 8xB200, FA4, torch.compile on, 768x1344x124 frames, 28 steps, whole generations: -3.3% at Ulysses 2, -2.4% at 4, -1.5% at 8; BF16 only; not bit-identical to the shipped path (Q, K and V become three GEMMs instead of one, so bf16 rounding differs from the first block on). Not measured on B300 before 2026-11-18. VALIDATION PENDING (round 2026-11-18, 4xB300)."
+        },
+        "cand-async-tetp2": {
+          "framework_ref": "tensorrt-llm 1.4.0rc3 (tag v1.4.0rc3, 9e334fbaae)",
+          "num_gpus": 2,
+          "serve_args": "",
+          "visual_gen_args": {
+            "parallel_config": {
+              "async_ulysses": true,
+              "text_encoder_tp_size": 2
+            }
+          },
+          "extra_env": {
+            "OMP_NUM_THREADS": "8"
+          },
+          "description": "b300-omp8-async plus parallel_config.text_encoder_tp_size 2 (tensorrt-llm #19807, text-only prompts). Never selected on its own: A/B arm.",
+          "notes": "A profile's visual_gen_args are DEEP-MERGED onto the framework entry's. Upstream's PR gives no performance number. VALIDATION PENDING (2026-11-18, 4xB300)."
         }
       },
       "extra_env_reason": "The harness exports PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True. Under it, the CUDA IPC handle TRT-LLM's rank 0 hands its media over with needs pidfd_getfd in the server process, which RunPod containers deny: every request logged 'pidfd_getfd: Operation not permitted' and hung to the read timeout (4xB300, 2026-10-22). Plain segments use cudaIpcMemHandle instead."

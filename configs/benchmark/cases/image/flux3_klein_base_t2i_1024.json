@@ -51,8 +51,60 @@
       }
     },
     "vllm-omni": {
-      "status": "unsupported",
-      "reason": "No FLUX.3 pipeline on vLLM-Omni main (2026-10-16). It is in the open, approved PR vllm-project/vllm-omni#9007; reclassify once it merges. Measured pre-merge on 2xH200 2026-10-16 at head 389a02a149ce with vllm==0.31.0 (the head's docker/Dockerfile.ci): CFG parallel 2 4.534 s, one GPU 9.101 s (regional compile, FLASH_ATTN). Its FLUX.3 loader reads only a local package directory (model_path = the snapshot dir), and requests need --served-model-name set to the case model."
+      "status": "supported",
+      "num_gpus": 2,
+      "model_path": "hf://black-forest-labs/flux-3-image-klein-base",
+      "serve_args": "--served-model-name black-forest-labs/flux-3-image-klein-base --num-gpus 2 --cfg-parallel-size 2",
+      "command_profiles": {
+        "default": {
+          "framework_ref": "vllm-omni main 24e5472849 + vllm==0.33.0",
+          "num_gpus": 2,
+          "serve_args": "--served-model-name black-forest-labs/flux-3-image-klein-base --num-gpus 2 --cfg-parallel-size 2",
+          "description": "CFG parallel 2 (one CFG branch per GPU), vLLM-Omni's defaults otherwise: the layout its pre-merge measurement used.",
+          "notes": "vLLM-Omni serves FLUX.3 since vllm-project/vllm-omni#9523 (f48a7c73e, 2026-11-10; Flux3Pipeline in docs/models/supported_models.md). Its loader reads a local package directory only (diffusion/utils/flux3_package.py: 'Flux3 model path must point at a flux3 package root'), so model_path is the Hub snapshot and --served-model-name carries the case's model id for the request. The base package runs CFG whenever guidance_scale != 1 with an empty negative prompt by default (pipeline_flux3.py), the case's 50 steps / CFG 3.5. Before the merge, at PR head 389a02a149ce on 2xH200 (2026-10-16, vllm==0.31.0): CFG parallel 2 4.534 s, one GPU 9.101 s. VALIDATION PENDING (2026-11-18, 4xB300)."
+        },
+        "cand-cfg2-static": {
+          "framework_ref": "vllm-omni main 24e5472849 + vllm==0.33.0",
+          "num_gpus": 2,
+          "serve_args": "--served-model-name black-forest-labs/flux-3-image-klein-base --num-gpus 2 --cfg-parallel-size 2 --no-diffusion-compile-dynamic",
+          "description": "default plus --no-diffusion-compile-dynamic. Never selected on its own: A/B arm.",
+          "notes": "Static-shape compile is what every other vLLM-Omni image cell of this harness selects on Blackwell. VALIDATION PENDING (2026-11-18, 4xB300)."
+        },
+        "cand-cfg2-static-cudnn": {
+          "framework_ref": "vllm-omni main 24e5472849 + vllm==0.33.0",
+          "num_gpus": 2,
+          "serve_args": "--served-model-name black-forest-labs/flux-3-image-klein-base --num-gpus 2 --cfg-parallel-size 2 --no-diffusion-compile-dynamic",
+          "description": "cand-cfg2-static with cuDNN attention. Never selected on its own: A/B arm.",
+          "notes": "CUDNN_ATTN is the backend the Qwen-Image-2.1 and Cosmos3 cells select on Blackwell. VALIDATION PENDING (2026-11-18, 4xB300).",
+          "extra_env": {
+            "DIFFUSION_ATTENTION_BACKEND": "CUDNN_ATTN"
+          }
+        },
+        "cand-cfg2-static-flashinfer": {
+          "framework_ref": "vllm-omni main 24e5472849 + vllm==0.33.0",
+          "num_gpus": 2,
+          "serve_args": "--served-model-name black-forest-labs/flux-3-image-klein-base --num-gpus 2 --cfg-parallel-size 2 --no-diffusion-compile-dynamic",
+          "description": "cand-cfg2-static with FlashInfer attention. Never selected on its own: A/B arm.",
+          "notes": "FLASHINFER_ATTN is the backend the Z-Image cell selects on Blackwell. VALIDATION PENDING (2026-11-18, 4xB300).",
+          "extra_env": {
+            "DIFFUSION_ATTENTION_BACKEND": "FLASHINFER_ATTN"
+          }
+        },
+        "cand-tp2-static": {
+          "framework_ref": "vllm-omni main 24e5472849 + vllm==0.33.0",
+          "num_gpus": 2,
+          "serve_args": "--served-model-name black-forest-labs/flux-3-image-klein-base --tensor-parallel-size 2 --no-diffusion-compile-dynamic",
+          "description": "Tensor parallel 2 with both CFG branches in one batched call (Flux3's batch CFG, on whenever cfg_parallel_size is 1). Never selected on its own: A/B arm.",
+          "notes": "flux3_transformer.py shards attention QKV and the MLP across TP ranks. VALIDATION PENDING (2026-11-18, 4xB300)."
+        },
+        "cand-usp2-static": {
+          "framework_ref": "vllm-omni main 24e5472849 + vllm==0.33.0",
+          "num_gpus": 2,
+          "serve_args": "--served-model-name black-forest-labs/flux-3-image-klein-base --usp 2 --no-diffusion-compile-dynamic",
+          "description": "Ulysses 2 with both CFG branches in one batched call. Never selected on its own: A/B arm.",
+          "notes": "VALIDATION PENDING (2026-11-18, 4xB300)."
+        }
+      }
     },
     "lightx2v": {
       "status": "unsupported",

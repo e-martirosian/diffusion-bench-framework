@@ -296,6 +296,29 @@
           },
           "description": "blackwell-4gpu-cfg2-usp2-vaepp-devpost plus --ulysses-a2a-permute (copy-engine Ulysses exchange). Never selected on its own: A/B arm.",
           "notes": "vLLM-Omni #9922 (2026-11-13): Ulysses all-to-all over the CUDA copy engine instead of NCCL, off by default (`--ulysses-a2a-permute`). Upstream reports Qwen-Image SP2 1536^2 10.717 -> 10.467 s (-2.34%) and 512^2 5.524 -> 5.506 s on L20X, against its own earlier LSA kernel, pixel hashes identical. VALIDATION PENDING (2026-11-18, 4xB300)."
+        },
+        "cand-preencode": {
+          "num_gpus": 4,
+          "serve_args": "--num-gpus 4 --cfg-parallel-size 2 --usp 2 --vae-patch-parallel-size 4 --vae-parallel-mode spatial_shard_width --no-diffusion-compile-dynamic --video-output-transport {\"enable_device_postprocess\":true}",
+          "extra_env": {
+            "DIFFUSION_ATTENTION_BACKEND": "CUDNN_ATTN"
+          },
+          "request_extra": {
+            "extra_params": {
+              "preencode_mp4": true
+            }
+          },
+          "description": "blackwell-4gpu-cfg2-usp2-vaepp-devpost with extra_params.preencode_mp4 on every request (MP4 encoding overlapped with the VAE decode). Never selected on its own: A/B arm.",
+          "notes": "vLLM-Omni documents preencode_mp4 for MiniMax-H3 and Wan 2.2 (docs/serving/videos_api.md); the H3 cells have sent it since 2026-10-08, the Wan cell never did. On Wan the flag replaces vae.decode with decode_to_mp4, which decodes in batches of frames (wan2_2/pipeline_wan2_2.py, chunked_mp4.py), so it also replaces the 4-GPU spatial-shard VAE decode the base profile selects; which of the two is faster is the question. VALIDATION PENDING (2026-11-18, 4xB300)."
+        },
+        "cand-usp4-cfgbatch": {
+          "num_gpus": 4,
+          "serve_args": "--num-gpus 4 --usp 4 --enable-cfg-batching --vae-patch-parallel-size 4 --vae-parallel-mode spatial_shard_width --no-diffusion-compile-dynamic --video-output-transport {\"enable_device_postprocess\":true}",
+          "extra_env": {
+            "DIFFUSION_ATTENTION_BACKEND": "CUDNN_ATTN"
+          },
+          "description": "Ulysses 4 with both CFG branches in one batched denoiser call (--enable-cfg-batching, #9797) in place of CFG-parallel 2 x Ulysses 2. Never selected on its own: A/B arm.",
+          "notes": "vLLM-Omni's CFG batching (docs/user_guide/diffusion/parallelism/cfg_parallel.md) is off by default, applies only without CFG-parallel, and Wan2.2 T2V opts in. Its doc says batched and sequential outputs are not bit-identical in bf16 (GEMMs at twice the batch size); same dtype and algorithm, so the same precision class. VALIDATION PENDING (2026-11-18, 4xB300)."
         }
       }
     },

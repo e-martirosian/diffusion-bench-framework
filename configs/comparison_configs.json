@@ -69,6 +69,61 @@
                         }
                     }
                 },
+                "vllm-omni": {
+                    "num_gpus": 2,
+                    "model_path": "hf://black-forest-labs/flux-3-image-klein-base",
+                    "serve_args": "--served-model-name black-forest-labs/flux-3-image-klein-base --num-gpus 2 --cfg-parallel-size 2",
+                    "command_profiles": {
+                        "default": {
+                            "framework_ref": "vllm-omni main 24e5472849 + vllm==0.33.0",
+                            "num_gpus": 2,
+                            "serve_args": "--served-model-name black-forest-labs/flux-3-image-klein-base --num-gpus 2 --cfg-parallel-size 2",
+                            "description": "CFG parallel 2 (one CFG branch per GPU), vLLM-Omni's defaults otherwise: the layout its pre-merge measurement used.",
+                            "notes": "vLLM-Omni serves FLUX.3 since vllm-project/vllm-omni#9523 (f48a7c73e, 2026-11-10; Flux3Pipeline in docs/models/supported_models.md). Its loader reads a local package directory only (diffusion/utils/flux3_package.py: 'Flux3 model path must point at a flux3 package root'), so model_path is the Hub snapshot and --served-model-name carries the case's model id for the request. The base package runs CFG whenever guidance_scale != 1 with an empty negative prompt by default (pipeline_flux3.py), the case's 50 steps / CFG 3.5. Before the merge, at PR head 389a02a149ce on 2xH200 (2026-10-16, vllm==0.31.0): CFG parallel 2 4.534 s, one GPU 9.101 s. VALIDATION PENDING (2026-11-18, 4xB300)."
+                        },
+                        "cand-cfg2-static": {
+                            "framework_ref": "vllm-omni main 24e5472849 + vllm==0.33.0",
+                            "num_gpus": 2,
+                            "serve_args": "--served-model-name black-forest-labs/flux-3-image-klein-base --num-gpus 2 --cfg-parallel-size 2 --no-diffusion-compile-dynamic",
+                            "description": "default plus --no-diffusion-compile-dynamic. Never selected on its own: A/B arm.",
+                            "notes": "Static-shape compile is what every other vLLM-Omni image cell of this harness selects on Blackwell. VALIDATION PENDING (2026-11-18, 4xB300)."
+                        },
+                        "cand-cfg2-static-cudnn": {
+                            "framework_ref": "vllm-omni main 24e5472849 + vllm==0.33.0",
+                            "num_gpus": 2,
+                            "serve_args": "--served-model-name black-forest-labs/flux-3-image-klein-base --num-gpus 2 --cfg-parallel-size 2 --no-diffusion-compile-dynamic",
+                            "description": "cand-cfg2-static with cuDNN attention. Never selected on its own: A/B arm.",
+                            "notes": "CUDNN_ATTN is the backend the Qwen-Image-2.1 and Cosmos3 cells select on Blackwell. VALIDATION PENDING (2026-11-18, 4xB300).",
+                            "extra_env": {
+                                "DIFFUSION_ATTENTION_BACKEND": "CUDNN_ATTN"
+                            }
+                        },
+                        "cand-cfg2-static-flashinfer": {
+                            "framework_ref": "vllm-omni main 24e5472849 + vllm==0.33.0",
+                            "num_gpus": 2,
+                            "serve_args": "--served-model-name black-forest-labs/flux-3-image-klein-base --num-gpus 2 --cfg-parallel-size 2 --no-diffusion-compile-dynamic",
+                            "description": "cand-cfg2-static with FlashInfer attention. Never selected on its own: A/B arm.",
+                            "notes": "FLASHINFER_ATTN is the backend the Z-Image cell selects on Blackwell. VALIDATION PENDING (2026-11-18, 4xB300).",
+                            "extra_env": {
+                                "DIFFUSION_ATTENTION_BACKEND": "FLASHINFER_ATTN"
+                            }
+                        },
+                        "cand-tp2-static": {
+                            "framework_ref": "vllm-omni main 24e5472849 + vllm==0.33.0",
+                            "num_gpus": 2,
+                            "serve_args": "--served-model-name black-forest-labs/flux-3-image-klein-base --tensor-parallel-size 2 --no-diffusion-compile-dynamic",
+                            "description": "Tensor parallel 2 with both CFG branches in one batched call (Flux3's batch CFG, on whenever cfg_parallel_size is 1). Never selected on its own: A/B arm.",
+                            "notes": "flux3_transformer.py shards attention QKV and the MLP across TP ranks. VALIDATION PENDING (2026-11-18, 4xB300)."
+                        },
+                        "cand-usp2-static": {
+                            "framework_ref": "vllm-omni main 24e5472849 + vllm==0.33.0",
+                            "num_gpus": 2,
+                            "serve_args": "--served-model-name black-forest-labs/flux-3-image-klein-base --usp 2 --no-diffusion-compile-dynamic",
+                            "description": "Ulysses 2 with both CFG branches in one batched call. Never selected on its own: A/B arm.",
+                            "notes": "VALIDATION PENDING (2026-11-18, 4xB300)."
+                        }
+                    }
+                },
                 "comfyui": {
                     "num_gpus": 2,
                     "serve_args": "--gpu-only",
@@ -218,13 +273,11 @@
                 }
             },
             "report_framework_statuses": {
-                "vllm-omni": "unsupported",
                 "lightx2v": "unsupported",
                 "trtllm-visual": "unsupported",
                 "fastvideo": "unsupported"
             },
             "report_framework_reasons": {
-                "vllm-omni": "No FLUX.3 pipeline on vLLM-Omni main (2026-10-16). It is in the open, approved PR vllm-project/vllm-omni#9007; reclassify once it merges. Measured pre-merge on 2xH200 2026-10-16 at head 389a02a149ce with vllm==0.31.0 (the head's docker/Dockerfile.ci): CFG parallel 2 4.534 s, one GPU 9.101 s (regional compile, FLASH_ATTN). Its FLUX.3 loader reads only a local package directory (model_path = the snapshot dir), and requests need --served-model-name set to the case model.",
                 "lightx2v": "LightX2V main has no FLUX.3 serving path (2026-10-15): no flux3 / flux-3-image code or PR in ModelTC/LightX2V; its FLUX coverage ends at FLUX.2.",
                 "trtllm-visual": "No FLUX.3 pipeline on TensorRT-LLM main (2026-10-16); NVIDIA/TensorRT-LLM#20430 adds it and is still a draft.",
                 "fastvideo": "FastVideo main has no FLUX.3 pipeline (2026-10-15): no flux3 code in hao-ai-lab/FastVideo."
@@ -985,6 +1038,15 @@
                             },
                             "description": "blackwell-cudnn-static plus --ulysses-a2a-permute (copy-engine Ulysses exchange). Never selected on its own: A/B arm.",
                             "notes": "vLLM-Omni #9922 (2026-11-13): Ulysses all-to-all over the CUDA copy engine instead of NCCL, off by default (`--ulysses-a2a-permute`). Upstream reports Qwen-Image SP2 1536^2 10.717 -> 10.467 s (-2.34%) and 512^2 5.524 -> 5.506 s on L20X, against its own earlier LSA kernel, pixel hashes identical. VALIDATION PENDING (2026-11-18, 4xB300)."
+                        },
+                        "cand-tetp2": {
+                            "num_gpus": 2,
+                            "serve_args": "--usp 2 --no-diffusion-compile-dynamic --text-encoder-tp-size 2",
+                            "extra_env": {
+                                "DIFFUSION_ATTENTION_BACKEND": "CUDNN_ATTN"
+                            },
+                            "description": "blackwell-cudnn-static plus --text-encoder-tp-size 2 (text encoder sharded across the two DiT ranks, #9438). Never selected on its own: A/B arm.",
+                            "notes": "vLLM-Omni's text-encoder tensor parallelism (docs/user_guide/diffusion/parallelism/tensor_parallel.md) is off by default (text_encoder_tp_size 1) and documented for the Qwen-Image family and MiniMax-H3; its example pairs it with --tensor-parallel-size, this profile's DiT runs --usp 2. VALIDATION PENDING (2026-11-18, 4xB300)."
                         }
                     }
                 }
@@ -2264,6 +2326,29 @@
                             },
                             "description": "blackwell-4gpu-cfg2-usp2-vaepp-devpost plus --ulysses-a2a-permute (copy-engine Ulysses exchange). Never selected on its own: A/B arm.",
                             "notes": "vLLM-Omni #9922 (2026-11-13): Ulysses all-to-all over the CUDA copy engine instead of NCCL, off by default (`--ulysses-a2a-permute`). Upstream reports Qwen-Image SP2 1536^2 10.717 -> 10.467 s (-2.34%) and 512^2 5.524 -> 5.506 s on L20X, against its own earlier LSA kernel, pixel hashes identical. VALIDATION PENDING (2026-11-18, 4xB300)."
+                        },
+                        "cand-preencode": {
+                            "num_gpus": 4,
+                            "serve_args": "--num-gpus 4 --cfg-parallel-size 2 --usp 2 --vae-patch-parallel-size 4 --vae-parallel-mode spatial_shard_width --no-diffusion-compile-dynamic --video-output-transport {\"enable_device_postprocess\":true}",
+                            "extra_env": {
+                                "DIFFUSION_ATTENTION_BACKEND": "CUDNN_ATTN"
+                            },
+                            "request_extra": {
+                                "extra_params": {
+                                    "preencode_mp4": true
+                                }
+                            },
+                            "description": "blackwell-4gpu-cfg2-usp2-vaepp-devpost with extra_params.preencode_mp4 on every request (MP4 encoding overlapped with the VAE decode). Never selected on its own: A/B arm.",
+                            "notes": "vLLM-Omni documents preencode_mp4 for MiniMax-H3 and Wan 2.2 (docs/serving/videos_api.md); the H3 cells have sent it since 2026-10-08, the Wan cell never did. On Wan the flag replaces vae.decode with decode_to_mp4, which decodes in batches of frames (wan2_2/pipeline_wan2_2.py, chunked_mp4.py), so it also replaces the 4-GPU spatial-shard VAE decode the base profile selects; which of the two is faster is the question. VALIDATION PENDING (2026-11-18, 4xB300)."
+                        },
+                        "cand-usp4-cfgbatch": {
+                            "num_gpus": 4,
+                            "serve_args": "--num-gpus 4 --usp 4 --enable-cfg-batching --vae-patch-parallel-size 4 --vae-parallel-mode spatial_shard_width --no-diffusion-compile-dynamic --video-output-transport {\"enable_device_postprocess\":true}",
+                            "extra_env": {
+                                "DIFFUSION_ATTENTION_BACKEND": "CUDNN_ATTN"
+                            },
+                            "description": "Ulysses 4 with both CFG branches in one batched denoiser call (--enable-cfg-batching, #9797) in place of CFG-parallel 2 x Ulysses 2. Never selected on its own: A/B arm.",
+                            "notes": "vLLM-Omni's CFG batching (docs/user_guide/diffusion/parallelism/cfg_parallel.md) is off by default, applies only without CFG-parallel, and Wan2.2 T2V opts in. Its doc says batched and sequential outputs are not bit-identical in bf16 (GEMMs at twice the batch size); same dtype and algorithm, so the same precision class. VALIDATION PENDING (2026-11-18, 4xB300)."
                         }
                     }
                 },
@@ -5739,6 +5824,22 @@
                             },
                             "description": "blackwell-omp8 plus parallel_config.async_ulysses: the Q/K/V projections overlap with the cross-rank all-to-all on a side stream. Never selected on its own: A/B arm.",
                             "notes": "A profile's visual_gen_args are DEEP-MERGED onto the framework entry's, so this arm keeps the framework entry's ulysses_size and parallel_vae_size and adds only the async flag. Upstream (tensorrt-llm #20333, merged 2026-10-23, after rc1): MiniMax-H3 with async_ulysses on 8xB200, FA4, torch.compile on, 768x1344x124 frames, 28 steps, whole generations: -3.3% at Ulysses 2, -2.4% at 4, -1.5% at 8; BF16 only; not bit-identical to the shipped path (Q, K and V become three GEMMs instead of one, so bf16 rounding differs from the first block on). Not measured on B300 before 2026-11-18. VALIDATION PENDING (round 2026-11-18, 4xB300)."
+                        },
+                        "cand-async-tetp2": {
+                            "framework_ref": "tensorrt-llm 1.4.0rc3 (tag v1.4.0rc3, 9e334fbaae)",
+                            "num_gpus": 2,
+                            "serve_args": "",
+                            "visual_gen_args": {
+                                "parallel_config": {
+                                    "async_ulysses": true,
+                                    "text_encoder_tp_size": 2
+                                }
+                            },
+                            "extra_env": {
+                                "OMP_NUM_THREADS": "8"
+                            },
+                            "description": "b300-omp8-async plus parallel_config.text_encoder_tp_size 2 (tensorrt-llm #19807, text-only prompts). Never selected on its own: A/B arm.",
+                            "notes": "A profile's visual_gen_args are DEEP-MERGED onto the framework entry's. Upstream's PR gives no performance number. VALIDATION PENDING (2026-11-18, 4xB300)."
                         }
                     },
                     "extra_env_reason": "The harness exports PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True. Under it, the CUDA IPC handle TRT-LLM's rank 0 hands its media over with needs pidfd_getfd in the server process, which RunPod containers deny: every request logged 'pidfd_getfd: Operation not permitted' and hung to the read timeout (4xB300, 2026-10-22). Plain segments use cudaIpcMemHandle instead."

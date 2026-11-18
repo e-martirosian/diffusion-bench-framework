@@ -1,0 +1,8 @@
+# 2026-11-18: what sglang's Qwen-Image-2.1 VAE padding-fold fallback costs on B300. The fold is verified bit-exact per conv on first
+# sight and B300 (cuDNN 9.24) rejects it ("conv padding fold (NHWC) fast path is not bit-exact ..."), so those convs keep the F.pad copy.
+# `ffold` is main with the fold forced on, verified or not: an experiment tree, never a candidate (its output is not the reference's).
+# Stage timers are synchronized so the decode stage can be read off; these latencies are not published numbers.
+qv-main-r1 sglang qwen_image_21_t2i_1024 single_e2e 0 - DBF_SGLANG_PYTHONPATH=/workspace/r1118/sgl-main/python SGLANG_DIFFUSION_SYNC_STAGE_PROFILING=1
+qv-ffold-r1 sglang qwen_image_21_t2i_1024 single_e2e 0 - DBF_SGLANG_PYTHONPATH=/workspace/r1118/sgl-ffold/python SGLANG_DIFFUSION_SYNC_STAGE_PROFILING=1
+qv-ffold-r2 sglang qwen_image_21_t2i_1024 single_e2e 0 - DBF_SGLANG_PYTHONPATH=/workspace/r1118/sgl-ffold/python SGLANG_DIFFUSION_SYNC_STAGE_PROFILING=1
+qv-main-r2 sglang qwen_image_21_t2i_1024 single_e2e 0 - DBF_SGLANG_PYTHONPATH=/workspace/r1118/sgl-main/python SGLANG_DIFFUSION_SYNC_STAGE_PROFILING=1

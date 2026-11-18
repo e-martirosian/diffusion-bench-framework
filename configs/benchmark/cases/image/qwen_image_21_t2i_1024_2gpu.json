@@ -190,6 +190,15 @@
           },
           "description": "blackwell-cudnn-static plus --ulysses-a2a-permute (copy-engine Ulysses exchange). Never selected on its own: A/B arm.",
           "notes": "vLLM-Omni #9922 (2026-11-13): Ulysses all-to-all over the CUDA copy engine instead of NCCL, off by default (`--ulysses-a2a-permute`). Upstream reports Qwen-Image SP2 1536^2 10.717 -> 10.467 s (-2.34%) and 512^2 5.524 -> 5.506 s on L20X, against its own earlier LSA kernel, pixel hashes identical. VALIDATION PENDING (2026-11-18, 4xB300)."
+        },
+        "cand-tetp2": {
+          "num_gpus": 2,
+          "serve_args": "--usp 2 --no-diffusion-compile-dynamic --text-encoder-tp-size 2",
+          "extra_env": {
+            "DIFFUSION_ATTENTION_BACKEND": "CUDNN_ATTN"
+          },
+          "description": "blackwell-cudnn-static plus --text-encoder-tp-size 2 (text encoder sharded across the two DiT ranks, #9438). Never selected on its own: A/B arm.",
+          "notes": "vLLM-Omni's text-encoder tensor parallelism (docs/user_guide/diffusion/parallelism/tensor_parallel.md) is off by default (text_encoder_tp_size 1) and documented for the Qwen-Image family and MiniMax-H3; its example pairs it with --tensor-parallel-size, this profile's DiT runs --usp 2. VALIDATION PENDING (2026-11-18, 4xB300)."
         }
       }
     },

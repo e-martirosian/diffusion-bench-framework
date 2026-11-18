@@ -1,0 +1,20 @@
+# 2026-11-18, second batch on one 4xB300 box (single_e2e, a fresh server per arm).
+# FLUX.3 Klein Base on vLLM-Omni, which serves it since vllm-omni #9523 (2026-11-10) and was still classified unsupported: its candidate
+# commands next to sglang. Then the per-request and topology options the competitors ship off by default that the first batch
+# (plan_b300_fairoff_20261118.txt) left out: vLLM-Omni text-encoder TP (tetp2), Wan preencode_mp4 (preenc) and CFG batching on Ulysses 4
+# (cfgb); TRT-LLM text-encoder TP (tetp2), each next to its framework's selected profile.
+fx-sg-r1 sglang flux3_klein_base_t2i_1024 single_e2e 0,1 -
+fx-vo-r1 vllm-omni flux3_klein_base_t2i_1024 single_e2e 0,1 default
+fx-vo-static-r1 vllm-omni flux3_klein_base_t2i_1024 single_e2e 0,1 cand-cfg2-static
+fx-vo-cudnn-r1 vllm-omni flux3_klein_base_t2i_1024 single_e2e 0,1 cand-cfg2-static-cudnn
+fx-vo-fi-r1 vllm-omni flux3_klein_base_t2i_1024 single_e2e 0,1 cand-cfg2-static-flashinfer
+fx-vo-tp2-r1 vllm-omni flux3_klein_base_t2i_1024 single_e2e 0,1 cand-tp2-static
+fx-vo-usp2-r1 vllm-omni flux3_klein_base_t2i_1024 single_e2e 0,1 cand-usp2-static
+fx-sg-r2 sglang flux3_klein_base_t2i_1024 single_e2e 0,1 -
+q2-vo-r2 vllm-omni qwen_image_21_t2i_1024_2gpu single_e2e 0,1 -
+q2-vo-tetp2-r1 vllm-omni qwen_image_21_t2i_1024_2gpu single_e2e 0,1 cand-tetp2
+wan-vo-r2 vllm-omni wan22_t2v_a14b_720p single_e2e 0,1,2,3 -
+wan-vo-preenc-r1 vllm-omni wan22_t2v_a14b_720p single_e2e 0,1,2,3 cand-preencode
+wan-vo-cfgb-r1 vllm-omni wan22_t2v_a14b_720p single_e2e 0,1,2,3 cand-usp4-cfgbatch
+h3-tr-r2 trtllm-visual minimax_h3_t2va_5s single_e2e 0,1 -
+h3-tr-tetp2-r1 trtllm-visual minimax_h3_t2va_5s single_e2e 0,1 cand-async-tetp2

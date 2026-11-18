@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""vLLM-Omni video requests drop the fields the case's entry lists in `request_omit_keys`.
+"""vLLM-Omni video requests drop the fields the case's entry lists in `request_omit_keys`, and carry a selected
+profile's `request_extra`.
 
 vLLM-Omni's LTX applies a top-level `guidance_scale` to BOTH video and audio CFG,
 after `extra_params`, so the LTX-2.3 cell (retired 2026-10-24, kept here as a
@@ -69,5 +70,28 @@ check("the LTX-2.5 distilled request sends no negative prompt", "negative_prompt
 check("...and the official distilled two-stage shape",
       (data["width"], data["height"], data["num_frames"], data["num_inference_steps"], data["guidance_scale"])
       == ("1920", "1088", "121", "8", "1.0"), str(data))
+
+# a selected profile's request_extra reaches the request, over the case's own extras and for that framework only
+WAN = {
+    "id": "wan", "task": "text-to-video", "prompt": "p", "width": 1280, "height": 720, "num_frames": 81, "seed": 42,
+    "fps": 16, "num_inference_steps": 40, "guidance_scale": 4.0,
+    "framework_request_extra": {"vllm-omni": {"extra_params": {"kept": 1}}},
+    "frameworks": {"vllm-omni": {"serve_args": "", "command_profiles": {
+        "default": {"serve_args": "--usp 2"},
+        "cand-preencode": {"serve_args": "--usp 2", "request_extra": {"extra_params": {"preencode_mp4": True}}},
+    }}},
+}
+for profile, want in (("cand-preencode", {"kept": 1, "preencode_mp4": True}), ("default", {"kept": 1})):
+    rc.os.environ["DIFFUSION_BENCH_FRAMEWORK_PROFILE"] = profile
+    fw_cfg = rc._resolve_framework_config("vllm-omni", WAN["frameworks"]["vllm-omni"], None, {})
+    rc.send_request_vllm_omni("http://x", rc._case_with_profile_request_extra(WAN, "vllm-omni", fw_cfg), config)
+    got = json.loads(sent[-1]["data"]["extra_params"])
+    check(f"profile {profile}: extra_params are {want}", got == want, str(got))
+    check(f"profile {profile}: the row's metadata records the profile's request_extra",
+          fw_cfg["_benchmark_metadata"]["request_extra"] == WAN["frameworks"]["vllm-omni"]["command_profiles"][profile].get("request_extra"))
+rc.os.environ.pop("DIFFUSION_BENCH_FRAMEWORK_PROFILE")
+check("the case itself is left alone", WAN["framework_request_extra"] == {"vllm-omni": {"extra_params": {"kept": 1}}})
+other = rc._case_with_profile_request_extra(WAN, "sglang", {"serve_args": ""})
+check("a framework whose profile has no request_extra gets the case as is", other is WAN)
 
 sys.exit(fail)
