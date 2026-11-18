@@ -605,6 +605,18 @@
             }
           },
           "notes": "Derived from `default` (the profile B300 selects). Audit 2026-10-23 (Cosmos3/Wan2.2 finding 4; Cosmos3 T2I sub-audit): only VANILLA and FA4 were A/B'd; TRT-LLM 1.4.0rc1 AttentionConfig.backend also takes CUDNN, TRTLLM, CUTEDSL and FLASHINFER (tensorrt_llm/visual_gen/args.py). Everything else is the selected visual_gen_args. No CUTEDSL arm on this cell: under Ulysses 2 Cosmos3's cross-attention refuses it ('Cosmos3 cross-attention with Ulysses cannot use the CUTEDSL backend', transformer_cosmos3.py). The cuDNN backend raises on a key_padding_mask rather than dropping it. VALIDATION PENDING (wave 4, 4xB300)."
+        },
+        "cand-graph": {
+          "framework_ref": "tensorrt-llm 1.4.0rc3 (tag v1.4.0rc3, 9e334fbaae)",
+          "num_gpus": 4,
+          "serve_args": "",
+          "visual_gen_args": {
+            "cuda_graph_config": {
+              "enable": true
+            }
+          },
+          "description": "default with VisualGen CUDA graphs on (the feature matrix lists Cosmos3 as supported). Never selected on its own: A/B arm.",
+          "notes": "A profile's visual_gen_args are DEEP-MERGED onto the framework entry's, so only the changed keys are listed. On Cosmos3 T2I the same option exited before the health check on 1.4.0rc1 (2026-10-22). VALIDATION PENDING (2026-11-18, 4xB300)."
         }
       },
       "extra_env_reason": "The harness exports PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True. Under it, the CUDA IPC handle TRT-LLM's rank 0 hands its media over with needs pidfd_getfd in the server process, which RunPod containers deny: every request logged 'pidfd_getfd: Operation not permitted' and hung to the read timeout (4xB300, 2026-10-22). Plain segments use cudaIpcMemHandle instead."

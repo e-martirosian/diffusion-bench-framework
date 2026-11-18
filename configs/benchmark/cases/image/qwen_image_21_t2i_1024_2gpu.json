@@ -181,6 +181,15 @@
             "recheck": "Re-checked 2026-11-16: three commits since changed no serving command (9ab4fabc up to 10 reference images, 6c8f6930 decode graph-pool lifetime fix, 725c1c9a Ascend MXFP8 KV cache); the 2026-10-22 note stands: the new exact text-conditioning cache cannot hit the harness's distinct per-request prompts."
           },
           "notes": "Derived from `blackwell-cudnn-static` (the profile B300 selects). Audit 2026-10-23 (image finding 2): recipes/Qwen/Qwen-Image-2.1.md documents --ulysses-a2a-permute for the Ulysses path; never measured here. cuDNN attention and static compile kept. VALIDATION PENDING (wave 4, 4xB300)."
+        },
+        "cand-a2a-permute": {
+          "num_gpus": 2,
+          "serve_args": "--usp 2 --no-diffusion-compile-dynamic --ulysses-a2a-permute",
+          "extra_env": {
+            "DIFFUSION_ATTENTION_BACKEND": "CUDNN_ATTN"
+          },
+          "description": "blackwell-cudnn-static plus --ulysses-a2a-permute (copy-engine Ulysses exchange). Never selected on its own: A/B arm.",
+          "notes": "vLLM-Omni #9922 (2026-11-13): Ulysses all-to-all over the CUDA copy engine instead of NCCL, off by default (`--ulysses-a2a-permute`). Upstream reports Qwen-Image SP2 1536^2 10.717 -> 10.467 s (-2.34%) and 512^2 5.524 -> 5.506 s on L20X, against its own earlier LSA kernel, pixel hashes identical. VALIDATION PENDING (2026-11-18, 4xB300)."
         }
       }
     },

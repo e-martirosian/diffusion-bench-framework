@@ -135,6 +135,15 @@
           },
           "num_gpus": 2,
           "notes": " VALIDATION PENDING (round 2026-10-22, 4xB300)."
+        },
+        "cand-graph": {
+          "num_gpus": 2,
+          "serve_args": "--tensor-parallel-size 2 --no-diffusion-compile-dynamic --stage-overrides {\"0\":{\"diffusion_use_graph\":true}}",
+          "extra_env": {
+            "DIFFUSION_ATTENTION_BACKEND": "FLASHINFER_ATTN"
+          },
+          "description": "blackwell-tp2-static plus the denoise-step CUDA graph (diffusion_use_graph). Never selected on its own: A/B arm.",
+          "notes": "vLLM-Omni's denoise-step graph (docs/user_guide/diffusion/denoise_graph.md, #9306 / #9597): one denoise step is captured as a CUDA graph and replayed; supported for Wan2.1/2.2 and Z-Image, off by default. Graphs are keyed by input shapes, and Z-Image's prompt length is part of the shape, so this harness's distinct-per-request prompts can recapture on every request. Upstream reports no gain on one Intel Arc Pro B70 (Z-Image, one prompt repeated: 4.45 s eager, 4.44 s graph). VALIDATION PENDING (2026-11-18, 4xB300)."
         }
       }
     },

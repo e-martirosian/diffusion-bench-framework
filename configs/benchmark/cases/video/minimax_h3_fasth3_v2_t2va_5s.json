@@ -128,6 +128,13 @@
           "extra_env": {},
           "description": "default plus --no-diffusion-compile-dynamic. Never selected on its own: A/B arm.",
           "notes": "The matrix cell ran the default profile, whose log reads 'lazy regional torch.compile with dynamic=True' and, on the first request, 'torch._dynamo hit config.recompile_limit (8)'; every other vLLM-Omni cell passes --no-diffusion-compile-dynamic. The 2026-10-22 audit measured up to 28% from this flag on other cells. VALIDATION PENDING (round 2026-11-18, 4xB300)."
+        },
+        "cand-a2a-permute": {
+          "num_gpus": 4,
+          "serve_args": "--trust-remote-code --task-type fl2va --num-gpus 4 --usp 4 --ring 1 --vae-patch-parallel-size 4 --vae-parallel-mode tile --vae-use-tiling --diffusion-attention-backend FASTVIDEO_VSA --revision 71a17d72c58ce3eeec418144de2a5a2090cb4c04 --ulysses-a2a-permute",
+          "extra_env": {},
+          "description": "default plus --ulysses-a2a-permute (copy-engine Ulysses exchange). Never selected on its own: A/B arm.",
+          "notes": "vLLM-Omni #9922 (2026-11-13): Ulysses all-to-all over the CUDA copy engine instead of NCCL, off by default (`--ulysses-a2a-permute`). Upstream reports Qwen-Image SP2 1536^2 10.717 -> 10.467 s (-2.34%) and 512^2 5.524 -> 5.506 s on L20X, against its own earlier LSA kernel, pixel hashes identical. VALIDATION PENDING (2026-11-18, 4xB300)."
         }
       },
       "framework_ref": "vllm-omni main 56763cd6c383 + vllm==0.30.0 + fastvideo-kernel==0.3.5 installed --no-deps (VLLM_OMNI_VSA_KERNEL_SPEC)"

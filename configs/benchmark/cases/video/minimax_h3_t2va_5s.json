@@ -537,6 +537,32 @@
         }
       },
       "command_profiles": {
+        "b300-omp8-async": {
+          "framework_ref": "tensorrt-llm 1.4.0rc3 (tag v1.4.0rc3, 9e334fbaae)",
+          "num_gpus": 2,
+          "serve_args": "",
+          "visual_gen_args": {
+            "parallel_config": {
+              "async_ulysses": true
+            }
+          },
+          "upstream_recipe": {
+            "repo": "NVIDIA/TensorRT-LLM",
+            "path": "examples/visual_gen/configs/minimax-h3-bf16-2gpu.yaml",
+            "commit": "a8ce1074a66b",
+            "commit_date": "2026-10-28",
+            "section": "BF16 multi-GPU config scaled to pure Ulysses 2",
+            "recheck": "Re-checked 2026-11-16: #20176 (a8ce1074) repurposed the 8-GPU file to 2-GPU pure Ulysses (ulysses_size 2, parallel_vae_size 2) and added a DiT tensor-parallel file (tp_size 2, no CUDA graph, VANILLA); the Ulysses degree is chosen per case here, and TP2 is measured as the cand-tp2 arm."
+          },
+          "extra_env": {
+            "OMP_NUM_THREADS": "8"
+          },
+          "description": "blackwell-omp8 plus async Ulysses (Q/K/V projections overlap the all-to-all).",
+          "hardware": [
+            "b300"
+          ],
+          "notes": "B300 only: measured on 4xB300 (2026-11-18, same box, a fresh server per arm, two interleaved rounds); other Blackwell hosts keep blackwell-omp8 until they are measured. parallel_config.async_ulysses (tensorrt-llm #20333, merged 2026-10-23, in 1.4.0rc2+) overlaps the per-rank Q/K/V projections with the cross-rank all-to-all on a side stream; BF16 only; three GEMMs instead of one fused Q/K/V GEMM, so not bit-identical to the default path (upstream reports LPIPS 0.09 against it). A profile's visual_gen_args are deep-merged onto the framework entry's, so only the changed keys are listed. blackwell-omp8 67.899 / 67.812 s, this profile 66.729 / 66.691 s (-1.72% / -1.65%)."
+        },
         "blackwell-omp8": {
           "framework_ref": "tensorrt-llm 1.4.0rc1 (tag 0372799d1543, 2026-10-19)",
           "num_gpus": 2,

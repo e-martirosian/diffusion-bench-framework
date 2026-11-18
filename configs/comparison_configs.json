@@ -976,6 +976,15 @@
                                 "recheck": "Re-checked 2026-11-16: three commits since changed no serving command (9ab4fabc up to 10 reference images, 6c8f6930 decode graph-pool lifetime fix, 725c1c9a Ascend MXFP8 KV cache); the 2026-10-22 note stands: the new exact text-conditioning cache cannot hit the harness's distinct per-request prompts."
                             },
                             "notes": "Derived from `blackwell-cudnn-static` (the profile B300 selects). Audit 2026-10-23 (image finding 2): recipes/Qwen/Qwen-Image-2.1.md documents --ulysses-a2a-permute for the Ulysses path; never measured here. cuDNN attention and static compile kept. VALIDATION PENDING (wave 4, 4xB300)."
+                        },
+                        "cand-a2a-permute": {
+                            "num_gpus": 2,
+                            "serve_args": "--usp 2 --no-diffusion-compile-dynamic --ulysses-a2a-permute",
+                            "extra_env": {
+                                "DIFFUSION_ATTENTION_BACKEND": "CUDNN_ATTN"
+                            },
+                            "description": "blackwell-cudnn-static plus --ulysses-a2a-permute (copy-engine Ulysses exchange). Never selected on its own: A/B arm.",
+                            "notes": "vLLM-Omni #9922 (2026-11-13): Ulysses all-to-all over the CUDA copy engine instead of NCCL, off by default (`--ulysses-a2a-permute`). Upstream reports Qwen-Image SP2 1536^2 10.717 -> 10.467 s (-2.34%) and 512^2 5.524 -> 5.506 s on L20X, against its own earlier LSA kernel, pixel hashes identical. VALIDATION PENDING (2026-11-18, 4xB300)."
                         }
                     }
                 }
@@ -1329,6 +1338,15 @@
                             },
                             "num_gpus": 2,
                             "notes": " VALIDATION PENDING (round 2026-10-22, 4xB300)."
+                        },
+                        "cand-graph": {
+                            "num_gpus": 2,
+                            "serve_args": "--tensor-parallel-size 2 --no-diffusion-compile-dynamic --stage-overrides {\"0\":{\"diffusion_use_graph\":true}}",
+                            "extra_env": {
+                                "DIFFUSION_ATTENTION_BACKEND": "FLASHINFER_ATTN"
+                            },
+                            "description": "blackwell-tp2-static plus the denoise-step CUDA graph (diffusion_use_graph). Never selected on its own: A/B arm.",
+                            "notes": "vLLM-Omni's denoise-step graph (docs/user_guide/diffusion/denoise_graph.md, #9306 / #9597): one denoise step is captured as a CUDA graph and replayed; supported for Wan2.1/2.2 and Z-Image, off by default. Graphs are keyed by input shapes, and Z-Image's prompt length is part of the shape, so this harness's distinct-per-request prompts can recapture on every request. Upstream reports no gain on one Intel Arc Pro B70 (Z-Image, one prompt repeated: 4.45 s eager, 4.44 s graph). VALIDATION PENDING (2026-11-18, 4xB300)."
                         }
                     }
                 },
@@ -2228,6 +2246,24 @@
                             },
                             "description": "blackwell-4gpu-cfg2-usp2-vaepp-devpost with FLASH_ATTN (CuTe FA4) in place of CUDNN_ATTN. Never selected on its own: A/B arm; needs the fa4 extra installed.",
                             "notes": "vLLM-Omni resolves FLASH_ATTN to CuTe FA4 on Blackwell, which needs the `fa4` extra (flash-attn-4[cu13], pinned in vllm-omni's pyproject); the round's venv did not install it, which is why the selected profiles use CUDNN_ATTN and why the older notes say FLASH_ATTN is refused on sm_100. SGLang measured FA4 1.5-2% faster than cuDNN for long self-attention on sm_103 and slower on sm_100. Not measured for vLLM-Omni on B300 before 2026-11-18. VALIDATION PENDING (round 2026-11-18, 4xB300)."
+                        },
+                        "cand-graph": {
+                            "num_gpus": 4,
+                            "serve_args": "--num-gpus 4 --cfg-parallel-size 2 --usp 2 --vae-patch-parallel-size 4 --vae-parallel-mode spatial_shard_width --no-diffusion-compile-dynamic --video-output-transport {\"enable_device_postprocess\":true} --stage-overrides {\"0\":{\"diffusion_use_graph\":true}}",
+                            "extra_env": {
+                                "DIFFUSION_ATTENTION_BACKEND": "CUDNN_ATTN"
+                            },
+                            "description": "blackwell-4gpu-cfg2-usp2-vaepp-devpost plus the denoise-step CUDA graph (diffusion_use_graph). Never selected on its own: A/B arm.",
+                            "notes": "vLLM-Omni's denoise-step graph (docs/user_guide/diffusion/denoise_graph.md, #9306 / #9597): one denoise step is captured as a CUDA graph and replayed; supported for Wan2.1/2.2 and Z-Image, off by default. Graphs are keyed by input shapes, and Z-Image's prompt length is part of the shape, so this harness's distinct-per-request prompts can recapture on every request. Upstream reports no gain on one Intel Arc Pro B70 (Z-Image, one prompt repeated: 4.45 s eager, 4.44 s graph). VALIDATION PENDING (2026-11-18, 4xB300)."
+                        },
+                        "cand-a2a-permute": {
+                            "num_gpus": 4,
+                            "serve_args": "--num-gpus 4 --cfg-parallel-size 2 --usp 2 --vae-patch-parallel-size 4 --vae-parallel-mode spatial_shard_width --no-diffusion-compile-dynamic --video-output-transport {\"enable_device_postprocess\":true} --ulysses-a2a-permute",
+                            "extra_env": {
+                                "DIFFUSION_ATTENTION_BACKEND": "CUDNN_ATTN"
+                            },
+                            "description": "blackwell-4gpu-cfg2-usp2-vaepp-devpost plus --ulysses-a2a-permute (copy-engine Ulysses exchange). Never selected on its own: A/B arm.",
+                            "notes": "vLLM-Omni #9922 (2026-11-13): Ulysses all-to-all over the CUDA copy engine instead of NCCL, off by default (`--ulysses-a2a-permute`). Upstream reports Qwen-Image SP2 1536^2 10.717 -> 10.467 s (-2.34%) and 512^2 5.524 -> 5.506 s on L20X, against its own earlier LSA kernel, pixel hashes identical. VALIDATION PENDING (2026-11-18, 4xB300)."
                         }
                     }
                 },
@@ -2664,6 +2700,41 @@
                                 }
                             },
                             "notes": "Derived from `default` (the profile B300 selects). Audit 2026-10-23 (Cosmos3/Wan2.2 finding 4; Cosmos3 T2I sub-audit): only VANILLA and FA4 were A/B'd; TRT-LLM 1.4.0rc1 AttentionConfig.backend also takes CUDNN, TRTLLM, CUTEDSL and FLASHINFER (tensorrt_llm/visual_gen/args.py). Everything else is the selected visual_gen_args. The 2026-10-23 B300 microbenchmark had CuTe DSL competitive (fastest under sustained load at the H3 shapes). VALIDATION PENDING (wave 4, 4xB300)."
+                        },
+                        "cand-cudnn-graph": {
+                            "framework_ref": "tensorrt-llm 1.4.0rc3 (tag v1.4.0rc3, 9e334fbaae)",
+                            "num_gpus": 4,
+                            "serve_args": "",
+                            "visual_gen_args": {
+                                "attention_config": {
+                                    "backend": "CUDNN"
+                                },
+                                "cuda_graph_config": {
+                                    "enable": true
+                                }
+                            },
+                            "description": "blackwell-cudnn with VisualGen CUDA graphs on (the feature matrix lists Wan 2.2 as supported). Never selected on its own: A/B arm.",
+                            "notes": "A profile's visual_gen_args are DEEP-MERGED onto the framework entry's, so only the changed keys are listed. The official Wan2.2 config keeps CUDA graphs off. VALIDATION PENDING (2026-11-18, 4xB300)."
+                        },
+                        "cand-cfg2-tp2-tokshard": {
+                            "framework_ref": "tensorrt-llm 1.4.0rc3 (tag v1.4.0rc3, 9e334fbaae)",
+                            "num_gpus": 4,
+                            "serve_args": "",
+                            "visual_gen_args": {
+                                "attention_config": {
+                                    "backend": "CUDNN"
+                                },
+                                "parallel_config": {
+                                    "cfg_size": 2,
+                                    "ulysses_size": 1,
+                                    "async_ulysses": false,
+                                    "tp_size": 2,
+                                    "tp_layout": "token_sharded",
+                                    "parallel_vae_size": 4
+                                }
+                            },
+                            "description": "CFG 2 x token-sharded TP 2 in place of CFG 2 x async Ulysses 2 (tp_layout: token_sharded, prototype, Wan 2.1/2.2 only). Never selected on its own: A/B arm.",
+                            "notes": "A profile's visual_gen_args are DEEP-MERGED onto the framework entry's, so only the changed keys are listed. ulysses_size and async_ulysses are overridden because the framework entry sets them and token-sharded TP does not compose with Ulysses. VALIDATION PENDING (2026-11-18, 4xB300)."
                         }
                     },
                     "extra_env_reason": "The harness exports PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True. Under it, the CUDA IPC handle TRT-LLM's rank 0 hands its media over with needs pidfd_getfd in the server process, which RunPod containers deny: every request logged 'pidfd_getfd: Operation not permitted' and hung to the read timeout (4xB300, 2026-10-22). Plain segments use cudaIpcMemHandle instead."
@@ -4307,6 +4378,18 @@
                                 }
                             },
                             "notes": "Derived from `default` (the profile B300 selects). Audit 2026-10-23 (Cosmos3/Wan2.2 finding 4; Cosmos3 T2I sub-audit): only VANILLA and FA4 were A/B'd; TRT-LLM 1.4.0rc1 AttentionConfig.backend also takes CUDNN, TRTLLM, CUTEDSL and FLASHINFER (tensorrt_llm/visual_gen/args.py). Everything else is the selected visual_gen_args. No CUTEDSL arm on this cell: under Ulysses 2 Cosmos3's cross-attention refuses it ('Cosmos3 cross-attention with Ulysses cannot use the CUTEDSL backend', transformer_cosmos3.py). The cuDNN backend raises on a key_padding_mask rather than dropping it. VALIDATION PENDING (wave 4, 4xB300)."
+                        },
+                        "cand-graph": {
+                            "framework_ref": "tensorrt-llm 1.4.0rc3 (tag v1.4.0rc3, 9e334fbaae)",
+                            "num_gpus": 4,
+                            "serve_args": "",
+                            "visual_gen_args": {
+                                "cuda_graph_config": {
+                                    "enable": true
+                                }
+                            },
+                            "description": "default with VisualGen CUDA graphs on (the feature matrix lists Cosmos3 as supported). Never selected on its own: A/B arm.",
+                            "notes": "A profile's visual_gen_args are DEEP-MERGED onto the framework entry's, so only the changed keys are listed. On Cosmos3 T2I the same option exited before the health check on 1.4.0rc1 (2026-10-22). VALIDATION PENDING (2026-11-18, 4xB300)."
                         }
                     },
                     "extra_env_reason": "The harness exports PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True. Under it, the CUDA IPC handle TRT-LLM's rank 0 hands its media over with needs pidfd_getfd in the server process, which RunPod containers deny: every request logged 'pidfd_getfd: Operation not permitted' and hung to the read timeout (4xB300, 2026-10-22). Plain segments use cudaIpcMemHandle instead."
@@ -5427,6 +5510,32 @@
                         }
                     },
                     "command_profiles": {
+                        "b300-omp8-async": {
+                            "framework_ref": "tensorrt-llm 1.4.0rc3 (tag v1.4.0rc3, 9e334fbaae)",
+                            "num_gpus": 2,
+                            "serve_args": "",
+                            "visual_gen_args": {
+                                "parallel_config": {
+                                    "async_ulysses": true
+                                }
+                            },
+                            "upstream_recipe": {
+                                "repo": "NVIDIA/TensorRT-LLM",
+                                "path": "examples/visual_gen/configs/minimax-h3-bf16-2gpu.yaml",
+                                "commit": "a8ce1074a66b",
+                                "commit_date": "2026-10-28",
+                                "section": "BF16 multi-GPU config scaled to pure Ulysses 2",
+                                "recheck": "Re-checked 2026-11-16: #20176 (a8ce1074) repurposed the 8-GPU file to 2-GPU pure Ulysses (ulysses_size 2, parallel_vae_size 2) and added a DiT tensor-parallel file (tp_size 2, no CUDA graph, VANILLA); the Ulysses degree is chosen per case here, and TP2 is measured as the cand-tp2 arm."
+                            },
+                            "extra_env": {
+                                "OMP_NUM_THREADS": "8"
+                            },
+                            "description": "blackwell-omp8 plus async Ulysses (Q/K/V projections overlap the all-to-all).",
+                            "hardware": [
+                                "b300"
+                            ],
+                            "notes": "B300 only: measured on 4xB300 (2026-11-18, same box, a fresh server per arm, two interleaved rounds); other Blackwell hosts keep blackwell-omp8 until they are measured. parallel_config.async_ulysses (tensorrt-llm #20333, merged 2026-10-23, in 1.4.0rc2+) overlaps the per-rank Q/K/V projections with the cross-rank all-to-all on a side stream; BF16 only; three GEMMs instead of one fused Q/K/V GEMM, so not bit-identical to the default path (upstream reports LPIPS 0.09 against it). A profile's visual_gen_args are deep-merged onto the framework entry's, so only the changed keys are listed. blackwell-omp8 67.899 / 67.812 s, this profile 66.729 / 66.691 s (-1.72% / -1.65%)."
+                        },
                         "blackwell-omp8": {
                             "framework_ref": "tensorrt-llm 1.4.0rc1 (tag 0372799d1543, 2026-10-19)",
                             "num_gpus": 2,
@@ -6108,6 +6217,13 @@
                             "extra_env": {},
                             "num_gpus": 4,
                             "notes": " VALIDATION PENDING (round 2026-10-22, 4xB300)."
+                        },
+                        "cand-a2a-permute": {
+                            "num_gpus": 4,
+                            "serve_args": "--trust-remote-code --task-type fl2va --num-gpus 4 --usp 4 --ring 1 --vae-patch-parallel-size 4 --vae-parallel-mode tile --vae-use-tiling --no-diffusion-compile-dynamic --ulysses-a2a-permute",
+                            "extra_env": {},
+                            "description": "blackwell-4gpu-static plus --ulysses-a2a-permute (copy-engine Ulysses exchange). Never selected on its own: A/B arm.",
+                            "notes": "vLLM-Omni #9922 (2026-11-13): Ulysses all-to-all over the CUDA copy engine instead of NCCL, off by default (`--ulysses-a2a-permute`). Upstream reports Qwen-Image SP2 1536^2 10.717 -> 10.467 s (-2.34%) and 512^2 5.524 -> 5.506 s on L20X, against its own earlier LSA kernel, pixel hashes identical. VALIDATION PENDING (2026-11-18, 4xB300)."
                         }
                     },
                     "reason": "Empirically validated 2026-08-07, first on minimax-h3-5090-2gpu-v4 (2x RTX 5090) then on 2xB200: the default (compiled) profile segfaults identically on both GPU classes 1 step into denoising (see command_profiles.default.notes) -- a confirmed hardware-independent vLLM-Omni bug, despite the recipe's own claim that torch.compile is 'not enabled by default on consumer paths.' --enforce-eager avoids that segfault, but on RTX 5090 it fails differently at startup (a diffusion worker process dies before completing its init handshake, surfaced as EOFError) and never completes a request on that GPU class. On 2xB200 the identical --enforce-eager command works cleanly and completes a correct generation -- see command_profiles.b200-2gpu for the validated numbers and the sglang comparison on the same hardware. Net: vLLM-Omni H3 support is real but fragile below the B200 class tested here; RTX 5090 has no working profile for this case in either variant."
@@ -6286,6 +6402,35 @@
                         }
                     },
                     "command_profiles": {
+                        "b300-fa4-omp8-async": {
+                            "framework_ref": "tensorrt-llm 1.4.0rc3 (tag v1.4.0rc3, 9e334fbaae)",
+                            "num_gpus": 4,
+                            "serve_args": "",
+                            "visual_gen_args": {
+                                "attention_config": {
+                                    "backend": "FA4"
+                                },
+                                "parallel_config": {
+                                    "async_ulysses": true
+                                }
+                            },
+                            "upstream_recipe": {
+                                "repo": "NVIDIA/TensorRT-LLM",
+                                "path": "examples/visual_gen/configs/minimax-h3-bf16-2gpu.yaml",
+                                "commit": "a8ce1074a66b",
+                                "commit_date": "2026-10-28",
+                                "section": "BF16 multi-GPU config scaled to pure Ulysses 4",
+                                "recheck": "Re-checked 2026-11-16: #20176 (a8ce1074) repurposed the 8-GPU file to 2-GPU pure Ulysses (ulysses_size 2, parallel_vae_size 2) and added a DiT tensor-parallel file (tp_size 2, no CUDA graph, VANILLA); the Ulysses degree is chosen per case here, and TP2 is measured as the cand-tp2 arm."
+                            },
+                            "extra_env": {
+                                "OMP_NUM_THREADS": "8"
+                            },
+                            "description": "blackwell-fa4-omp8 plus async Ulysses (Q/K/V projections overlap the all-to-all).",
+                            "hardware": [
+                                "b300"
+                            ],
+                            "notes": "B300 only: measured on 4xB300 (2026-11-18, same box, a fresh server per arm, two interleaved rounds); other Blackwell hosts keep blackwell-fa4-omp8 until they are measured. parallel_config.async_ulysses (tensorrt-llm #20333, merged 2026-10-23, in 1.4.0rc2+) overlaps the per-rank Q/K/V projections with the cross-rank all-to-all on a side stream; BF16 only; three GEMMs instead of one fused Q/K/V GEMM, so not bit-identical to the default path (upstream reports LPIPS 0.09 against it). A profile's visual_gen_args are deep-merged onto the framework entry's, so only the changed keys are listed. blackwell-fa4-omp8 36.321 / 36.333 s, this profile 35.744 / 35.789 s (-1.59% / -1.50%)."
+                        },
                         "blackwell-fa4-omp8": {
                             "framework_ref": "tensorrt-llm 1.4.0rc1 (tag 0372799d1543, 2026-10-19)",
                             "num_gpus": 4,
@@ -6456,6 +6601,26 @@
                             },
                             "description": "blackwell-fa4-omp8 plus parallel_config.async_ulysses at Ulysses 4. Never selected on its own: A/B arm.",
                             "notes": "A profile's visual_gen_args are DEEP-MERGED onto the framework entry's, so this arm keeps the framework entry's ulysses_size and parallel_vae_size and adds only the async flag. Upstream (tensorrt-llm #20333, merged 2026-10-23, after rc1): MiniMax-H3 with async_ulysses on 8xB200, FA4, torch.compile on, 768x1344x124 frames, 28 steps, whole generations: -3.3% at Ulysses 2, -2.4% at 4, -1.5% at 8; BF16 only; not bit-identical to the shipped path (Q, K and V become three GEMMs instead of one, so bf16 rounding differs from the first block on). Not measured on B300 before 2026-11-18. VALIDATION PENDING (round 2026-11-18, 4xB300). The attention backend is spelled out because this profile does not inherit blackwell-fa4-omp8's."
+                        },
+                        "cand-tp2-u2": {
+                            "framework_ref": "tensorrt-llm 1.4.0rc3 (tag v1.4.0rc3, 9e334fbaae)",
+                            "num_gpus": 4,
+                            "serve_args": "",
+                            "visual_gen_args": {
+                                "attention_config": {
+                                    "backend": "FA4"
+                                },
+                                "parallel_config": {
+                                    "ulysses_size": 2,
+                                    "tp_size": 2,
+                                    "parallel_vae_size": 4
+                                }
+                            },
+                            "extra_env": {
+                                "OMP_NUM_THREADS": "8"
+                            },
+                            "description": "Tensor parallel 2 x Ulysses 2 on four GPUs in place of Ulysses 4 (tensorrt-llm #20176 added H3 tensor parallelism). Never selected on its own: A/B arm.",
+                            "notes": "A profile's visual_gen_args are DEEP-MERGED onto the framework entry's, so only the changed keys are listed. n_workers = cfg x ulysses x ring x tp = 4. On two GPUs TP2 tied Ulysses 2 (68.64 against 68.39 s, 2026-11-17). VALIDATION PENDING (2026-11-18, 4xB300)."
                         }
                     },
                     "extra_env_reason": "The harness exports PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True. Under it, the CUDA IPC handle TRT-LLM's rank 0 hands its media over with needs pidfd_getfd in the server process, which RunPod containers deny: every request logged 'pidfd_getfd: Operation not permitted' and hung to the read timeout (4xB300, 2026-10-22). Plain segments use cudaIpcMemHandle instead."
@@ -7931,6 +8096,13 @@
                             "extra_env": {},
                             "description": "default plus --no-diffusion-compile-dynamic. Never selected on its own: A/B arm.",
                             "notes": "The matrix cell ran the default profile, whose log reads 'lazy regional torch.compile with dynamic=True' and, on the first request, 'torch._dynamo hit config.recompile_limit (8)'; every other vLLM-Omni cell passes --no-diffusion-compile-dynamic. The 2026-10-22 audit measured up to 28% from this flag on other cells. VALIDATION PENDING (round 2026-11-18, 4xB300)."
+                        },
+                        "cand-a2a-permute": {
+                            "num_gpus": 4,
+                            "serve_args": "--trust-remote-code --task-type fl2va --num-gpus 4 --usp 4 --ring 1 --vae-patch-parallel-size 4 --vae-parallel-mode tile --vae-use-tiling --diffusion-attention-backend FASTVIDEO_VSA --revision 71a17d72c58ce3eeec418144de2a5a2090cb4c04 --ulysses-a2a-permute",
+                            "extra_env": {},
+                            "description": "default plus --ulysses-a2a-permute (copy-engine Ulysses exchange). Never selected on its own: A/B arm.",
+                            "notes": "vLLM-Omni #9922 (2026-11-13): Ulysses all-to-all over the CUDA copy engine instead of NCCL, off by default (`--ulysses-a2a-permute`). Upstream reports Qwen-Image SP2 1536^2 10.717 -> 10.467 s (-2.34%) and 512^2 5.524 -> 5.506 s on L20X, against its own earlier LSA kernel, pixel hashes identical. VALIDATION PENDING (2026-11-18, 4xB300)."
                         }
                     },
                     "framework_ref": "vllm-omni main 56763cd6c383 + vllm==0.30.0 + fastvideo-kernel==0.3.5 installed --no-deps (VLLM_OMNI_VSA_KERNEL_SPEC)"
