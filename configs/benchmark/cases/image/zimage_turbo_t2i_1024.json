@@ -277,6 +277,23 @@
             "section": "Ulysses sequence parallel over 2 GPUs (scripts/z_image/z_image_turbo_t2i_dist.sh)"
           },
           "notes": "Derived from `blackwell-fa2-fusion` (the profile B300 selects). Audit 2026-10-23 (image finding 8, Cosmos3/Wan2.2 finding 5): every LightX2V Blackwell cell runs FlashAttention 2 (the sm80 mma.sync path on sm103); torch_sdpa (lightx2v/common/ops/attn/torch_sdpa.py, cuDNN / flash SDPA on B300) was never A/B'd. FA4 is not reachable: the installer deletes flash_attn/cute (no nvidia-cutlass-dsl release satisfies it, see the SKILL), which this arm keeps. torch_sdpa ignores cu_seqlens, which is exact here because every call is one unpadded sequence (batch 1 per CFG rank). VALIDATION PENDING (wave 4, 4xB300)."
+        },
+        "cand-noprof": {
+          "lightx2v_config": {
+            "attn_type": "flash_attn2",
+            "parallel": {
+              "seq_p_size": 2,
+              "seq_p_attn_type": "ulysses",
+              "seq_p_tensor_fusion": true,
+              "seq_p_prepost_backend": "triton"
+            }
+          },
+          "num_gpus": 2,
+          "extra_env": {
+            "PROFILING_DEBUG_LEVEL": "0"
+          },
+          "description": "blackwell-fa2-fusion plus PROFILING_DEBUG_LEVEL=0 (no per-step device synchronize and log line). Never selected on its own: A/B arm.",
+          "notes": "LightX2V 395e2ac49f sets PROFILING_DEBUG_LEVEL=2 unless the environment says otherwise (lightx2v/__init__.py), and at level 1 and above every denoise step runs inside profiling contexts (step_pre / infer_main / step_post in models/runners/default_runner.py) that synchronize the device and log a line. Its own doc string calls 0 the default. This harness set 0 for the MiniMax-H3 entries only; the run logs of both the 2026-10-22 and 2026-11-16 rounds carry the per-step profile lines for this cell. VALIDATION PENDING (2026-11-18, 4xB300)."
         }
       }
     },

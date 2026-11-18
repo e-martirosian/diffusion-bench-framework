@@ -461,6 +461,28 @@
           "extra_env": {
             "PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:False"
           }
+        },
+        "cand-noprof": {
+          "serve_args": "",
+          "lightx2v_config": {
+            "self_attn_1_type": "torch_sdpa",
+            "cross_attn_1_type": "torch_sdpa"
+          },
+          "extra_env": {
+            "PROFILING_DEBUG_LEVEL": "0"
+          },
+          "description": "blackwell-sdpa plus PROFILING_DEBUG_LEVEL=0 (no per-step device synchronize and log line). Never selected on its own: A/B arm.",
+          "notes": "LightX2V 395e2ac49f sets PROFILING_DEBUG_LEVEL=2 unless the environment says otherwise (lightx2v/__init__.py), and at level 1 and above every denoise step runs inside profiling contexts (step_pre / infer_main / step_post in models/runners/default_runner.py) that synchronize the device and log a line. Its own doc string calls 0 the default. This harness set 0 for the MiniMax-H3 entries only; the run logs of both the 2026-10-22 and 2026-11-16 rounds carry the per-step profile lines for this cell. VALIDATION PENDING (2026-11-18, 4xB300)."
+        },
+        "cand-vae-compile": {
+          "serve_args": "",
+          "lightx2v_config": {
+            "self_attn_1_type": "torch_sdpa",
+            "cross_attn_1_type": "torch_sdpa",
+            "vae_use_compile": true
+          },
+          "description": "blackwell-sdpa plus vae_use_compile (torch.compile on the Wan VAE decoder). Never selected on its own: A/B arm.",
+          "notes": "New in LightX2V 395e2ac49f: ModelTC/LightX2V#1646 made the generic Wan runner compile the VAE encoder/decoder when vae_use_compile is set (models/runners/wan/wan_runner.py _configure_vae_compile); before, the key reached the tiny VAE only. Off by default. VALIDATION PENDING (2026-11-18, 4xB300)."
         }
       },
       "model_override_reason": "Same weights, different packaging: LightX2V reads Wan's original checkpoint layout, while sglang and vLLM-Omni read the Diffusers conversion (Wan2.2-T2V-A14B-Diffusers). Equivalent model path, not a different model."

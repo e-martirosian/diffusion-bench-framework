@@ -1,0 +1,23 @@
+# 2026-11-18, third batch on one 4xB300 box (single_e2e, a fresh server per arm): LightX2V options our commands leave off, from the audit
+# of ModelTC/LightX2V 19c19614..395e2ac4. noprof = PROFILING_DEBUG_LEVEL=0 (LightX2V defaults to 2: a device synchronize and a log line
+# around every denoise step; only the H3 entries set 0). The rest are config keys LightX2V ships off: Wan VAE compile, and for H3 the
+# packed Ulysses exchange, head-parallel Ulysses, fused QKV(+norm+RoPE), VAE compile, a traceable RMSNorm.
+zi-lx-r1 lightx2v zimage_turbo_t2i_1024 single_e2e 0,1 -
+zi-lx-noprof-r1 lightx2v zimage_turbo_t2i_1024 single_e2e 0,1 cand-noprof
+q1-lx-r1 lightx2v qwen_image_21_t2i_1024 single_e2e 0 -
+q1-lx-noprof-r1 lightx2v qwen_image_21_t2i_1024 single_e2e 0 cand-noprof
+zi-lx-noprof-r2 lightx2v zimage_turbo_t2i_1024 single_e2e 0,1 cand-noprof
+zi-lx-r2 lightx2v zimage_turbo_t2i_1024 single_e2e 0,1 -
+q1-lx-noprof-r2 lightx2v qwen_image_21_t2i_1024 single_e2e 0 cand-noprof
+q1-lx-r2 lightx2v qwen_image_21_t2i_1024 single_e2e 0 -
+c3v-lx-r1 lightx2v cosmos3_nano_t2v_720p_189f single_e2e 0,1,2,3 -
+c3v-lx-noprof-r1 lightx2v cosmos3_nano_t2v_720p_189f single_e2e 0,1,2,3 cand-noprof
+wan-lx-r1 lightx2v wan22_t2v_a14b_720p single_e2e 0,1,2,3 -
+wan-lx-noprof-r1 lightx2v wan22_t2v_a14b_720p single_e2e 0,1,2,3 cand-noprof
+wan-lx-vaec-r1 lightx2v wan22_t2v_a14b_720p single_e2e 0,1,2,3 cand-vae-compile
+h3-lx-r1 lightx2v minimax_h3_t2va_5s single_e2e 0,1 -
+h3-lx-fusion-r1 lightx2v minimax_h3_t2va_5s single_e2e 0,1 cand-sp-fusion
+h3-lx-head-r1 lightx2v minimax_h3_t2va_5s single_e2e 0,1 cand-sp-head
+h3-lx-fqkv-r1 lightx2v minimax_h3_t2va_5s single_e2e 0,1 cand-fused-qkv
+h3-lx-vaec-r1 lightx2v minimax_h3_t2va_5s single_e2e 0,1 cand-vae-compile
+h3-lx-rms-r1 lightx2v minimax_h3_t2va_5s single_e2e 0,1 cand-rms-native

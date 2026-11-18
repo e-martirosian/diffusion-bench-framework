@@ -473,6 +473,83 @@
             "attn_type": "flash_attn2"
           },
           "notes": "VALIDATION PENDING (2026-10-08). flash_attn3 is a Hopper-only kernel; FlashAttention 2 (source-built for sm_100) is what every LightX2V Blackwell profile here runs, the same exact-softmax class. Untested alternative: torch_sdpa (cuDNN / flash SDPA, what sglang resolves for H3 on B200). Otherwise the default profile; see its notes."
+        },
+        "cand-sp-fusion": {
+          "num_gpus": 2,
+          "serve_args": "--model-variant fl2av",
+          "lightx2v_config": {
+            "attn_type": "torch_sdpa",
+            "parallel": {
+              "tensor_p_size": 1,
+              "seq_p_size": 2,
+              "seq_p_attn_type": "ulysses",
+              "seq_p_tensor_fusion": true,
+              "seq_p_prepost_backend": "triton"
+            }
+          },
+          "description": "blackwell-sp2-sdpa plus seq_p_tensor_fusion with the Triton pre/post backend (one packed all-to-all per attention). Never selected on its own: A/B arm.",
+          "notes": "LightX2V 395e2ac49f reads parallel.seq_p_tensor_fusion and parallel.seq_p_prepost_backend in models/networks/minimax_h3/infer/transformer_infer.py, both off by default; upstream's own H3 sequence-parallel presets set them (configs/minimax_h3/fp8/minimax_h3_sp_5090.json), and this harness already selects the pair for Z-Image on Blackwell. VALIDATION PENDING (2026-11-18, 4xB300)."
+        },
+        "cand-sp-head": {
+          "num_gpus": 2,
+          "serve_args": "--model-variant fl2av",
+          "lightx2v_config": {
+            "attn_type": "torch_sdpa",
+            "parallel": {
+              "tensor_p_size": 1,
+              "seq_p_size": 2,
+              "seq_p_attn_type": "ulysses",
+              "seq_p_head_parallel": true
+            }
+          },
+          "description": "blackwell-sp2-sdpa plus seq_p_head_parallel. Never selected on its own: A/B arm.",
+          "notes": "LightX2V 395e2ac49f reads parallel.seq_p_head_parallel in models/networks/minimax_h3/infer/transformer_infer.py, off by default; upstream's H3 sequence-parallel presets set it. VALIDATION PENDING (2026-11-18, 4xB300)."
+        },
+        "cand-fused-qkv": {
+          "num_gpus": 2,
+          "serve_args": "--model-variant fl2av",
+          "lightx2v_config": {
+            "attn_type": "torch_sdpa",
+            "parallel": {
+              "tensor_p_size": 1,
+              "seq_p_size": 2,
+              "seq_p_attn_type": "ulysses"
+            },
+            "use_fused_qkv": true,
+            "use_fused_qkv_norm_rope": true
+          },
+          "description": "blackwell-sp2-sdpa plus use_fused_qkv and use_fused_qkv_norm_rope. Never selected on its own: A/B arm.",
+          "notes": "LightX2V 395e2ac49f reads use_fused_qkv / use_fused_qkv_norm_rope in models/networks/minimax_h3/infer/transformer_infer.py, both off by default (qkv_norm_rope_type defaults to triton). Whether they hold under torch.compile is not verified. VALIDATION PENDING (2026-11-18, 4xB300)."
+        },
+        "cand-vae-compile": {
+          "num_gpus": 2,
+          "serve_args": "--model-variant fl2av",
+          "lightx2v_config": {
+            "attn_type": "torch_sdpa",
+            "parallel": {
+              "tensor_p_size": 1,
+              "seq_p_size": 2,
+              "seq_p_attn_type": "ulysses"
+            },
+            "vae_use_compile": true
+          },
+          "description": "blackwell-sp2-sdpa plus vae_use_compile (torch.compile on the video VAE). Never selected on its own: A/B arm.",
+          "notes": "LightX2V 395e2ac49f passes vae_use_compile to the H3 video VAE (models/runners/minimax_h3/minimax_h3_runner.py), off by default. VALIDATION PENDING (2026-11-18, 4xB300)."
+        },
+        "cand-rms-native": {
+          "num_gpus": 2,
+          "serve_args": "--model-variant fl2av",
+          "lightx2v_config": {
+            "attn_type": "torch_sdpa",
+            "parallel": {
+              "tensor_p_size": 1,
+              "seq_p_size": 2,
+              "seq_p_attn_type": "ulysses"
+            },
+            "rms_type": "torch_native"
+          },
+          "description": "blackwell-sp2-sdpa plus rms_type torch_native (an RMSNorm Inductor can trace, in place of the opaque sgl-kernel op). Never selected on its own: A/B arm.",
+          "notes": "Upstream's newest BF16 compile preset uses rms_type torch_native (configs/minimax_h3/distill/8steps/minimax_h3_bf16_8step.json, LightX2V 395e2ac49f); this entry runs sgl-kernel. VALIDATION PENDING (2026-11-18, 4xB300)."
         }
       }
     },

@@ -441,6 +441,15 @@
             "recheck": "Re-checked 2026-11-16: #1673 (395e2ac4, 'LightX2V Refactor') adds `model_variant: omni` to this config and the Cosmos3 loader now requires it (`Cosmos3 requires model_variant='omni', ...`), so the profile's lightx2v_config carries it; no other key of the profile moved."
           },
           "notes": "Onboarded 2026-10-23 from the audits (image finding 3, Cosmos3/Wan2.2 finding 6): LightX2V 19c19614 has RUNNER_REGISTER('cosmos3') with tasks t2i/t2v/i2v (lightx2v/models/runners/cosmos3/cosmos3_runner.py) and configs/cosmos3/cosmos3_nano_omni.json matches this case: 35 steps (the harness writes infer_steps from the case), sample_guide_scale 6.0, sample_shift 10, 720x1280, resolution and duration templates off, one-pass norms, cosmos3_rope; offload off. Attention: torch_sdpa, LightX2V's own default for Cosmos3 (transformer_weights.py) and cuDNN / flash SDPA on B300; the upstream configs name flash_attn3 (Hopper-only) or flash_attn2 (the sm80 path). Every attention call is one sequence (_infer_attn passes a single cu_seqlens segment), so torch_sdpa ignoring cu_seqlens is exact. Text is tokenized to its real length (no padding), as in the other rows. Compile: Cosmos3TransformerInfer never calls init_compile/run_block at 19c19614, so use_compile is ignored and the transformer runs eager, LightX2V's only path. The negative prompt comes from the request (the case's), as for the other rows. VALIDATION PENDING (wave 4, 4xB300). First measured by the wave-4 A/B (scripts/run_b300_ab_20261022.sh, WAVE=4)."
+        },
+        "cand-noprof": {
+          "num_gpus": 4,
+          "serve_args": "",
+          "extra_env": {
+            "PROFILING_DEBUG_LEVEL": "0"
+          },
+          "description": "blackwell-cfg2-sp2-sdpa plus PROFILING_DEBUG_LEVEL=0 (no per-step device synchronize and log line). Never selected on its own: A/B arm.",
+          "notes": "LightX2V 395e2ac49f sets PROFILING_DEBUG_LEVEL=2 unless the environment says otherwise (lightx2v/__init__.py), and at level 1 and above every denoise step runs inside profiling contexts (step_pre / infer_main / step_post in models/runners/default_runner.py) that synchronize the device and log a line. Its own doc string calls 0 the default. This harness set 0 for the MiniMax-H3 entries only; the run logs of both the 2026-10-22 and 2026-11-16 rounds carry the per-step profile lines for this cell. VALIDATION PENDING (2026-11-18, 4xB300)."
         }
       }
     },
