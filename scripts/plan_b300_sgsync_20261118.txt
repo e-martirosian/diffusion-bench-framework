@@ -1,0 +1,11 @@
+# 2026-11-18: sglang's true per-stage split. Stage timers are asynchronous by default (a stage's GPU work is charged to whichever
+# later stage first waits on it); SGLANG_DIFFUSION_SYNC_STAGE_PROFILING=1 drains the device queue at every stage boundary, so
+# denoise / decode / encode can be set against the competitors' non-denoise time, and client latency minus the stage sum is the time
+# a request spends outside the pipeline (HTTP, serialization, scheduling). The latency of these arms is not a published number.
+h34-sg-sync sglang minimax_h3_t2va_5s_4gpu single_e2e 0,1,2,3 - SGLANG_DIFFUSION_SYNC_STAGE_PROFILING=1
+c3v-sg-sync sglang cosmos3_nano_t2v_720p_189f single_e2e 0,1,2,3 - SGLANG_DIFFUSION_SYNC_STAGE_PROFILING=1
+fh3-sg-sync sglang minimax_h3_fasth3_v2_t2va_5s single_e2e 0,1,2,3 - SGLANG_DIFFUSION_SYNC_STAGE_PROFILING=1
+ltx-sg-sync sglang ltx2.5_twostage_t2v_2gpus single_e2e 0,1 - SGLANG_DIFFUSION_SYNC_STAGE_PROFILING=1
+wan-sg-sync sglang wan22_t2v_a14b_720p single_e2e 0,1,2,3 - SGLANG_DIFFUSION_SYNC_STAGE_PROFILING=1
+h3-sg-sync sglang minimax_h3_t2va_5s single_e2e 0,1 - SGLANG_DIFFUSION_SYNC_STAGE_PROFILING=1
+rv-sg-sync sglang minimax_h3_ref2va_5s single_e2e 0,1 - SGLANG_DIFFUSION_SYNC_STAGE_PROFILING=1

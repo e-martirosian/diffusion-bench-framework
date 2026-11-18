@@ -1,0 +1,7 @@
+# 2026-11-18: the same synchronized stage split for sglang's short image cells (main 9fbab1f6ed): how much of a request is outside the
+# pipeline stages. Qwen-Image-2.1 T2I one GPU is in plan_b300_qwen_vae_fold_20261118.txt.
+zi-sg-sync sglang zimage_turbo_t2i_1024 single_e2e 0,1 - DBF_SGLANG_PYTHONPATH=/workspace/r1118/sgl-main/python SGLANG_DIFFUSION_SYNC_STAGE_PROFILING=1
+c3i-sg-sync sglang cosmos3_nano_t2i_720p single_e2e 0,1 - DBF_SGLANG_PYTHONPATH=/workspace/r1118/sgl-main/python SGLANG_DIFFUSION_SYNC_STAGE_PROFILING=1
+q2-sg-sync sglang qwen_image_21_t2i_1024_2gpu single_e2e 0,1 - DBF_SGLANG_PYTHONPATH=/workspace/r1118/sgl-main/python SGLANG_DIFFUSION_SYNC_STAGE_PROFILING=1
+fx-sg-sync sglang flux3_klein_base_t2i_1024 single_e2e 0,1 - DBF_SGLANG_PYTHONPATH=/workspace/r1118/sgl-main/python SGLANG_DIFFUSION_SYNC_STAGE_PROFILING=1
+ig-sg-sync sglang ideogram4_t2i_1024_2gpu_tp single_e2e 0,1 - DBF_SGLANG_PYTHONPATH=/workspace/r1118/sgl-main/python SGLANG_DIFFUSION_SYNC_STAGE_PROFILING=1
