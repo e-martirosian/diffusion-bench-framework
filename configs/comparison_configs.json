@@ -2219,6 +2219,15 @@
                                 "commit_date": "2026-09-25",
                                 "section": "8x NVIDIA H20 / H100 / A100 (scaled to 4 GPUs)"
                             }
+                        },
+                        "cand-fa4": {
+                            "num_gpus": 4,
+                            "serve_args": "--num-gpus 4 --cfg-parallel-size 2 --usp 2 --vae-patch-parallel-size 4 --vae-parallel-mode spatial_shard_width --no-diffusion-compile-dynamic --video-output-transport {\"enable_device_postprocess\":true}",
+                            "extra_env": {
+                                "DIFFUSION_ATTENTION_BACKEND": "FLASH_ATTN"
+                            },
+                            "description": "blackwell-4gpu-cfg2-usp2-vaepp-devpost with FLASH_ATTN (CuTe FA4) in place of CUDNN_ATTN. Never selected on its own: A/B arm; needs the fa4 extra installed.",
+                            "notes": "vLLM-Omni resolves FLASH_ATTN to CuTe FA4 on Blackwell, which needs the `fa4` extra (flash-attn-4[cu13], pinned in vllm-omni's pyproject); the round's venv did not install it, which is why the selected profiles use CUDNN_ATTN and why the older notes say FLASH_ATTN is refused on sm_100. SGLang measured FA4 1.5-2% faster than cuDNN for long self-attention on sm_103 and slower on sm_100. Not measured for vLLM-Omni on B300 before 2026-11-18. VALIDATION PENDING (round 2026-11-18, 4xB300)."
                         }
                     }
                 },
@@ -5229,6 +5238,13 @@
                             "extra_env": {},
                             "description": "Throughput-only fairness arm for sglang dp2-throughput: vLLM-Omni's native replica data parallelism, one GPU per replica.",
                             "notes": "vLLM-Omni's replica-DP (examples/online_serving/replica_data_parallel; stage num_replicas + devices via --stage-overrides): blackwell-2gpu-static with every intra-request degree at 1, two single-GPU replicas. --omni-lb-policy round-robin instead of the default random so the harness's sequential warmups reach both replicas. Select explicitly in the throughput invocation (DIFFUSION_BENCH_VLLM_OMNI_PROFILE=replica2-throughput); no `hardware` key, single_e2e keeps blackwell-2gpu-static. 2026-10-30 b300final: 250.535/250.505 s against blackwell-2gpu-static's 276.55 s."
+                        },
+                        "cand-fa4": {
+                            "num_gpus": 2,
+                            "serve_args": "--trust-remote-code --task-type fl2va --num-gpus 2 --tensor-parallel-size 2 --usp 1 --ring 1 --text-encoder-tp-size 2 --vae-patch-parallel-size 2 --vae-parallel-mode tile --vae-use-tiling --diffusion-attention-backend FLASH_ATTN --no-diffusion-compile-dynamic",
+                            "extra_env": {},
+                            "description": "blackwell-2gpu-static with FLASH_ATTN (CuTe FA4) in place of CUDNN_ATTN. Never selected on its own: A/B arm; needs the fa4 extra installed.",
+                            "notes": "vLLM-Omni resolves FLASH_ATTN to CuTe FA4 on Blackwell, which needs the `fa4` extra (flash-attn-4[cu13], pinned in vllm-omni's pyproject); the round's venv did not install it, which is why the selected profiles use CUDNN_ATTN and why the older notes say FLASH_ATTN is refused on sm_100. SGLang measured FA4 1.5-2% faster than cuDNN for long self-attention on sm_103 and slower on sm_100. Not measured for vLLM-Omni on B300 before 2026-11-18. VALIDATION PENDING (round 2026-11-18, 4xB300)."
                         }
                     },
                     "reason": "Empirically validated 2026-08-07, first on minimax-h3-5090-2gpu-v4 (2x RTX 5090) then on 2xB200: the default (compiled) profile segfaults identically on both GPU classes 1 step into denoising (see command_profiles.default.notes) -- a confirmed hardware-independent vLLM-Omni bug, despite the recipe's own claim that torch.compile is 'not enabled by default on consumer paths.' --enforce-eager avoids that segfault, but on RTX 5090 it fails differently at startup (a diffusion worker process dies before completing its init handshake, surfaced as EOFError) and never completes a request on that GPU class. On 2xB200 the identical --enforce-eager command works cleanly and completes a correct generation -- see command_profiles.b200-2gpu for the validated numbers and the sglang comparison on the same hardware. Net: vLLM-Omni H3 support is real but fragile below the B200 class tested here; RTX 5090 has no working profile for this case in either variant."
@@ -5433,7 +5449,7 @@
                                 "b300",
                                 "gb300"
                             ],
-                            "notes": "Derived from `default` (the profile B300 selects). Audit 2026-10-23 (H3 finding 1): TRT-LLM spends 5 s (2 GPU), 8 s (Ref2VA) and 11 s (4 GPU) on the CPU before its denoise loop (row_timestep_plan: torch.full, scatters and torch.unique over the whole sequence per step, on every rank) while its workers share the host's cores with OMP_NUM_THREADS unset. The harness sets OMP_NUM_THREADS for no framework; sglang caps its workers itself (min(16, cores / GPUs), gpu_worker._worker_cpu_intra_op_threads), vLLM-Omni's workers take 1 (set_multiprocessing_worker_envs) and LightX2V's torchrun sets 1, while TRT-LLM and FastVideo keep one thread per core in every worker. Promoted from cand-omp8 by the 2026-10-22 4xB300 fourth-wave A/B: 69.63 s against 74.39 s: with OMP unset its 4 workers each keep one thread per core and lose 5-11 s per request to a CPU timestep plan before denoising."
+                            "notes": "Derived from `default` (the profile B300 selects). Audit 2026-10-23 (H3 finding 1): TRT-LLM spends 5 s (2 GPU), 8 s (Ref2VA) and 11 s (4 GPU) on the CPU before its denoise loop (row_timestep_plan: torch.full, scatters and torch.unique over the whole sequence per step, on every rank) while its workers share the host's cores with OMP_NUM_THREADS unset. The harness sets OMP_NUM_THREADS for no framework; sglang caps its workers itself (min(16, cores / GPUs), gpu_worker._worker_cpu_intra_op_threads), vLLM-Omni's workers take cores // local_world_size from vllm's set_multiprocessing_worker_envs (all cores per worker on vllm-omni 0da1d831e, which called it with the default 1; cores // GPUs from #9194, 2026-11-14) and LightX2V's torchrun sets 1, while TRT-LLM and FastVideo keep one thread per core in every worker. Promoted from cand-omp8 by the 2026-10-22 4xB300 fourth-wave A/B: 69.63 s against 74.39 s: with OMP unset its 4 workers each keep one thread per core and lose 5-11 s per request to a CPU timestep plan before denoising."
                         },
                         "default": {
                             "description": "TensorRT-LLM VisualGen, NVIDIA's official minimax-h3-bf16-8gpu.yaml at BF16, 2 GPU(s).",
@@ -5508,7 +5524,7 @@
                             "extra_env": {
                                 "OMP_NUM_THREADS": "8"
                             },
-                            "notes": "Derived from `default` (the profile B300 selects). Audit 2026-10-23 (H3 finding 1): TRT-LLM spends 5 s (2 GPU), 8 s (Ref2VA) and 11 s (4 GPU) on the CPU before its denoise loop (row_timestep_plan: torch.full, scatters and torch.unique over the whole sequence per step, on every rank) while its workers share the host's cores with OMP_NUM_THREADS unset. The harness sets OMP_NUM_THREADS for no framework; sglang caps its workers itself (min(16, cores / GPUs), gpu_worker._worker_cpu_intra_op_threads), vLLM-Omni's workers take 1 (set_multiprocessing_worker_envs) and LightX2V's torchrun sets 1, while TRT-LLM and FastVideo keep one thread per core in every worker. VALIDATION PENDING (wave 4, 4xB300)."
+                            "notes": "Derived from `default` (the profile B300 selects). Audit 2026-10-23 (H3 finding 1): TRT-LLM spends 5 s (2 GPU), 8 s (Ref2VA) and 11 s (4 GPU) on the CPU before its denoise loop (row_timestep_plan: torch.full, scatters and torch.unique over the whole sequence per step, on every rank) while its workers share the host's cores with OMP_NUM_THREADS unset. The harness sets OMP_NUM_THREADS for no framework; sglang caps its workers itself (min(16, cores / GPUs), gpu_worker._worker_cpu_intra_op_threads), vLLM-Omni's workers take cores // local_world_size from vllm's set_multiprocessing_worker_envs (all cores per worker on vllm-omni 0da1d831e, which called it with the default 1; cores // GPUs from #9194, 2026-11-14) and LightX2V's torchrun sets 1, while TRT-LLM and FastVideo keep one thread per core in every worker. VALIDATION PENDING (wave 4, 4xB300)."
                         },
                         "cand-tp2": {
                             "description": "DiT tensor parallelism on two GPUs, as in the upstream recipe's new minimax-h3 TP2 yaml (tensorrt-llm#20176): tp_size 2, the text encoder replicated, VAE decode not parallel. VANILLA and OMP_NUM_THREADS=8 as the selected profile. Never selected on its own: A/B arm.",
@@ -5599,6 +5615,21 @@
                                 "OMP_NUM_THREADS": "8"
                             },
                             "notes": "Not in the upstream recipe: tests whether tensor parallelism and the VAE split compose in VisualGen. A startup error is the answer. MEASURED 2026-11-17 on b300r1116 (4xB300, harness single_e2e, one round, a fresh server per arm, after the fix to cand-tp2): it starts, so the two compose, and 67.87 s against 68.39 s for the selected blackwell-omp8 (Ulysses 2; -0.8%, inside run-to-run noise). Not promoted."
+                        },
+                        "cand-async-u2": {
+                            "framework_ref": "tensorrt-llm 1.4.0rc3 (tag v1.4.0rc3, 9e334fbaae)",
+                            "num_gpus": 2,
+                            "serve_args": "",
+                            "visual_gen_args": {
+                                "parallel_config": {
+                                    "async_ulysses": true
+                                }
+                            },
+                            "extra_env": {
+                                "OMP_NUM_THREADS": "8"
+                            },
+                            "description": "blackwell-omp8 plus parallel_config.async_ulysses: the Q/K/V projections overlap with the cross-rank all-to-all on a side stream. Never selected on its own: A/B arm.",
+                            "notes": "A profile's visual_gen_args are DEEP-MERGED onto the framework entry's, so this arm keeps the framework entry's ulysses_size and parallel_vae_size and adds only the async flag. Upstream (tensorrt-llm #20333, merged 2026-10-23, after rc1): MiniMax-H3 with async_ulysses on 8xB200, FA4, torch.compile on, 768x1344x124 frames, 28 steps, whole generations: -3.3% at Ulysses 2, -2.4% at 4, -1.5% at 8; BF16 only; not bit-identical to the shipped path (Q, K and V become three GEMMs instead of one, so bf16 rounding differs from the first block on). Not measured on B300 before 2026-11-18. VALIDATION PENDING (round 2026-11-18, 4xB300)."
                         }
                     },
                     "extra_env_reason": "The harness exports PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True. Under it, the CUDA IPC handle TRT-LLM's rank 0 hands its media over with needs pidfd_getfd in the server process, which RunPod containers deny: every request logged 'pidfd_getfd: Operation not permitted' and hung to the read timeout (4xB300, 2026-10-22). Plain segments use cudaIpcMemHandle instead."
@@ -6407,6 +6438,24 @@
                                 "OMP_NUM_THREADS": "8"
                             },
                             "notes": "Derived from `cand-fa4` (the profile B300 selects). Audit 2026-10-23 (H3 finding 1): TRT-LLM spends 5 s (2 GPU), 8 s (Ref2VA) and 11 s (4 GPU) on the CPU before its denoise loop (row_timestep_plan: torch.full, scatters and torch.unique over the whole sequence per step, on every rank) while its workers share the host's cores with OMP_NUM_THREADS unset. The harness sets OMP_NUM_THREADS for no framework; sglang caps its workers itself (min(16, cores / GPUs), gpu_worker._worker_cpu_intra_op_threads), vLLM-Omni's workers take 1 (set_multiprocessing_worker_envs) and LightX2V's torchrun sets 1, while TRT-LLM and FastVideo keep one thread per core in every worker. Combined with FA4 because this cell's sequence does not split evenly under its Ulysses size (VANILLA then runs masked SDPA; FA4 takes the trailing pad as seqused_k). VALIDATION PENDING (wave 4, 4xB300)."
+                        },
+                        "cand-async-u4": {
+                            "framework_ref": "tensorrt-llm 1.4.0rc3 (tag v1.4.0rc3, 9e334fbaae)",
+                            "num_gpus": 4,
+                            "serve_args": "",
+                            "visual_gen_args": {
+                                "attention_config": {
+                                    "backend": "FA4"
+                                },
+                                "parallel_config": {
+                                    "async_ulysses": true
+                                }
+                            },
+                            "extra_env": {
+                                "OMP_NUM_THREADS": "8"
+                            },
+                            "description": "blackwell-fa4-omp8 plus parallel_config.async_ulysses at Ulysses 4. Never selected on its own: A/B arm.",
+                            "notes": "A profile's visual_gen_args are DEEP-MERGED onto the framework entry's, so this arm keeps the framework entry's ulysses_size and parallel_vae_size and adds only the async flag. Upstream (tensorrt-llm #20333, merged 2026-10-23, after rc1): MiniMax-H3 with async_ulysses on 8xB200, FA4, torch.compile on, 768x1344x124 frames, 28 steps, whole generations: -3.3% at Ulysses 2, -2.4% at 4, -1.5% at 8; BF16 only; not bit-identical to the shipped path (Q, K and V become three GEMMs instead of one, so bf16 rounding differs from the first block on). Not measured on B300 before 2026-11-18. VALIDATION PENDING (round 2026-11-18, 4xB300). The attention backend is spelled out because this profile does not inherit blackwell-fa4-omp8's."
                         }
                     },
                     "extra_env_reason": "The harness exports PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True. Under it, the CUDA IPC handle TRT-LLM's rank 0 hands its media over with needs pidfd_getfd in the server process, which RunPod containers deny: every request logged 'pidfd_getfd: Operation not permitted' and hung to the read timeout (4xB300, 2026-10-22). Plain segments use cudaIpcMemHandle instead."
@@ -7857,6 +7906,13 @@
                                 "recheck": "2026-10-22: the V2 recipe moved to recipes/FastVideo/FastH3-V2.md and now serves eight GPUs from recipes/FastVideo/fasth3-8step-8gpu.yaml: FASTVIDEO_VSA with the cuDNN provider (the [cudnn-bsa] extra), USP 8, HSDP, text-encoder TP 8, VAE patch parallel 8 with tiling, enforce-eager. This profile keeps the previously measured 4-GPU command until the cudnn-vsa-candidate profile is measured against it."
                             },
                             "notes": "Derived from `default` (the profile B300 selects). Audit 2026-10-23 (H3 finding 4): the PyPI fastvideo-kernel 0.3.5 has no sm_103a build (block_sparse_attn_sm100a.is_supported requires capability (10, 0)), so on B300 VSA falls to the Triton kernel and runs slower (0.83 s/step) than vLLM-Omni's own dense 4-GPU step (0.73). The recipe (recipes/FastVideo/FastH3-V2.md, fasth3-8step-8gpu.yaml) selects fastvideo_vsa_provider cudnn, which needs the [cudnn-bsa] extra (nvidia-cudnn-frontend==1.31.0 at 0da1d831; require_cudnn_sparse accepts SM90-SM120): install it with VLLM_OMNI_CUDNN_FRONTEND_SPEC=nvidia-cudnn-frontend==1.31.0 (scripts/install_comparison_frameworks.sh). The 2026-10-22 cudnn-vsa-candidate (recipe placement with HSDP + enforce-eager) hung in the first request; this keeps the selected placement and changes only the provider, plus --no-diffusion-compile-dynamic like every other Blackwell vLLM-Omni profile. --diffusion-attention-backend and --diffusion-attention-config.default.backend are mutually exclusive, so the backend moves into the config. VALIDATION PENDING (wave 4, 4xB300)."
+                        },
+                        "cand-nocompdyn": {
+                            "num_gpus": 4,
+                            "serve_args": "--trust-remote-code --task-type fl2va --num-gpus 4 --usp 4 --ring 1 --vae-patch-parallel-size 4 --vae-parallel-mode tile --vae-use-tiling --diffusion-attention-backend FASTVIDEO_VSA --revision 71a17d72c58ce3eeec418144de2a5a2090cb4c04 --no-diffusion-compile-dynamic",
+                            "extra_env": {},
+                            "description": "default plus --no-diffusion-compile-dynamic. Never selected on its own: A/B arm.",
+                            "notes": "The matrix cell ran the default profile, whose log reads 'lazy regional torch.compile with dynamic=True' and, on the first request, 'torch._dynamo hit config.recompile_limit (8)'; every other vLLM-Omni cell passes --no-diffusion-compile-dynamic. The 2026-10-22 audit measured up to 28% from this flag on other cells. VALIDATION PENDING (round 2026-11-18, 4xB300)."
                         }
                     },
                     "framework_ref": "vllm-omni main 56763cd6c383 + vllm==0.30.0 + fastvideo-kernel==0.3.5 installed --no-deps (VLLM_OMNI_VSA_KERNEL_SPEC)"

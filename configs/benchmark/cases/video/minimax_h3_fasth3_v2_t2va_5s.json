@@ -121,6 +121,13 @@
             "recheck": "2026-10-22: the V2 recipe moved to recipes/FastVideo/FastH3-V2.md and now serves eight GPUs from recipes/FastVideo/fasth3-8step-8gpu.yaml: FASTVIDEO_VSA with the cuDNN provider (the [cudnn-bsa] extra), USP 8, HSDP, text-encoder TP 8, VAE patch parallel 8 with tiling, enforce-eager. This profile keeps the previously measured 4-GPU command until the cudnn-vsa-candidate profile is measured against it."
           },
           "notes": "Derived from `default` (the profile B300 selects). Audit 2026-10-23 (H3 finding 4): the PyPI fastvideo-kernel 0.3.5 has no sm_103a build (block_sparse_attn_sm100a.is_supported requires capability (10, 0)), so on B300 VSA falls to the Triton kernel and runs slower (0.83 s/step) than vLLM-Omni's own dense 4-GPU step (0.73). The recipe (recipes/FastVideo/FastH3-V2.md, fasth3-8step-8gpu.yaml) selects fastvideo_vsa_provider cudnn, which needs the [cudnn-bsa] extra (nvidia-cudnn-frontend==1.31.0 at 0da1d831; require_cudnn_sparse accepts SM90-SM120): install it with VLLM_OMNI_CUDNN_FRONTEND_SPEC=nvidia-cudnn-frontend==1.31.0 (scripts/install_comparison_frameworks.sh). The 2026-10-22 cudnn-vsa-candidate (recipe placement with HSDP + enforce-eager) hung in the first request; this keeps the selected placement and changes only the provider, plus --no-diffusion-compile-dynamic like every other Blackwell vLLM-Omni profile. --diffusion-attention-backend and --diffusion-attention-config.default.backend are mutually exclusive, so the backend moves into the config. VALIDATION PENDING (wave 4, 4xB300)."
+        },
+        "cand-nocompdyn": {
+          "num_gpus": 4,
+          "serve_args": "--trust-remote-code --task-type fl2va --num-gpus 4 --usp 4 --ring 1 --vae-patch-parallel-size 4 --vae-parallel-mode tile --vae-use-tiling --diffusion-attention-backend FASTVIDEO_VSA --revision 71a17d72c58ce3eeec418144de2a5a2090cb4c04 --no-diffusion-compile-dynamic",
+          "extra_env": {},
+          "description": "default plus --no-diffusion-compile-dynamic. Never selected on its own: A/B arm.",
+          "notes": "The matrix cell ran the default profile, whose log reads 'lazy regional torch.compile with dynamic=True' and, on the first request, 'torch._dynamo hit config.recompile_limit (8)'; every other vLLM-Omni cell passes --no-diffusion-compile-dynamic. The 2026-10-22 audit measured up to 28% from this flag on other cells. VALIDATION PENDING (round 2026-11-18, 4xB300)."
         }
       },
       "framework_ref": "vllm-omni main 56763cd6c383 + vllm==0.30.0 + fastvideo-kernel==0.3.5 installed --no-deps (VLLM_OMNI_VSA_KERNEL_SPEC)"

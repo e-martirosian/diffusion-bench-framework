@@ -269,6 +269,15 @@
             "commit_date": "2026-09-25",
             "section": "8x NVIDIA H20 / H100 / A100 (scaled to 4 GPUs)"
           }
+        },
+        "cand-fa4": {
+          "num_gpus": 4,
+          "serve_args": "--num-gpus 4 --cfg-parallel-size 2 --usp 2 --vae-patch-parallel-size 4 --vae-parallel-mode spatial_shard_width --no-diffusion-compile-dynamic --video-output-transport {\"enable_device_postprocess\":true}",
+          "extra_env": {
+            "DIFFUSION_ATTENTION_BACKEND": "FLASH_ATTN"
+          },
+          "description": "blackwell-4gpu-cfg2-usp2-vaepp-devpost with FLASH_ATTN (CuTe FA4) in place of CUDNN_ATTN. Never selected on its own: A/B arm; needs the fa4 extra installed.",
+          "notes": "vLLM-Omni resolves FLASH_ATTN to CuTe FA4 on Blackwell, which needs the `fa4` extra (flash-attn-4[cu13], pinned in vllm-omni's pyproject); the round's venv did not install it, which is why the selected profiles use CUDNN_ATTN and why the older notes say FLASH_ATTN is refused on sm_100. SGLang measured FA4 1.5-2% faster than cuDNN for long self-attention on sm_103 and slower on sm_100. Not measured for vLLM-Omni on B300 before 2026-11-18. VALIDATION PENDING (round 2026-11-18, 4xB300)."
         }
       }
     },
