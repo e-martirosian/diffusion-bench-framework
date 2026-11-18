@@ -47,6 +47,27 @@
           "num_gpus": 2,
           "serve_args": "--model-type diffusion --warmup-mode server --tp-size 1 --ulysses-degree 2 --performance-mode speed",
           "notes": "Kept for the tuning A/B, as for tp2-candidate. 2xH200 2026-10-16: 4.428/4.441/4.431 s, 22% slower than CFG parallel."
+        },
+        "cand-bcg": {
+          "sglang_ref": "main 9fbab1f6ed",
+          "num_gpus": 2,
+          "serve_args": "--model-type diffusion --warmup-mode server --enable-cfg-parallel --performance-mode speed --enable-breakable-cuda-graph true",
+          "description": "default plus the breakable CUDA graph (one captured DiT step replayed). Never selected on its own: A/B arm.",
+          "notes": "vLLM-Omni is ahead of sglang on this cell on 2xB300 (1.892-1.909 s against 2.050 s, one box, 2026-11-18). sglang's critical path is the conditional CFG rank: 517 kernel launches per step, 35.9 ms of kernel time in a 38.3 ms step (torch profiler and synchronized stage timers). VALIDATION PENDING (2026-11-18, 4xB300)."
+        },
+        "cand-encdp": {
+          "sglang_ref": "main 9fbab1f6ed",
+          "num_gpus": 2,
+          "serve_args": "--model-type diffusion --warmup-mode server --enable-cfg-parallel --performance-mode speed --encoder-parallel dp",
+          "description": "default plus the two CFG prompts encoded one per rank (--encoder-parallel dp). Never selected on its own: A/B arm.",
+          "notes": "vLLM-Omni is ahead of sglang on this cell on 2xB300 (1.892-1.909 s against 2.050 s, one box, 2026-11-18). sglang's critical path is the conditional CFG rank: 517 kernel launches per step, 35.9 ms of kernel time in a 38.3 ms step (torch profiler and synchronized stage timers). VALIDATION PENDING (2026-11-18, 4xB300)."
+        },
+        "cand-bcg-encdp": {
+          "sglang_ref": "main 9fbab1f6ed",
+          "num_gpus": 2,
+          "serve_args": "--model-type diffusion --warmup-mode server --enable-cfg-parallel --performance-mode speed --enable-breakable-cuda-graph true --encoder-parallel dp",
+          "description": "default plus the breakable CUDA graph and --encoder-parallel dp. Never selected on its own: A/B arm.",
+          "notes": "vLLM-Omni is ahead of sglang on this cell on 2xB300 (1.892-1.909 s against 2.050 s, one box, 2026-11-18). sglang's critical path is the conditional CFG rank: 517 kernel launches per step, 35.9 ms of kernel time in a 38.3 ms step (torch profiler and synchronized stage timers). VALIDATION PENDING (2026-11-18, 4xB300)."
         }
       }
     },

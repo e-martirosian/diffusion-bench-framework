@@ -1,0 +1,8 @@
+# 2026-11-18: sglang's FLUX.3 cell on 2xB300, where vLLM-Omni is ahead (1.892-1.909 s against 2.050 s): flags sglang already has, each
+# against the selected command on main 9fbab1f6ed, mirrored.
+fxc-base-r1 sglang flux3_klein_base_t2i_1024 single_e2e 0,1 - DBF_SGLANG_PYTHONPATH=/workspace/r1118/sgl-main/python
+fxc-bcg-r1 sglang flux3_klein_base_t2i_1024 single_e2e 0,1 cand-bcg DBF_SGLANG_PYTHONPATH=/workspace/r1118/sgl-main/python
+fxc-encdp-r1 sglang flux3_klein_base_t2i_1024 single_e2e 0,1 cand-encdp DBF_SGLANG_PYTHONPATH=/workspace/r1118/sgl-main/python
+fxc-bcg-encdp-r1 sglang flux3_klein_base_t2i_1024 single_e2e 0,1 cand-bcg-encdp DBF_SGLANG_PYTHONPATH=/workspace/r1118/sgl-main/python
+fxc-bcg-encdp-r2 sglang flux3_klein_base_t2i_1024 single_e2e 0,1 cand-bcg-encdp DBF_SGLANG_PYTHONPATH=/workspace/r1118/sgl-main/python
+fxc-base-r2 sglang flux3_klein_base_t2i_1024 single_e2e 0,1 - DBF_SGLANG_PYTHONPATH=/workspace/r1118/sgl-main/python
