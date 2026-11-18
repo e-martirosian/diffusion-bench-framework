@@ -1,0 +1,14 @@
+# 2026-11-18 competitor fairness arms, round 2 (trimmed to the arms with a signal in round 1, reversed order) plus the Ref2VA async arm.
+#   DBF_STATE_DIR=/workspace/r1117 PLAN=<file> PLAN_TAG=fair2 bash scripts/run_plan_ab.sh
+h3-tr-async-r2 trtllm-visual minimax_h3_t2va_5s single_e2e 0,1 cand-async-u2
+h3-tr-r2 trtllm-visual minimax_h3_t2va_5s single_e2e 0,1 -
+h34-tr-async-r2 trtllm-visual minimax_h3_t2va_5s_4gpu single_e2e 0,1,2,3 cand-async-u4
+h34-tr-r2 trtllm-visual minimax_h3_t2va_5s_4gpu single_e2e 0,1,2,3 -
+rv-tr-r1 trtllm-visual minimax_h3_ref2va_5s single_e2e 0,1 -
+rv-tr-async-r1 trtllm-visual minimax_h3_ref2va_5s single_e2e 0,1 cand-async-u2
+zi-vo-omp1-r2 vllm-omni zimage_turbo_t2i_1024 single_e2e 0,1 - OMP_NUM_THREADS=1
+zi-vo-omp8-r2 vllm-omni zimage_turbo_t2i_1024 single_e2e 0,1 - OMP_NUM_THREADS=8
+zi-vo-r2 vllm-omni zimage_turbo_t2i_1024 single_e2e 0,1 -
+c3i-vo-omp1-r2 vllm-omni cosmos3_nano_t2i_720p single_e2e 0,1 - OMP_NUM_THREADS=1
+c3i-vo-omp8-r2 vllm-omni cosmos3_nano_t2i_720p single_e2e 0,1 - OMP_NUM_THREADS=8
+c3i-vo-r2 vllm-omni cosmos3_nano_t2i_720p single_e2e 0,1 -

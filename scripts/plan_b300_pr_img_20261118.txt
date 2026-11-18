@@ -1,0 +1,16 @@
+# 2026-11-18: does the image-response change (pybase64 + orjson_response in multimodal_gen's images API) move a request on B300?
+# Same box, same pinned sglang tree with and without the patch (DBF_SGLANG_PYTHONPATH per arm), a fresh server per arm,
+# order B P | P B | B P | P B (B = pin, P = pin + patch). Z-Image is the shortest image cell, Qwen-Image-2.1 a longer one.
+#   DBF_STATE_DIR=/workspace/r1117 PLAN=<this file> PLAN_TAG=primg1118 bash scripts/run_plan_ab.sh
+z-b1 sglang zimage_turbo_t2i_1024 single_e2e 0,1 - DBF_SGLANG_PYTHONPATH=/workspace/r1117/sgl/python
+z-p1 sglang zimage_turbo_t2i_1024 single_e2e 0,1 - DBF_SGLANG_PYTHONPATH=/workspace/r1117/sgl-patched/python
+z-p2 sglang zimage_turbo_t2i_1024 single_e2e 0,1 - DBF_SGLANG_PYTHONPATH=/workspace/r1117/sgl-patched/python
+z-b2 sglang zimage_turbo_t2i_1024 single_e2e 0,1 - DBF_SGLANG_PYTHONPATH=/workspace/r1117/sgl/python
+z-b3 sglang zimage_turbo_t2i_1024 single_e2e 0,1 - DBF_SGLANG_PYTHONPATH=/workspace/r1117/sgl/python
+z-p3 sglang zimage_turbo_t2i_1024 single_e2e 0,1 - DBF_SGLANG_PYTHONPATH=/workspace/r1117/sgl-patched/python
+z-p4 sglang zimage_turbo_t2i_1024 single_e2e 0,1 - DBF_SGLANG_PYTHONPATH=/workspace/r1117/sgl-patched/python
+z-b4 sglang zimage_turbo_t2i_1024 single_e2e 0,1 - DBF_SGLANG_PYTHONPATH=/workspace/r1117/sgl/python
+q-b1 sglang qwen_image_21_t2i_1024 single_e2e 0 - DBF_SGLANG_PYTHONPATH=/workspace/r1117/sgl/python
+q-p1 sglang qwen_image_21_t2i_1024 single_e2e 0 - DBF_SGLANG_PYTHONPATH=/workspace/r1117/sgl-patched/python
+q-p2 sglang qwen_image_21_t2i_1024 single_e2e 0 - DBF_SGLANG_PYTHONPATH=/workspace/r1117/sgl-patched/python
+q-b2 sglang qwen_image_21_t2i_1024 single_e2e 0 - DBF_SGLANG_PYTHONPATH=/workspace/r1117/sgl/python

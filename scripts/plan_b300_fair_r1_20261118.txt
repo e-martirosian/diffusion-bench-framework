@@ -1,0 +1,35 @@
+# 2026-11-18 competitor fairness arms (single_e2e), one fresh server per arm, same box and the round's pinned trees.
+# Round 1 lists each cell's arms in order; the second file lists them in reverse. A vLLM-Omni 'omp' arm sets OMP_NUM_THREADS for the whole server;
+# 'fa4' needs the fa4 extra installed in the vllm-omni venv; 'async' arms are the TRT-LLM cand-async profiles.
+#   DBF_STATE_DIR=/workspace/r1117 PLAN=<file> PLAN_TAG=<tag> bash scripts/run_plan_ab.sh
+h3-sg-r1 sglang minimax_h3_t2va_5s single_e2e 0,1 -
+h3-vo-r1 vllm-omni minimax_h3_t2va_5s single_e2e 0,1 -
+h3-vo-omp8-r1 vllm-omni minimax_h3_t2va_5s single_e2e 0,1 - OMP_NUM_THREADS=8
+h3-vo-fa4-r1 vllm-omni minimax_h3_t2va_5s single_e2e 0,1 cand-fa4
+h3-tr-r1 trtllm-visual minimax_h3_t2va_5s single_e2e 0,1 -
+h3-tr-async-r1 trtllm-visual minimax_h3_t2va_5s single_e2e 0,1 cand-async-u2
+h34-sg-r1 sglang minimax_h3_t2va_5s_4gpu single_e2e 0,1,2,3 -
+h34-vo-r1 vllm-omni minimax_h3_t2va_5s_4gpu single_e2e 0,1,2,3 -
+h34-vo-omp8-r1 vllm-omni minimax_h3_t2va_5s_4gpu single_e2e 0,1,2,3 - OMP_NUM_THREADS=8
+h34-tr-r1 trtllm-visual minimax_h3_t2va_5s_4gpu single_e2e 0,1,2,3 -
+h34-tr-async-r1 trtllm-visual minimax_h3_t2va_5s_4gpu single_e2e 0,1,2,3 cand-async-u4
+wan-sg-r1 sglang wan22_t2v_a14b_720p single_e2e 0,1,2,3 -
+wan-vo-r1 vllm-omni wan22_t2v_a14b_720p single_e2e 0,1,2,3 -
+wan-vo-omp8-r1 vllm-omni wan22_t2v_a14b_720p single_e2e 0,1,2,3 - OMP_NUM_THREADS=8
+wan-vo-fa4-r1 vllm-omni wan22_t2v_a14b_720p single_e2e 0,1,2,3 cand-fa4
+wan-tr-r1 trtllm-visual wan22_t2v_a14b_720p single_e2e 0,1,2,3 -
+fh3-sg-r1 sglang minimax_h3_fasth3_v2_t2va_5s single_e2e 0,1,2,3 -
+fh3-vo-r1 vllm-omni minimax_h3_fasth3_v2_t2va_5s single_e2e 0,1,2,3 -
+fh3-vo-nodyn-r1 vllm-omni minimax_h3_fasth3_v2_t2va_5s single_e2e 0,1,2,3 cand-nocompdyn
+zi-sg-r1 sglang zimage_turbo_t2i_1024 single_e2e 0,1 -
+zi-vo-r1 vllm-omni zimage_turbo_t2i_1024 single_e2e 0,1 -
+zi-vo-omp8-r1 vllm-omni zimage_turbo_t2i_1024 single_e2e 0,1 - OMP_NUM_THREADS=8
+zi-vo-omp1-r1 vllm-omni zimage_turbo_t2i_1024 single_e2e 0,1 - OMP_NUM_THREADS=1
+c3i-sg-r1 sglang cosmos3_nano_t2i_720p single_e2e 0,1 -
+c3i-vo-r1 vllm-omni cosmos3_nano_t2i_720p single_e2e 0,1 -
+c3i-vo-omp8-r1 vllm-omni cosmos3_nano_t2i_720p single_e2e 0,1 - OMP_NUM_THREADS=8
+c3i-vo-omp1-r1 vllm-omni cosmos3_nano_t2i_720p single_e2e 0,1 - OMP_NUM_THREADS=1
+q2-sg-r1 sglang qwen_image_21_t2i_1024_2gpu single_e2e 0,1 -
+q2-vo-r1 vllm-omni qwen_image_21_t2i_1024_2gpu single_e2e 0,1 -
+q2-vo-omp8-r1 vllm-omni qwen_image_21_t2i_1024_2gpu single_e2e 0,1 - OMP_NUM_THREADS=8
+q2-vo-omp1-r1 vllm-omni qwen_image_21_t2i_1024_2gpu single_e2e 0,1 - OMP_NUM_THREADS=1
