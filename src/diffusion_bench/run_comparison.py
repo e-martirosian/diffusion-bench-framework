@@ -42,6 +42,7 @@ import time
 from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
 import requests
@@ -2512,14 +2513,34 @@ def _rocm_smi_gpus() -> list[str]:
     return gpus
 
 
+# The GPU library wheels under attention and the collectives. They move a cell without any
+# framework commit: cuDNN 9.20 -> 9.24 alone made every CUDNN_ATTN video cell ~3% faster
+# between two rounds (2026-11), and no result recorded either version.
+GPU_STACK = [
+    "nvidia-cudnn-cu13",
+    "nvidia-cudnn-cu12",
+    "nvidia-nccl-cu13",
+    "nvidia-nccl-cu12",
+    "triton",
+    "flashinfer-python",
+]
+
+
+def _installed_version(name: str) -> str | None:
+    try:
+        return version(name)
+    except PackageNotFoundError:
+        return None
+
+
 def _collect_sglang_runtime_metadata() -> dict:
     metadata = {}
-    try:
-        from importlib.metadata import version
-
-        metadata["package_version"] = version("sglang")
-    except Exception:
-        pass
+    package_version = _installed_version("sglang")
+    if package_version is not None:
+        metadata["package_version"] = package_version
+    # sglang runs in the harness's own interpreter, so these are its libraries
+    packages = {name: _installed_version(name) for name in ("torch", *GPU_STACK)}
+    metadata["packages"] = {name: v for name, v in packages.items() if v is not None}
     try:
         import sglang  # type: ignore
 
@@ -2626,14 +2647,13 @@ def _collect_framework_runtime_metadata() -> dict:
     # cell ran at all and none of which appeared in the block. torch is here for
     # the same reason -- flash-attn is compiled against it, so its version is
     # part of what the row means.
-    SHARED_STACK = ["torch", "transformers", "diffusers", "huggingface_hub"]
+    SHARED_STACK = ["torch", "transformers", "diffusers", "huggingface_hub", *GPU_STACK]
     packages_by_framework = {
         "vllm-omni": ["vllm", "vllm-omni", *SHARED_STACK],
         "lightx2v": [
             "lightx2v",
             "flash-attn",
             "flash-attn-3",
-            "flashinfer-python",
             *SHARED_STACK,
         ],
         "trtllm-visual": ["tensorrt-llm", "tensorrt", *SHARED_STACK],
@@ -2651,7 +2671,6 @@ def _collect_framework_runtime_metadata() -> dict:
             "fastvideo-kernel",
             "flash-attn-4",
             "nvidia-cutlass-dsl",
-            "flashinfer-python",
             *SHARED_STACK,
         ],
     }

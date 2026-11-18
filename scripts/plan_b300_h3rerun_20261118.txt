@@ -1,0 +1,8 @@
+# 2026-11-18: the MiniMax-H3 2-GPU cells again on one box after TRT-LLM's B300 profile moved to async Ulysses: sglang, vLLM-Omni and
+# TRT-LLM through their selected profiles (TRT-LLM T2VA with its throughput row), and the Ref2VA async arm a second time.
+h3-sg-r1 sglang minimax_h3_t2va_5s single_e2e 0,1 -
+h3-vo-r1 vllm-omni minimax_h3_t2va_5s single_e2e 0,1 -
+h3-tr-r1 trtllm-visual minimax_h3_t2va_5s single_e2e+throughput 0,1 -
+rv-sg-r1 sglang minimax_h3_ref2va_5s single_e2e 0,1 -
+rv-tr-async-r2 trtllm-visual minimax_h3_ref2va_5s single_e2e 0,1 cand-async-u2
+rv-tr-r2 trtllm-visual minimax_h3_ref2va_5s single_e2e 0,1 -

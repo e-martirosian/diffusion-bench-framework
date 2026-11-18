@@ -1,0 +1,25 @@
+# 2026-11-18: features the competitors ship off by default, each next to its framework's selected profile on the same box (single_e2e,
+# a fresh server per arm). vLLM-Omni: the denoise-step CUDA graph (graph) and the copy-engine Ulysses exchange (a2a). TRT-LLM: CUDA graphs
+# (graph), token-sharded TP (tok), TP2 x Ulysses2 (tp2u2). The TRT-LLM H3 4-GPU baseline is the promoted async profile.
+zi-vo-r1 vllm-omni zimage_turbo_t2i_1024 single_e2e 0,1 -
+zi-vo-graph-r1 vllm-omni zimage_turbo_t2i_1024 single_e2e 0,1 cand-graph
+q2-vo-r1 vllm-omni qwen_image_21_t2i_1024_2gpu single_e2e 0,1 -
+q2-vo-a2a-r1 vllm-omni qwen_image_21_t2i_1024_2gpu single_e2e 0,1 cand-a2a-permute
+c3i-tr-r1 trtllm-visual cosmos3_nano_t2i_720p single_e2e 0,1 -
+c3i-tr-graph-r1 trtllm-visual cosmos3_nano_t2i_720p single_e2e 0,1 cand-graph
+fh3-vo-r1 vllm-omni minimax_h3_fasth3_v2_t2va_5s single_e2e 0,1,2,3 -
+fh3-vo-a2a-r1 vllm-omni minimax_h3_fasth3_v2_t2va_5s single_e2e 0,1,2,3 cand-a2a-permute
+c3v-tr-r1 trtllm-visual cosmos3_nano_t2v_720p_189f single_e2e 0,1,2,3 -
+c3v-tr-graph-r1 trtllm-visual cosmos3_nano_t2v_720p_189f single_e2e 0,1,2,3 cand-graph
+h34-sg-r1 sglang minimax_h3_t2va_5s_4gpu single_e2e 0,1,2,3 -
+h34-vo-r1 vllm-omni minimax_h3_t2va_5s_4gpu single_e2e 0,1,2,3 -
+h34-vo-a2a-r1 vllm-omni minimax_h3_t2va_5s_4gpu single_e2e 0,1,2,3 cand-a2a-permute
+h34-tr-r1 trtllm-visual minimax_h3_t2va_5s_4gpu single_e2e 0,1,2,3 -
+h34-tr-tp2u2-r1 trtllm-visual minimax_h3_t2va_5s_4gpu single_e2e 0,1,2,3 cand-tp2-u2
+wan-sg-r1 sglang wan22_t2v_a14b_720p single_e2e 0,1,2,3 -
+wan-vo-r1 vllm-omni wan22_t2v_a14b_720p single_e2e 0,1,2,3 -
+wan-vo-graph-r1 vllm-omni wan22_t2v_a14b_720p single_e2e 0,1,2,3 cand-graph
+wan-vo-a2a-r1 vllm-omni wan22_t2v_a14b_720p single_e2e 0,1,2,3 cand-a2a-permute
+wan-tr-r1 trtllm-visual wan22_t2v_a14b_720p single_e2e 0,1,2,3 -
+wan-tr-graph-r1 trtllm-visual wan22_t2v_a14b_720p single_e2e 0,1,2,3 cand-cudnn-graph
+wan-tr-tok-r1 trtllm-visual wan22_t2v_a14b_720p single_e2e 0,1,2,3 cand-cfg2-tp2-tokshard
