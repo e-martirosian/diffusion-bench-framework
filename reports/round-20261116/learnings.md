@@ -20,7 +20,7 @@ vLLM-Omni has served FLUX.3 since vllm-omni #9523 (2026-11-10), inside the round
 | vLLM-Omni + `--no-diffusion-compile-dynamic` | 1.901 / 1.903 / 1.905 |
 | vLLM-Omni + FlashInfer attention (now its selected B300 profile) | 1.892 / 1.885 / 1.885 |
 | vLLM-Omni TP2 / Ulysses 2 (batched CFG) | 2.254 / 4.851 |
-| sglang main + the four PRs below | 1.905 / 1.906 / 1.902 / 1.906 |
+| sglang main + the five PRs below | 1.897 / 1.894 (four of them, without the text cache: 1.902-1.906) |
 
 sglang main with synchronized stage timers: text 0.044, denoise 1.916 (38.3 ms/step), decode 0.066, outside the stages 0.030.
 
@@ -37,17 +37,18 @@ What it was, and the fixes (each measured alone against main, mirrored):
 | The native SwiGLU called `sgl_kernel.silu_and_mul` (101 us per call at these widths); the shared `SiluAndMul` layer's in-tree kernel takes 38 us | sgl-project/sglang#51387 | 2.050 / 2.049 -> 1.975 / 1.973 (-3.7%) | PSNR 39.4-39.9 dB (differs only for gates below -15) |
 | The image VAE sharded its decode across the CFG ranks although `vae_sp` is false; the sharded decode is slower than the serial one from 512x512 to 2560x2560 (1024x1024: 0.069 against 0.050 s) | sgl-project/sglang#51406 | 2.044 / 2.047 -> 2.027 / 2.029 (-0.9%) | identical bytes |
 | Image responses through pybase64 and orjson | sgl-project/sglang#51318 | 5.3 ms per 1024x1024 response (host component) | identical bytes |
-| all four | | 2.047 -> 1.902-1.906 (-6.9%); synchronized: denoise 1.796, decode 0.051, text 0.043, outside 0.028 | |
+| The text stage encoded the (constant, empty) negative prompt on every request; it now goes through the conditioning cache like the other text stages | sgl-project/sglang#51411 | 2.041 / 2.048 -> 2.037 / 2.039 (-0.3%); text stage 0.043 -> 0.036 s | identical bytes |
+| all five | | 2.047 -> 1.894-1.897 (-7.4%); synchronized: denoise 1.792, decode 0.052, text 0.036, outside 0.028 | |
 
 The SwiGLU fix came from laying the two frameworks' torch-profiler tables side by side: GEMMs and cuDNN SDPA were the same
 kernels with the same call counts; vLLM-Omni's compiled SwiGLU ran 33 times for 1.75 ms per step, sglang's 38 times for 3.74 ms.
 
-Where it stands: level with vLLM-Omni's cuDNN command (1.903 / 1.905) and 0.7-1.1% behind its FlashInfer command. Denoise is
-level or ahead (1.796 s against about 1.82 s from vLLM-Omni's progress bar). vLLM-Omni runs the FLUX.3 VAE in bf16 (its log:
-fp32 weights loaded into bf16 parameters; no switch); the checkpoint and sglang are fp32, so the two rows are not at the same VAE
-precision. sglang's `--component-precisions.vae` does not reach the FLUX.3 VAE (its dtype comes from the package config), so a
-same-precision sglang arm is not measured. Not done: sglang's 0.043 s text encode is two sequential forwards (the empty negative
-prompt and the prompt fall in different length buckets); they could run one per CFG rank.
+Where it stands: 0.4% ahead of vLLM-Omni's cuDNN command (1.903 / 1.905) and 0.1-0.6% behind its FlashInfer command
+(1.885 / 1.885 / 1.892). Denoise is ahead (1.792 s against about 1.82 s from vLLM-Omni's progress bar). vLLM-Omni runs the
+FLUX.3 VAE in bf16 (its log: fp32 weights loaded into bf16 parameters; no switch); the checkpoint and sglang are fp32, so the two
+rows are not at the same VAE precision. sglang's `--component-precisions.vae` does not reach the FLUX.3 VAE (its dtype comes from
+the package config), so a same-precision sglang arm is not measured. The cell should not be published before the five PRs land and
+it is measured again.
 
 ## 2. Did sglang regress between rounds? No
 
