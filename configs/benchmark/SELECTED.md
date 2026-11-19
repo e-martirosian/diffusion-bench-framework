@@ -127,7 +127,7 @@ offloaded on datacenter hardware without one (see KNOWN_COMPETITOR_VIOLATIONS).
 | flux3_klein_base_t2i_1024 | sglang | rtx4090 | `default` |  |  |  | `--model-type diffusion --warmup-mode server --enable-cfg-parallel --performance-mode speed` |  |
 | flux3_klein_base_t2i_1024 | sglang | rtx5090 | `default` |  |  |  | `--model-type diffusion --warmup-mode server --enable-cfg-parallel --performance-mode speed` |  |
 | flux3_klein_base_t2i_1024 | vllm-omni | b200 | `default` |  |  |  | `--served-model-name black-forest-labs/flux-3-image-klein-base --num-gpus 2 --cfg-parallel-size 2` |  |
-| flux3_klein_base_t2i_1024 | vllm-omni | b300 | `default` |  |  |  | `--served-model-name black-forest-labs/flux-3-image-klein-base --num-gpus 2 --cfg-parallel-size 2` |  |
+| flux3_klein_base_t2i_1024 | vllm-omni | b300 | `b300-cfg2-static-flashinfer` |  |  |  | `--served-model-name black-forest-labs/flux-3-image-klein-base --num-gpus 2 --cfg-parallel-size 2 --no-diffusion-compile-dynamic` | `DIFFUSION_ATTENTION_BACKEND=FLASHINFER_ATTN` |
 | flux3_klein_base_t2i_1024 | vllm-omni | gb200 | `default` |  |  |  | `--served-model-name black-forest-labs/flux-3-image-klein-base --num-gpus 2 --cfg-parallel-size 2` |  |
 | flux3_klein_base_t2i_1024 | vllm-omni | gb300 | `default` |  |  |  | `--served-model-name black-forest-labs/flux-3-image-klein-base --num-gpus 2 --cfg-parallel-size 2` |  |
 | flux3_klein_base_t2i_1024 | vllm-omni | h100 | `default` |  |  |  | `--served-model-name black-forest-labs/flux-3-image-klein-base --num-gpus 2 --cfg-parallel-size 2` |  |

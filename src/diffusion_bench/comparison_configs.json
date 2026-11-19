@@ -72,21 +72,21 @@
                             "num_gpus": 2,
                             "serve_args": "--model-type diffusion --warmup-mode server --enable-cfg-parallel --performance-mode speed --enable-breakable-cuda-graph true",
                             "description": "default plus the breakable CUDA graph (one captured DiT step replayed). Never selected on its own: A/B arm.",
-                            "notes": "vLLM-Omni is ahead of sglang on this cell on 2xB300 (1.892-1.909 s against 2.050 s, one box, 2026-11-18). sglang's critical path is the conditional CFG rank: 517 kernel launches per step, 35.9 ms of kernel time in a 38.3 ms step (torch profiler and synchronized stage timers). VALIDATION PENDING (2026-11-18, 4xB300)."
+                            "notes": "Measured on one 4xB300 box, 2026-11-18 (main 9fbab1f6ed, mirrored): default 2.047 / 2.049; cand-bcg 2.051 (the host loop drops from 1.82 to 1.62 s and the request does not move: GPU-bound); cand-encdp 2.046 (--encoder-parallel dp does not reach FLUX.3's text stage); cand-bcg-encdp 2.050 / 2.048. Not promoted. What did move the cell is in sgl-project/sglang#51380 (static streams under CFG parallel), #51387 (SwiGLU kernel) and #51406 (serial VAE decode): 2.047 -> 1.902-1.906 s with #51318."
                         },
                         "cand-encdp": {
                             "sglang_ref": "main 9fbab1f6ed",
                             "num_gpus": 2,
                             "serve_args": "--model-type diffusion --warmup-mode server --enable-cfg-parallel --performance-mode speed --encoder-parallel dp",
                             "description": "default plus the two CFG prompts encoded one per rank (--encoder-parallel dp). Never selected on its own: A/B arm.",
-                            "notes": "vLLM-Omni is ahead of sglang on this cell on 2xB300 (1.892-1.909 s against 2.050 s, one box, 2026-11-18). sglang's critical path is the conditional CFG rank: 517 kernel launches per step, 35.9 ms of kernel time in a 38.3 ms step (torch profiler and synchronized stage timers). VALIDATION PENDING (2026-11-18, 4xB300)."
+                            "notes": "Measured on one 4xB300 box, 2026-11-18 (main 9fbab1f6ed, mirrored): default 2.047 / 2.049; cand-bcg 2.051 (the host loop drops from 1.82 to 1.62 s and the request does not move: GPU-bound); cand-encdp 2.046 (--encoder-parallel dp does not reach FLUX.3's text stage); cand-bcg-encdp 2.050 / 2.048. Not promoted. What did move the cell is in sgl-project/sglang#51380 (static streams under CFG parallel), #51387 (SwiGLU kernel) and #51406 (serial VAE decode): 2.047 -> 1.902-1.906 s with #51318."
                         },
                         "cand-bcg-encdp": {
                             "sglang_ref": "main 9fbab1f6ed",
                             "num_gpus": 2,
                             "serve_args": "--model-type diffusion --warmup-mode server --enable-cfg-parallel --performance-mode speed --enable-breakable-cuda-graph true --encoder-parallel dp",
                             "description": "default plus the breakable CUDA graph and --encoder-parallel dp. Never selected on its own: A/B arm.",
-                            "notes": "vLLM-Omni is ahead of sglang on this cell on 2xB300 (1.892-1.909 s against 2.050 s, one box, 2026-11-18). sglang's critical path is the conditional CFG rank: 517 kernel launches per step, 35.9 ms of kernel time in a 38.3 ms step (torch profiler and synchronized stage timers). VALIDATION PENDING (2026-11-18, 4xB300)."
+                            "notes": "Measured on one 4xB300 box, 2026-11-18 (main 9fbab1f6ed, mirrored): default 2.047 / 2.049; cand-bcg 2.051 (the host loop drops from 1.82 to 1.62 s and the request does not move: GPU-bound); cand-encdp 2.046 (--encoder-parallel dp does not reach FLUX.3's text stage); cand-bcg-encdp 2.050 / 2.048. Not promoted. What did move the cell is in sgl-project/sglang#51380 (static streams under CFG parallel), #51387 (SwiGLU kernel) and #51406 (serial VAE decode): 2.047 -> 1.902-1.906 s with #51318."
                         }
                     }
                 },
@@ -95,26 +95,39 @@
                     "model_path": "hf://black-forest-labs/flux-3-image-klein-base",
                     "serve_args": "--served-model-name black-forest-labs/flux-3-image-klein-base --num-gpus 2 --cfg-parallel-size 2",
                     "command_profiles": {
+                        "b300-cfg2-static-flashinfer": {
+                            "framework_ref": "vllm-omni main 24e5472849 + vllm==0.33.0",
+                            "num_gpus": 2,
+                            "serve_args": "--served-model-name black-forest-labs/flux-3-image-klein-base --num-gpus 2 --cfg-parallel-size 2 --no-diffusion-compile-dynamic",
+                            "extra_env": {
+                                "DIFFUSION_ATTENTION_BACKEND": "FLASHINFER_ATTN"
+                            },
+                            "hardware": [
+                                "b300"
+                            ],
+                            "description": "B300: CFG parallel 2, static compile, FlashInfer attention: the fastest of six vLLM-Omni commands measured on B300.",
+                            "notes": "Promoted from cand-cfg2-static-flashinfer. Measured on one 4xB300 box, 2026-11-18/19, single_e2e medians, a fresh server per arm: default (CFG parallel 2, cuDNN attention by platform default) 1.909 s; + --no-diffusion-compile-dynamic 1.901 / 1.903 / 1.905; + CUDNN_ATTN spelled out 1.908; + FLASHINFER_ATTN 1.892 / 1.885 / 1.885; TP2 with batched CFG 2.254; Ulysses 2 with batched CFG 4.851. sglang on the same box: 2.047-2.053 s on main 9fbab1f6ed, 1.902-1.906 s with sgl-project/sglang#51380, #51387, #51406 and #51318 applied (all open at the time). PRECISION: vLLM-Omni runs the FLUX.3 VAE in bf16 (its server log: 'Attempted to load weight vae._model... with dtype torch.float32 into parameter with dtype torch.bfloat16'; no switch), while the checkpoint and sglang's decode are fp32. sglang's fp32 decode takes 0.050 s of the request; the two rows are not at the same VAE precision. B300 only: the other hosts keep `default` until they are measured."
+                        },
                         "default": {
                             "framework_ref": "vllm-omni main 24e5472849 + vllm==0.33.0",
                             "num_gpus": 2,
                             "serve_args": "--served-model-name black-forest-labs/flux-3-image-klein-base --num-gpus 2 --cfg-parallel-size 2",
                             "description": "CFG parallel 2 (one CFG branch per GPU), vLLM-Omni's defaults otherwise: the layout its pre-merge measurement used.",
-                            "notes": "vLLM-Omni serves FLUX.3 since vllm-project/vllm-omni#9523 (f48a7c73e, 2026-11-10; Flux3Pipeline in docs/models/supported_models.md). Its loader reads a local package directory only (diffusion/utils/flux3_package.py: 'Flux3 model path must point at a flux3 package root'), so model_path is the Hub snapshot and --served-model-name carries the case's model id for the request. The base package runs CFG whenever guidance_scale != 1 with an empty negative prompt by default (pipeline_flux3.py), the case's 50 steps / CFG 3.5. Before the merge, at PR head 389a02a149ce on 2xH200 (2026-10-16, vllm==0.31.0): CFG parallel 2 4.534 s, one GPU 9.101 s. VALIDATION PENDING (2026-11-18, 4xB300)."
+                            "notes": "vLLM-Omni serves FLUX.3 since vllm-project/vllm-omni#9523 (f48a7c73e, 2026-11-10; Flux3Pipeline in docs/models/supported_models.md). Its loader reads a local package directory only (diffusion/utils/flux3_package.py: 'Flux3 model path must point at a flux3 package root'), so model_path is the Hub snapshot and --served-model-name carries the case's model id for the request. The base package runs CFG whenever guidance_scale != 1 with an empty negative prompt by default (pipeline_flux3.py), the case's 50 steps / CFG 3.5. Before the merge, at PR head 389a02a149ce on 2xH200 (2026-10-16, vllm==0.31.0): CFG parallel 2 4.534 s, one GPU 9.101 s. Measured on one 4xB300 box, 2026-11-18/19, single_e2e medians, a fresh server per arm: default (CFG parallel 2, cuDNN attention by platform default) 1.909 s; + --no-diffusion-compile-dynamic 1.901 / 1.903 / 1.905; + CUDNN_ATTN spelled out 1.908; + FLASHINFER_ATTN 1.892 / 1.885 / 1.885; TP2 with batched CFG 2.254; Ulysses 2 with batched CFG 4.851. sglang on the same box: 2.047-2.053 s on main 9fbab1f6ed, 1.902-1.906 s with sgl-project/sglang#51380, #51387, #51406 and #51318 applied (all open at the time). PRECISION: vLLM-Omni runs the FLUX.3 VAE in bf16 (its server log: 'Attempted to load weight vae._model... with dtype torch.float32 into parameter with dtype torch.bfloat16'; no switch), while the checkpoint and sglang's decode are fp32. sglang's fp32 decode takes 0.050 s of the request; the two rows are not at the same VAE precision."
                         },
                         "cand-cfg2-static": {
                             "framework_ref": "vllm-omni main 24e5472849 + vllm==0.33.0",
                             "num_gpus": 2,
                             "serve_args": "--served-model-name black-forest-labs/flux-3-image-klein-base --num-gpus 2 --cfg-parallel-size 2 --no-diffusion-compile-dynamic",
                             "description": "default plus --no-diffusion-compile-dynamic. Never selected on its own: A/B arm.",
-                            "notes": "Static-shape compile is what every other vLLM-Omni image cell of this harness selects on Blackwell. VALIDATION PENDING (2026-11-18, 4xB300)."
+                            "notes": "Static-shape compile is what every other vLLM-Omni image cell of this harness selects on Blackwell. Measured on one 4xB300 box, 2026-11-18/19, single_e2e medians, a fresh server per arm: default (CFG parallel 2, cuDNN attention by platform default) 1.909 s; + --no-diffusion-compile-dynamic 1.901 / 1.903 / 1.905; + CUDNN_ATTN spelled out 1.908; + FLASHINFER_ATTN 1.892 / 1.885 / 1.885; TP2 with batched CFG 2.254; Ulysses 2 with batched CFG 4.851. sglang on the same box: 2.047-2.053 s on main 9fbab1f6ed, 1.902-1.906 s with sgl-project/sglang#51380, #51387, #51406 and #51318 applied (all open at the time)."
                         },
                         "cand-cfg2-static-cudnn": {
                             "framework_ref": "vllm-omni main 24e5472849 + vllm==0.33.0",
                             "num_gpus": 2,
                             "serve_args": "--served-model-name black-forest-labs/flux-3-image-klein-base --num-gpus 2 --cfg-parallel-size 2 --no-diffusion-compile-dynamic",
                             "description": "cand-cfg2-static with cuDNN attention. Never selected on its own: A/B arm.",
-                            "notes": "CUDNN_ATTN is the backend the Qwen-Image-2.1 and Cosmos3 cells select on Blackwell. VALIDATION PENDING (2026-11-18, 4xB300).",
+                            "notes": "CUDNN_ATTN is the backend the Qwen-Image-2.1 and Cosmos3 cells select on Blackwell. Measured on one 4xB300 box, 2026-11-18/19, single_e2e medians, a fresh server per arm: default (CFG parallel 2, cuDNN attention by platform default) 1.909 s; + --no-diffusion-compile-dynamic 1.901 / 1.903 / 1.905; + CUDNN_ATTN spelled out 1.908; + FLASHINFER_ATTN 1.892 / 1.885 / 1.885; TP2 with batched CFG 2.254; Ulysses 2 with batched CFG 4.851. sglang on the same box: 2.047-2.053 s on main 9fbab1f6ed, 1.902-1.906 s with sgl-project/sglang#51380, #51387, #51406 and #51318 applied (all open at the time).",
                             "extra_env": {
                                 "DIFFUSION_ATTENTION_BACKEND": "CUDNN_ATTN"
                             }
@@ -124,7 +137,7 @@
                             "num_gpus": 2,
                             "serve_args": "--served-model-name black-forest-labs/flux-3-image-klein-base --num-gpus 2 --cfg-parallel-size 2 --no-diffusion-compile-dynamic",
                             "description": "cand-cfg2-static with FlashInfer attention. Never selected on its own: A/B arm.",
-                            "notes": "FLASHINFER_ATTN is the backend the Z-Image cell selects on Blackwell. VALIDATION PENDING (2026-11-18, 4xB300).",
+                            "notes": "FLASHINFER_ATTN is the backend the Z-Image cell selects on Blackwell. Measured on one 4xB300 box, 2026-11-18/19, single_e2e medians, a fresh server per arm: default (CFG parallel 2, cuDNN attention by platform default) 1.909 s; + --no-diffusion-compile-dynamic 1.901 / 1.903 / 1.905; + CUDNN_ATTN spelled out 1.908; + FLASHINFER_ATTN 1.892 / 1.885 / 1.885; TP2 with batched CFG 2.254; Ulysses 2 with batched CFG 4.851. sglang on the same box: 2.047-2.053 s on main 9fbab1f6ed, 1.902-1.906 s with sgl-project/sglang#51380, #51387, #51406 and #51318 applied (all open at the time).",
                             "extra_env": {
                                 "DIFFUSION_ATTENTION_BACKEND": "FLASHINFER_ATTN"
                             }
@@ -134,14 +147,14 @@
                             "num_gpus": 2,
                             "serve_args": "--served-model-name black-forest-labs/flux-3-image-klein-base --tensor-parallel-size 2 --no-diffusion-compile-dynamic",
                             "description": "Tensor parallel 2 with both CFG branches in one batched call (Flux3's batch CFG, on whenever cfg_parallel_size is 1). Never selected on its own: A/B arm.",
-                            "notes": "flux3_transformer.py shards attention QKV and the MLP across TP ranks. VALIDATION PENDING (2026-11-18, 4xB300)."
+                            "notes": "flux3_transformer.py shards attention QKV and the MLP across TP ranks. Measured on one 4xB300 box, 2026-11-18/19, single_e2e medians, a fresh server per arm: default (CFG parallel 2, cuDNN attention by platform default) 1.909 s; + --no-diffusion-compile-dynamic 1.901 / 1.903 / 1.905; + CUDNN_ATTN spelled out 1.908; + FLASHINFER_ATTN 1.892 / 1.885 / 1.885; TP2 with batched CFG 2.254; Ulysses 2 with batched CFG 4.851. sglang on the same box: 2.047-2.053 s on main 9fbab1f6ed, 1.902-1.906 s with sgl-project/sglang#51380, #51387, #51406 and #51318 applied (all open at the time)."
                         },
                         "cand-usp2-static": {
                             "framework_ref": "vllm-omni main 24e5472849 + vllm==0.33.0",
                             "num_gpus": 2,
                             "serve_args": "--served-model-name black-forest-labs/flux-3-image-klein-base --usp 2 --no-diffusion-compile-dynamic",
                             "description": "Ulysses 2 with both CFG branches in one batched call. Never selected on its own: A/B arm.",
-                            "notes": "VALIDATION PENDING (2026-11-18, 4xB300)."
+                            "notes": " Measured on one 4xB300 box, 2026-11-18/19, single_e2e medians, a fresh server per arm: default (CFG parallel 2, cuDNN attention by platform default) 1.909 s; + --no-diffusion-compile-dynamic 1.901 / 1.903 / 1.905; + CUDNN_ATTN spelled out 1.908; + FLASHINFER_ATTN 1.892 / 1.885 / 1.885; TP2 with batched CFG 2.254; Ulysses 2 with batched CFG 4.851. sglang on the same box: 2.047-2.053 s on main 9fbab1f6ed, 1.902-1.906 s with sgl-project/sglang#51380, #51387, #51406 and #51318 applied (all open at the time)."
                         }
                     }
                 },
@@ -7933,7 +7946,7 @@
                                 "OMP_NUM_THREADS": "8"
                             },
                             "description": "blackwell-fa4-omp8 plus parallel_config.async_ulysses at Ulysses 2. Never selected on its own: A/B arm.",
-                            "notes": "A profile's visual_gen_args are DEEP-MERGED onto the framework entry's, so this arm keeps its ulysses_size, parallel_vae_size and ref2va pipeline_config and adds only the async flag; the attention backend is spelled out because the profile does not inherit blackwell-fa4-omp8's. tensorrt-llm #20333 wired async_ulysses for MiniMax-H3 self-attention (BF16 only; separate Q/K/V GEMMs, so not bit-identical to the fused path). The T2VA arm of the same flag measured -1.72% on 4xB300 (2026-11-18). VALIDATION PENDING for Ref2VA (round 2026-11-18, 4xB300)."
+                            "notes": "A profile's visual_gen_args are DEEP-MERGED onto the framework entry's, so this arm keeps its ulysses_size, parallel_vae_size and ref2va pipeline_config and adds only the async flag; the attention backend is spelled out because the profile does not inherit blackwell-fa4-omp8's. tensorrt-llm #20333 wired async_ulysses for MiniMax-H3 self-attention (BF16 only; separate Q/K/V GEMMs, so not bit-identical to the fused path). The T2VA arm of the same flag measured -1.72% on 4xB300 (2026-11-18). VALIDATION PENDING for Ref2VA (round 2026-11-18, 4xB300). Round 2 on a second 4xB300 box (2026-11-19): cand-async-u2 104.074 s against the selected profile's 103.704 s (+0.36%); round 1 (2026-11-18) was -0.44%. Two rounds of opposite sign: not promoted."
                         }
                     },
                     "extra_env_reason": "The harness exports PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True. Under it, the CUDA IPC handle TRT-LLM's rank 0 hands its media over with needs pidfd_getfd in the server process, which RunPod containers deny: every request logged 'pidfd_getfd: Operation not permitted' and hung to the read timeout (4xB300, 2026-10-22). Plain segments use cudaIpcMemHandle instead."
