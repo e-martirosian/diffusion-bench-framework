@@ -680,6 +680,27 @@ KILL); (4) while the queue sits at the gate, kill every leftover `vllm serve` / 
 plan's next arm running as an orphan that holds the GPUs under the new item (twice on 2026-11-18). Do not `pgrep -f` a string
 that is also in your own remote command line: it matches your shell.
 
+### A default-off switch that wins on one cell
+
+A competitor's gain from an option (vLLM-Omni's copy-engine Ulysses exchange, 2026-11-19) points at sglang's own default-off
+counterpart. One winning cell is not a default: (1) force the switch on in every cell that reaches the code path, selected
+profiles and candidate layouts alike (FastH3 -1.6%, Qwen-Image at Ulysses 4 +8.7%, the rest flat); (2) measure the primitive
+alone across the quantity that differs between the winners and the losers (`scripts/bench_a2a_sweep.py`: payload per rank, by
+group size); (3) histogram what the real cells send (a `sitecustomize.py` in the tree's `python/` directory wrapping the
+function; `DBF_SGLANG_PYTHONPATH` must stay one directory, the harness checks it); (4) put the choice where the quantity is known
+and measure the exact patch against main again. The primitive alone understated the end-to-end gain here (at break-even alone,
+FastH3 still gained 0.2-0.3%), so the threshold needs the end-to-end arms, not only the sweep.
+
+### Timing a server with your own client
+
+The harness tags every prompt (`(take NN)`), because sglang answers a repeated prompt from its conditioning cache. A hand-written
+loop that repeats one prompt measures that cache: FLUX.3 read 1.858 s that way against 1.889 s with a different prompt per
+request. Vary the prompt, and do not set such numbers beside harness numbers: the harness's client adds a few ms of its own.
+
+An in-process sampler (`sys._current_frames()` from a thread) undercounts whatever holds the GIL in C (PNG encode, pickling,
+kernel launches): read it for where a rank waits and which code runs on which rank, not for milliseconds. Idle ranks sit in the
+request broadcast, so the sampling window's idle padding shows up there on every rank.
+
 ## Failure Classification
 
 Classify every failed or missing cell:

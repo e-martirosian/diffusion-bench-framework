@@ -5,7 +5,7 @@ Follow-up to the published round `b300x4-20261116`. Everything here was measured
 single-request end-to-end medians in seconds. Pins: sglang `25c1c43942` (round pin) and main `9fbab1f6ed`; vLLM-Omni
 `24e5472849` on vllm 0.33.0; TRT-LLM 1.4.0rc3; LightX2V `395e2ac49f`. Raw results: `results/r1118-b300/` (untracked).
 
-Status: the FLUX.3 work and the sglang checks are complete; five sglang PRs are open or merged (section 1) and a sixth change is being measured. Section 5's confirmation rounds are in and the faster competitor commands are the B300-selected profiles; the published round predates them.
+Status: the FLUX.3 work and the sglang checks are complete; seven sglang PRs are open or merged (sections 1 and 6). Section 5's confirmation rounds are in and the faster competitor commands are the B300-selected profiles; the published round predates them.
 
 ## 1. One cell where sglang was behind: FLUX.3 Klein Base (2 GPUs)
 
@@ -42,12 +42,24 @@ What it was, and the fixes (each measured alone against main, mirrored):
 The SwiGLU fix came from laying the two frameworks' torch-profiler tables side by side: GEMMs and cuDNN SDPA were the same
 kernels with the same call counts; vLLM-Omni's compiled SwiGLU ran 33 times for 1.75 ms per step, sglang's 38 times for 3.74 ms.
 
-Where it stands: 0.4% ahead of vLLM-Omni's cuDNN command (1.903 / 1.905) and 0.1-0.6% behind its FlashInfer command
-(1.885 / 1.885 / 1.892). Denoise is ahead (1.792 s against about 1.82 s from vLLM-Omni's progress bar). vLLM-Omni runs the
-FLUX.3 VAE in bf16 (its log: fp32 weights loaded into bf16 parameters; no switch); the checkpoint and sglang are fp32, so the two
-rows are not at the same VAE precision. sglang's `--component-precisions.vae` does not reach the FLUX.3 VAE (its dtype comes from
-the package config), so a same-precision sglang arm is not measured. The cell should not be published before the five PRs land and
-it is measured again.
+Where it stands (2026-11-19, same box, mirrored against vLLM-Omni's selected FlashInfer command in one window):
+
+| | s |
+|---|---:|
+| sglang, the five PRs, fp32 VAE (the checkpoint's) | 1.899 / 1.898 |
+| sglang, the five PRs and sgl-project/sglang#51529, `--component-precisions.vae bf16` | 1.892 / 1.888 |
+| vLLM-Omni `b300-cfg2-static-flashinfer` (bf16 VAE, no switch) | 1.885 / 1.883 |
+
+sglang is 0.4% ahead of vLLM-Omni's cuDNN command (1.903 / 1.905) and still 0.7-0.8% behind its FlashInfer command, 0.2-0.4% at
+the same VAE precision. `--component-precisions.vae` used to be ignored for FLUX.3 (both VAE stages pinned the package's dtype);
+#51529 honors it: decode 0.052 -> 0.040 s, images against the fp32 decode PSNR 40.0-41.2 dB.
+
+Checked for the remainder and ruled out: the attention kernel (FlashInfer's `cute-dsl`, which vLLM-Omni's FlashInfer backend
+selects on Blackwell, is slower than cuDNN at this shape: section 6); the attention input layout (cuDNN SDPA takes transposed
+views, a strided QKV projection and contiguous BHLD inputs in the same 0.14-0.16 ms); the batch hand-off between the CFG ranks
+(a 248 KB pickle, 0.05 ms); the time outside the stages (12 ms with a plain client, the same as Z-Image under TP2). No lever is
+left that is known. The cell should not be published before the PRs land and it is measured again, and as measured it is not a
+cell sglang leads.
 
 ## 2. Did sglang regress between rounds? No
 
@@ -164,7 +176,17 @@ payload (`bench_a2a_sweep.py`, bf16, mean ms per exchange, one 4xB300 box):
 | 512 | 0.814 | 0.638 | 0.792 | 0.455 |
 | 1024 | 1.481 | 1.196 | 1.227 | 0.882 |
 
-So the default cannot simply flip: the transport is chosen per exchange by payload and group size (sglang change in progress).
+So the default cannot simply flip. sgl-project/sglang#51554 leaves the choice to the transport when the switch is unset: on
+Blackwell, three- and four-rank groups take the copy engine from 48 / 128 MiB sent per rank (the sizes at which it measured no
+slower than NCCL alone). FastH3 sends 387 MiB (packed QKV) and 129 MiB (output) per exchange, Qwen-Image at Ulysses 4 sends 8 MiB.
+Main b6d4389a77 against the change, mirrored: FastH3 5.022 / 5.027 -> 4.965 / 4.962 (-1.1% / -1.3%; forced on in an earlier
+window 4.961 / 4.954 against 5.033 / 5.021), Qwen-Image at Ulysses 4 1.780 against 1.798 (NCCL on both; the cell ranged
+1.748-1.831 over the day on either tree), MiniMax-H3 on four GPUs 31.493 against 31.475, MP4 md5s identical.
+
+Checked and dropped: Cosmos3's decode stage runs on every rank under CFG parallel (the generic decode stage runs on the main CFG
+rank only), so the other rank decodes, converts and safety-checks an output nobody reads. Restricting it to the main CFG rank
+changed nothing measurable: T2I 0.528 / 0.514 against 0.519 / 0.513, T2V 22.654 against 22.721, I2V 22.719 against 22.706, peak
+memory per GPU and output bytes identical. No PR.
 
 Also settled here: vLLM-Omni's FlashInfer attention on Blackwell is FlashInfer's `cute-dsl` kernel, which at FLUX.3's shape
 (24 heads x 128, bf16) is slower than cuDNN in isolation (L=4352: 0.146-0.149 against 0.138-0.143 ms; L=4608: 0.195 against
