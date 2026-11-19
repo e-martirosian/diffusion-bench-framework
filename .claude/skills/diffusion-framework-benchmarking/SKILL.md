@@ -649,6 +649,37 @@ actually reads shipped that way, and four GPUs ran with the dead key.
 copy and requires a match -- run the suite, not just the build.
 
 
+### A competitor that learned a model since the case was written
+
+A cell classified `unsupported` stays that way until someone re-reads the reason. vLLM-Omni merged FLUX.3 (#9523) six days
+before the 2026-11-16 round; the case still said "no FLUX.3 pipeline, PR open", the round published without that row, and
+when it was finally measured (2026-11-18) vLLM-Omni was 7% ahead of sglang on it. Before every round, check each
+`unsupported` / `no_profile` reason against the competitor's pin: list the model directories at that commit
+(`vllm_omni/diffusion/models/`, `tensorrt_llm/_torch/visual_gen/models/`, LightX2V `configs/`) and its supported-models doc.
+`reports/round-20261116/learnings.md` has the whole follow-up.
+
+When a competitor is ahead, lay the two torch-profiler kernel tables side by side before blaming "they compile"
+(`scripts/trace_kernel_summary.py`; sglang: request fields `profile: true, profile_all_stages: true` with
+`SGLANG_DIFFUSION_TORCH_PROFILER_DIR`; vLLM-Omni: `--profiler-config '{"profiler":"torch","torch_profiler_dir":...}'`, then
+POST `/start_profile`, one request, POST `/stop_profile`). On FLUX.3 the GEMMs and attention were identical; one activation
+kernel was not. `SGLANG_DIFFUSION_SYNC_STAGE_PROFILING=1` gives sglang's real stage split: its default stage timers are
+asynchronous, and the "decode" time and the client-minus-stages tail absorb the denoise tail.
+
+A competitor's per-request option can be an A/B arm: a profile's `request_extra` is laid over the case's request extras for
+that framework (first user: vLLM-Omni Wan `extra_params.preencode_mp4`). LightX2V sets `PROFILING_DEBUG_LEVEL=2` unless told
+otherwise (a device synchronize and a log line around every denoise step); a new LightX2V cell needs `PROFILING_DEBUG_LEVEL=0`
+in its `extra_env` the way the H3 entries have it.
+
+### Putting an urgent arm ahead of a running plan queue
+
+`scripts/run_plan_queue.sh` runs one item at a time, so a long plan blocks a ten-minute experiment for hours. To cut in:
+(1) add a gate item that sorts before the experiment (`until [ -e $STATE/go ]; do sleep 2; done`) and the experiment itself;
+(2) copy the running item to a later name so it runs again; (3) kill the running item's whole process tree (TERM, 12 s,
+KILL); (4) while the queue sits at the gate, kill every leftover `vllm serve` / `sglang serve` / `run_comparison` /
+`DiffusionWorker` process and check `nvidia-smi` shows 0 MiB; (5) `touch $STATE/go`. Killing without the gate leaves the
+plan's next arm running as an orphan that holds the GPUs under the new item (twice on 2026-11-18). Do not `pgrep -f` a string
+that is also in your own remote command line: it matches your shell.
+
 ## Failure Classification
 
 Classify every failed or missing cell:
