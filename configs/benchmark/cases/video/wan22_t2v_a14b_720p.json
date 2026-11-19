@@ -309,7 +309,7 @@
             }
           },
           "description": "blackwell-4gpu-cfg2-usp2-vaepp-devpost with extra_params.preencode_mp4 on every request (MP4 encoding overlapped with the VAE decode). Never selected on its own: A/B arm.",
-          "notes": "vLLM-Omni documents preencode_mp4 for MiniMax-H3 and Wan 2.2 (docs/serving/videos_api.md); the H3 cells have sent it since 2026-10-08, the Wan cell never did. On Wan the flag replaces vae.decode with decode_to_mp4, which decodes in batches of frames (wan2_2/pipeline_wan2_2.py, chunked_mp4.py), so it also replaces the 4-GPU spatial-shard VAE decode the base profile selects; which of the two is faster is the question. VALIDATION PENDING (2026-11-18, 4xB300)."
+          "notes": "vLLM-Omni documents preencode_mp4 for MiniMax-H3 and Wan 2.2 (docs/serving/videos_api.md); the H3 cells have sent it since 2026-10-08, the Wan cell never did. On Wan the flag replaces vae.decode with decode_to_mp4, which decodes in batches of frames (wan2_2/pipeline_wan2_2.py, chunked_mp4.py), so it also replaces the 4-GPU spatial-shard VAE decode the base profile selects; which of the two is faster is the question. Round 1, one 4xB300 box, 2026-11-19: selected profile 97.517 s, cand-preencode 97.141 s (-0.39%). Second round pending."
         },
         "cand-usp4-cfgbatch": {
           "num_gpus": 4,
@@ -318,7 +318,7 @@
             "DIFFUSION_ATTENTION_BACKEND": "CUDNN_ATTN"
           },
           "description": "Ulysses 4 with both CFG branches in one batched denoiser call (--enable-cfg-batching, #9797) in place of CFG-parallel 2 x Ulysses 2. Never selected on its own: A/B arm.",
-          "notes": "vLLM-Omni's CFG batching (docs/user_guide/diffusion/parallelism/cfg_parallel.md) is off by default, applies only without CFG-parallel, and Wan2.2 T2V opts in. Its doc says batched and sequential outputs are not bit-identical in bf16 (GEMMs at twice the batch size); same dtype and algorithm, so the same precision class. VALIDATION PENDING (2026-11-18, 4xB300)."
+          "notes": "vLLM-Omni's CFG batching (docs/user_guide/diffusion/parallelism/cfg_parallel.md) is off by default, applies only without CFG-parallel, and Wan2.2 T2V opts in. Its doc says batched and sequential outputs are not bit-identical in bf16 (GEMMs at twice the batch size); same dtype and algorithm, so the same precision class. Round 1, one 4xB300 box, 2026-11-19: selected profile 97.517 s, cand-usp4-cfgbatch 98.464 s (+1.0%). Not promoted."
         }
       }
     },

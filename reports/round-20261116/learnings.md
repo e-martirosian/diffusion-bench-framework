@@ -5,8 +5,8 @@ Follow-up to the published round `b300x4-20261116`. Everything here was measured
 single-request end-to-end medians in seconds. Pins: sglang `25c1c43942` (round pin) and main `9fbab1f6ed`; vLLM-Omni
 `24e5472849` on vllm 0.33.0; TRT-LLM 1.4.0rc3; LightX2V `395e2ac49f`. Raw results: `results/r1118-b300/` (untracked).
 
-Status: the FLUX.3 work and the sglang checks are complete. The competitor default-off batches (section 5) are still running;
-their rows say "pending".
+Status: the FLUX.3 work and the sglang checks are complete. Section 5's first rounds are in; the confirmation rounds
+(`plan_b300_lxconfirm_20261119.txt`, `plan_b300_a2a_confirm_20261119.txt`) are still running where a row says "pending".
 
 ## 1. One cell where sglang was behind: FLUX.3 Klein Base (2 GPUs)
 
@@ -81,6 +81,7 @@ narrower throughput lead is all vLLM-Omni's own 2%.
 | vllm-omni #7597 (one-launch QK-norm + RoPE) | Z-Image +18 ms under compile on B300 | sglang upper bound measured with an in-place fused kernel: -0.7%; not pursued |
 | vllm-omni #10120 (stored PNG, pybase64, orjson) | outside-engine time 59 -> 16 ms | sgl-project/sglang#51318 (pybase64 + orjson): 5.3 ms per 1024x1024 response on the B300 host, not visible end to end |
 | vllm-omni #9523 (FLUX.3) | a new cell | section 1 |
+| vllm-omni `4b63581cf..24e547284` (2026-11-11 to 11-16; #9487 bf16 tensors over shared memory as raw bits, #10120, #10171 shared-memory wakeup, #9553 Wan-family VAE fast path) | same box, old and new stacks bucketed: FastH3 8.19-8.25 -> 7.70-7.71 (-6.2%), Qwen-Image-2.1 2 GPUs 1.498 -> 1.425-1.427 (-4.8%), Cosmos3 T2I 0.635 -> 0.586-0.603 (-6.5%); the stack move alone: Qwen -2.6%, Cosmos3 T2I -1.9%, FastH3 none | its own worker-to-API and response overhead; sglang's time outside the stages is 9-30 ms on the image cells and 4-45 ms on H3 (section 4) |
 | TRT-LLM rc1 -> rc3 | per-request fixed cost about -1.1 s on H3; per-step unchanged | sglang's non-denoise time is already lower (section 4) |
 | LightX2V `19c19614..395e2ac4` | no cell moved | one idea, below |
 
@@ -116,10 +117,16 @@ sglang has no first-step penalty (H3 on four GPUs: 30.707 s against 49 x 0.625 s
 | TRT-LLM, MiniMax-H3 T2VA 2 / 4 GPUs | `parallel_config.async_ulysses` | -1.72% / -1.65% and -1.59% / -1.50%: promoted (`b300-omp8-async`, `b300-fa4-omp8-async`); the published TRT-LLM H3 rows predate it |
 | vLLM-Omni, FLUX.3 | the whole cell | section 1; B300 now selects `b300-cfg2-static-flashinfer` (1.885-1.892) |
 | vLLM-Omni | `OMP_NUM_THREADS=8`, FA4, FastH3 static compile | not gaps (2026-11-18 first box) |
-| vLLM-Omni | denoise-step CUDA graph, `--ulysses-a2a-permute`, text-encoder TP, Wan `preencode_mp4`, Wan Ulysses 4 + batched CFG | pending |
+| vLLM-Omni | `--ulysses-a2a-permute` (copy-engine Ulysses exchange, #9922) | round 1: Qwen-Image-2.1 2 GPUs 1.435 -> 1.385 (-3.5%), FastH3 7.785 -> 7.338 (-5.7%), MiniMax-H3 4 GPUs 36.613 -> 34.779 (-5.0%), Wan2.2 97.710 -> 94.642 (-3.1%); sglang stays ahead on all four (1.311 / 5.040 / 31.530 / 88.967); second round and the other Ulysses cells pending |
+| vLLM-Omni | denoise-step CUDA graph | no gain (Z-Image 0.449 -> 0.447, Wan2.2 97.710 -> 97.783) |
+| vLLM-Omni | text-encoder TP (Qwen 2 GPUs), Wan `preencode_mp4`, Wan Ulysses 4 + batched CFG | 1.424 -> 1.434 (none); 97.517 -> 97.141 (-0.39%, one round); 98.464 (slower) |
 | TRT-LLM, MiniMax-H3 Ref2VA | `async_ulysses` | -0.44% on the first box, +0.36% on the second (104.074 against 103.704): not promoted |
-| TRT-LLM | CUDA graphs, token-sharded TP, TP2 x Ulysses 2, text-encoder TP | pending |
-| LightX2V | `PROFILING_DEBUG_LEVEL=0` on the non-H3 cells (it defaults to 2: a device synchronize and a log line around every step; only our H3 entries set 0), Wan VAE compile, H3 packed / head-parallel Ulysses, fused QKV, VAE compile, traceable RMSNorm | pending |
+| TRT-LLM | CUDA graphs | Wan2.2 93.673 -> 93.655 (none); on Cosmos3 the server exits before the health check |
+| TRT-LLM | token-sharded TP (Wan2.2), TP2 x Ulysses 2 (MiniMax-H3 4 GPUs), text-encoder TP (MiniMax-H3) | 99.685 against 93.673 (slower); 38.330 against 35.749 (slower); server exits |
+| LightX2V | `PROFILING_DEBUG_LEVEL=0` on the non-H3 cells (it defaults to 2: a device synchronize and a log line around every step; only our H3 entries set 0) | Qwen-Image-2.1 2.483 / 2.480 -> 2.449 / 2.446 (-1.4%): promoted (`b300-sdpa-noprof`); Z-Image, Cosmos3 T2V, Wan2.2: no difference |
+| LightX2V, MiniMax-H3 T2VA | VAE compile, packed Ulysses exchange | 71.286 -> 70.281 (-1.41%), 70.788 (-0.70%), one round; second round and the pair pending |
+| LightX2V, MiniMax-H3 T2VA | head-parallel Ulysses, fused QKV, traceable RMSNorm | 84.761, 73.879, 72.244: slower |
+| LightX2V, Wan2.2 | VAE compile (#1646) | 99.904 -> 99.529 (-0.38%), one round; second round pending |
 
 Fairness note for the FLUX.3 cell: vLLM-Omni decodes with a bf16 VAE where the checkpoint is fp32.
 

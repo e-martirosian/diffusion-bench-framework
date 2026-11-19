@@ -198,7 +198,7 @@
             "DIFFUSION_ATTENTION_BACKEND": "CUDNN_ATTN"
           },
           "description": "blackwell-cudnn-static plus --text-encoder-tp-size 2 (text encoder sharded across the two DiT ranks, #9438). Never selected on its own: A/B arm.",
-          "notes": "vLLM-Omni's text-encoder tensor parallelism (docs/user_guide/diffusion/parallelism/tensor_parallel.md) is off by default (text_encoder_tp_size 1) and documented for the Qwen-Image family and MiniMax-H3; its example pairs it with --tensor-parallel-size, this profile's DiT runs --usp 2. VALIDATION PENDING (2026-11-18, 4xB300)."
+          "notes": "vLLM-Omni's text-encoder tensor parallelism (docs/user_guide/diffusion/parallelism/tensor_parallel.md) is off by default (text_encoder_tp_size 1) and documented for the Qwen-Image family and MiniMax-H3; its example pairs it with --tensor-parallel-size, this profile's DiT runs --usp 2. Round 1, one 4xB300 box, 2026-11-19: blackwell-cudnn-static 1.424 s, cand-tetp2 1.434 s. No gain. Not promoted."
         }
       }
     },
