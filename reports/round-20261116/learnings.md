@@ -124,9 +124,9 @@ sglang has no first-step penalty (H3 on four GPUs: 30.707 s against 49 x 0.625 s
 | TRT-LLM | CUDA graphs | Wan2.2 93.673 -> 93.655 (none); on Cosmos3 the server exits before the health check |
 | TRT-LLM | token-sharded TP (Wan2.2), TP2 x Ulysses 2 (MiniMax-H3 4 GPUs), text-encoder TP (MiniMax-H3) | 99.685 against 93.673 (slower); 38.330 against 35.749 (slower); server exits |
 | LightX2V | `PROFILING_DEBUG_LEVEL=0` on the non-H3 cells (it defaults to 2: a device synchronize and a log line around every step; only our H3 entries set 0) | Qwen-Image-2.1 2.483 / 2.480 -> 2.449 / 2.446 (-1.4%): promoted (`b300-sdpa-noprof`); Z-Image, Cosmos3 T2V, Wan2.2: no difference |
-| LightX2V, MiniMax-H3 T2VA | VAE compile, packed Ulysses exchange | 71.286 -> 70.281 (-1.41%), 70.788 (-0.70%), one round; second round and the pair pending |
+| LightX2V, MiniMax-H3 | VAE compile, packed Ulysses exchange (`seq_p_tensor_fusion`, Triton pre/post) | T2VA 2 GPUs, two rounds: 71.286 / 71.338 -> VAE compile 70.281 / 70.211, packed exchange 70.788 / 70.627, both 69.644 / 69.632 (-2.4%); 4 GPUs, one round: 36.799 -> 36.262 (-1.5%); Ref2VA, one round: 112.33 -> 110.13 (-2.0%): promoted (`b300-sp2-sdpa-fusion-vaec`, `b300-sp4-sdpa-fusion-vaec`); sglang on the same box 61.487 / 31.530 / 94.778 |
 | LightX2V, MiniMax-H3 T2VA | head-parallel Ulysses, fused QKV, traceable RMSNorm | 84.761, 73.879, 72.244: slower |
-| LightX2V, Wan2.2 | VAE compile (#1646) | 99.904 -> 99.529 (-0.38%), one round; second round pending |
+| LightX2V, Wan2.2 | VAE compile (#1646) | two rounds: 99.904 / 99.274 -> 99.529 / 99.004 (-0.38% / -0.27%): promoted (`b300-sdpa-vae-compile`); sglang 88.967 |
 
 Fairness note for the FLUX.3 cell: vLLM-Omni decodes with a bf16 VAE where the checkpoint is fp32.
 

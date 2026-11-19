@@ -1,0 +1,15 @@
+# 2026-11-19: does sglang's own N-rank copy-engine exchange (SGLANG_DIFFUSION_IPC_A2A_MULTI, off by default) pay on the cells where
+# vLLM-Omni's copy-engine exchange measured -5% against its NCCL path? FastH3 runs sparse attention, so its Ulysses 4 exchange is the
+# sequential one and goes over NCCL by default; MiniMax-H3 on four GPUs already pipelines its dense attention over the copy engine and
+# the switch only moves what is left. Mirrored rounds, one 4xB300 box, single_e2e, a fresh server per arm.
+# Then vLLM-Omni on Wan2.2: preencode_mp4 on top of the copy-engine exchange, two mirrored rounds.
+fh3-sg-r1 sglang minimax_h3_fasth3_v2_t2va_5s single_e2e 0,1,2,3 -
+fh3-sg-cem-r1 sglang minimax_h3_fasth3_v2_t2va_5s single_e2e 0,1,2,3 - SGLANG_DIFFUSION_IPC_A2A_MULTI=1
+h34-sg-cem-r1 sglang minimax_h3_t2va_5s_4gpu single_e2e 0,1,2,3 - SGLANG_DIFFUSION_IPC_A2A_MULTI=1
+h34-sg-r1 sglang minimax_h3_t2va_5s_4gpu single_e2e 0,1,2,3 -
+fh3-sg-cem-r2 sglang minimax_h3_fasth3_v2_t2va_5s single_e2e 0,1,2,3 - SGLANG_DIFFUSION_IPC_A2A_MULTI=1
+fh3-sg-r2 sglang minimax_h3_fasth3_v2_t2va_5s single_e2e 0,1,2,3 -
+wan-vo-a2a-r3 vllm-omni wan22_t2v_a14b_720p single_e2e 0,1,2,3 cand-a2a-permute
+wan-vo-a2apre-r1 vllm-omni wan22_t2v_a14b_720p single_e2e 0,1,2,3 cand-a2a-preencode
+wan-vo-a2apre-r2 vllm-omni wan22_t2v_a14b_720p single_e2e 0,1,2,3 cand-a2a-preencode
+wan-vo-a2a-r4 vllm-omni wan22_t2v_a14b_720p single_e2e 0,1,2,3 cand-a2a-permute

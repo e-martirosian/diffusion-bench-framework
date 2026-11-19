@@ -319,6 +319,20 @@
           },
           "description": "Ulysses 4 with both CFG branches in one batched denoiser call (--enable-cfg-batching, #9797) in place of CFG-parallel 2 x Ulysses 2. Never selected on its own: A/B arm.",
           "notes": "vLLM-Omni's CFG batching (docs/user_guide/diffusion/parallelism/cfg_parallel.md) is off by default, applies only without CFG-parallel, and Wan2.2 T2V opts in. Its doc says batched and sequential outputs are not bit-identical in bf16 (GEMMs at twice the batch size); same dtype and algorithm, so the same precision class. Round 1, one 4xB300 box, 2026-11-19: selected profile 97.517 s, cand-usp4-cfgbatch 98.464 s (+1.0%). Not promoted."
+        },
+        "cand-a2a-preencode": {
+          "num_gpus": 4,
+          "serve_args": "--num-gpus 4 --cfg-parallel-size 2 --usp 2 --vae-patch-parallel-size 4 --vae-parallel-mode spatial_shard_width --no-diffusion-compile-dynamic --video-output-transport {\"enable_device_postprocess\":true} --ulysses-a2a-permute",
+          "extra_env": {
+            "DIFFUSION_ATTENTION_BACKEND": "CUDNN_ATTN"
+          },
+          "description": "cand-a2a-permute plus extra_params.preencode_mp4 on every request. Never selected on its own: A/B arm.",
+          "notes": "VALIDATION PENDING (2026-11-19, 4xB300). preencode_mp4 alone read 97.517 -> 97.141 s (-0.39%, one round); this arm asks whether it adds to the copy-engine exchange, which is the faster command on this cell.",
+          "request_extra": {
+            "extra_params": {
+              "preencode_mp4": true
+            }
+          }
         }
       }
     },
