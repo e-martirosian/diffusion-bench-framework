@@ -701,6 +701,23 @@ An in-process sampler (`sys._current_frames()` from a thread) undercounts whatev
 kernel launches): read it for where a rank waits and which code runs on which rank, not for milliseconds. Idle ranks sit in the
 request broadcast, so the sampling window's idle padding shows up there on every rank.
 
+### One arm with another request field, and an "eager" arm that is not
+
+- To send one arm's requests with an extra field (2026-11-19: `quality: exact`
+  as a numerics reference), give a candidate profile a `request_extra` next to
+  its `serve_args`; the harness lays it over the case's request. Do it on the
+  box's checkout, rebuild with `scripts/build_benchmark_config.py`, and restore
+  **both** generated copies afterwards (`configs/` and
+  `src/diffusion_bench/comparison_configs.json`).
+- A profile without `--enable-breakable-cuda-graph` is not an eager arm: sglang
+  turns the breakable graph on by itself for validated models (LTX-2.3 among
+  them). The LTX-2.3 `default` arm produced the same md5s as the explicit graph
+  arm. For a real eager arm pass `--enable-breakable-cuda-graph false`, and
+  confirm with the server log (`[Diffusion BCG] captured`).
+- Before reading a PSNR between two trees as a quality change, measure the
+  model's own band: LTX-2.5's videos move 24-29 dB between any two numerically
+  different correct runs (lossless against exact, K/V-gather against Ulysses).
+
 ## Failure Classification
 
 Classify every failed or missing cell:

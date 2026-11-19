@@ -5,7 +5,7 @@ Follow-up to the published round `b300x4-20261116`. Everything here was measured
 single-request end-to-end medians in seconds. Pins: sglang `25c1c43942` (round pin) and main `9fbab1f6ed`; vLLM-Omni
 `24e5472849` on vllm 0.33.0; TRT-LLM 1.4.0rc3; LightX2V `395e2ac49f`. Raw results: `results/r1118-b300/` (untracked).
 
-Status: the FLUX.3 work and the sglang checks are complete; nine sglang PRs are open or merged (sections 1 and 6, one of them a draft). Section 5's confirmation rounds are in and the faster competitor commands are the B300-selected profiles; the published round predates them.
+Status: the FLUX.3 work and the sglang checks are complete; eleven sglang PRs are open or merged (sections 1, 2 and 6, one of them a draft). Section 5's confirmation rounds are in and the faster competitor commands are the B300-selected profiles; the published round predates them.
 
 ## 1. One cell where sglang was behind: FLUX.3 Klein Base (2 GPUs)
 
@@ -73,26 +73,76 @@ nothing there and channels_last doubles the time.
 
 The cell should still not be published before the PRs land and it is measured again.
 
-## 2. Did sglang regress between rounds? No
+## 2. Did sglang regress between rounds? One cell: LTX-2.5 two-stage
 
-Old `ca819c11cd` (2026-11-02), round pin, main, same box, two mirrored rounds, medians:
+Across the two published rounds (different boxes) sglang's own rows read slower in seven cells: Cosmos3 T2I +4.6%, LTX-2.5
++2.7%, Qwen-Image-2.1 T2I +1.6%, Edit +1.5%, FLUX.3 +1.0%, Ideogram 4 +1.0%, Wan2.2 +0.4%. The previous round's rows did not
+all run one sglang commit (the per-row commit is `sglang_runtime.git_commit` in each raw result; `merged.json`'s `commit_sha`
+is the harness): `ca819c11cd` (2026-11-02) for most, `1ab008f5b0` (2026-10-29) for Cosmos3 T2I, FLUX.3 and Ideogram 4
+(Z-Image was checked against it as well), and for LTX-2.5 the head of sglang PR #47411 (`4e1a4bb5c3`, 2026-10-30). Each cell against the tree its own row ran, one 2xB300 box, mirrored arms,
+main `5e32149fd6`, medians:
+
+| cell | previous row's tree | that tree | main |
+|---|---|---:|---:|
+| Qwen-Image-2.1 T2I | `ca819c11cd` | 2.134 | 2.134 / 2.134 |
+| Qwen-Image-2.1 Edit | `ca819c11cd` | 2.564 | 2.567 / 2.562 |
+| Cosmos3 T2I | `1ab008f5b0` | 0.513 / 0.511 | 0.515 / 0.519 (0.506 / 0.515 an hour earlier) |
+| FLUX.3 Klein Base | `1ab008f5b0` | 2.049 / 2.047 | 2.045 / 2.047 |
+| Ideogram 4 (2 GPUs) | `1ab008f5b0` | 1.916 / 1.915 | 1.904 / 1.904 |
+| Z-Image Turbo | `1ab008f5b0` | 0.342 / 0.343 | 0.311 / 0.314 |
+| **LTX-2.5 two-stage** | `4e1a4bb5c3` | **5.091 / 5.118** | **5.188 / 5.172** |
+
+Six of the seven are cross-box noise. Wan2.2 (+0.4% of 97 s, four GPUs) was not put on one box. LTX-2.5 is a real regression
+of 1.3-1.6%, and an earlier version of this section missed it: its "old" tree was `ca819c11cd` for every cell, three days
+newer than the LTX-2.5 row's, with the regression in between.
+
+Bisected by the two denoise stages' own times (they repeat within 3 ms; the decode stage absorbs the asynchronous tail and
+moves by 30 ms, which sent an end-to-end bisect to the wrong commit):
+
+| tree | stage 1 | stage 2 |
+|---|---:|---:|
+| `4e1a4bb5c3`, and eight commits on main up to `e93f817325` (#47301's parent) | 1.017-1.021 | 1.534-1.542 |
+| `504f9cf720` (sglang #47301), `0f92ddaefb`, `ca819c11cd`, main | 1.042-1.047 | 1.559-1.565 |
+
+sglang #47301 moved Blackwell attention with one side under 128 tokens (LTX's 126 audio tokens against the video or the
+text) from FA4 to cuDNN for `lossless` and `high` requests "in eager execution", because FA4's host dispatch loses there. Its
+measurement was plain eager. The rule also caught the eager breaks of a graph replay, which run outside the capture scope:
+LTX-2.5 under the breakable graph is 289 segments with 288 attention breaks per forward, and at its token counts (8160 video
+tokens in stage 1, four times that in stage 2) cuDNN's fallback kernel for these shapes costs more than FA4's dispatch. The
+fix keeps FA4 in a replay's breaks and leaves plain eager alone (sgl-project/sglang#51611). Same box, main `2bf882aefc` against the same tree with the fix, mirrored:
+
+| arm | stage 1 | stage 2 | request |
+|---|---:|---:|---:|
+| main | 1.043 / 1.042 | 1.561 / 1.562 | 5.193 / 5.163 |
+| fix | 1.020 / 1.021 | 1.539 / 1.544 | 5.135 / 5.132 |
+
+FLUX.3, Ideogram 4 and Z-Image give byte-identical images on the two trees (no such attention shape), so the change reaches
+only models with a short cross-attention side. The retired LTX-2.3 two-stage cell (768x512, CFG parallel, breakable graph;
+1536 video tokens in stage 1) is such a model and does not move: stage 1 / stage 2 2.049 / 0.329 and 2.052 / 0.329 s on main,
+2.050 / 0.327 and 2.049 / 0.328 s with the fix, the request 3.858 / 3.871 against 3.854 / 3.873 s. Its previous-round row
+(3.905 s at `3042cea843`, another box) is not a regression either.
+
+The fix's LTX-2.5 videos are 24.9-27.7 dB (per-frame PSNR, averaged per video) from main's. That is the band any two
+numerically different runs of this model sit in: against `quality=exact` videos of the same requests main's lossless videos
+are 23.9-28.3 dB and the fix's 25.0-26.7 dB, and two exact servers that differ only in the sequence-parallel exchange are
+24.3-28.7 dB apart. The exact videos are identical with and without the fix.
+
+Getting that reference found a second defect: on this server command (two GPUs, the runtime's own K/V-gather degree) every
+`quality=exact` LTX-2.5 request failed with a shape error. `exact` keeps the reference masked path, the video-to-audio
+attention passes the video's mask as a key mask, and the masked K/V-gather path read it as the query's. With
+sgl-project/sglang#51620 the call takes the Ulysses exchange instead and the requests complete (6.757 / 6.751 s).
+
+The cells whose previous rows ran `ca819c11cd`, on the first (4xB300) box, old / round pin / main:
 
 | cell | old | pin | main |
 |---|---:|---:|---:|
-| Ideogram 4 (2 GPUs) | 1.918 | 1.910 | 1.908 |
-| LTX-2.5 two-stage | 5.158 | 5.172 | 5.178 |
 | Cosmos3 T2V 189f | 22.726 | 22.750 | 22.724 |
 | FastH3 V2 | 5.081 | 5.045 | 5.040 |
-| FLUX.3 Klein Base | 2.044 | 2.051 | 2.052 |
-| Z-Image Turbo | 0.347 | 0.318 | 0.319 |
-| Qwen-Image-2.1 Edit | 2.569 | 2.553-2.559 | 2.554-2.590 |
-| Qwen-Image-2.1 T2I | 2.127 | 2.126 | 2.126 |
 | Qwen-Image-2.1 T2I 2 GPUs | 1.357 | 1.311 | 1.311 |
-| Cosmos3 T2I | 0.509 / 0.510 | 0.516 / 0.548 | 0.512 / 0.522 |
 
 The "Cosmos3 T2I got 5% slower" reading of the published tables was cross-box noise: five trees on one box agree within 1% by
-the fastest sample, and sglang #49162 (the suspect) measures 0.512 before and 0.511 after. The long video cells are within
-1% across the two rounds, and the MiniMax-H3 dp2 throughput p50 is 118.290 s (2026-11-02) and 118.278 s (this round): the
+the fastest sample, and sglang #49162 (the suspect) measures 0.512 before and 0.511 after. No other cell's row read slower
+across the two rounds, and the H3 dp2 throughput p50 is 118.290 s (2026-11-02) and 118.278 s (this round): the
 narrower throughput lead is all vLLM-Omni's own 2%.
 
 ## 3. Why the others got faster
@@ -106,7 +156,7 @@ narrower throughput lead is all vLLM-Omni's own 2%.
 | vllm-omni #9523 (FLUX.3) | a new cell | section 1 |
 | vllm-omni `4b63581cf..24e547284` (2026-11-11 to 11-16; #9487 bf16 tensors over shared memory as raw bits, #10120, #10171 shared-memory wakeup, #9553 Wan-family VAE fast path) | same box, old and new stacks bucketed: FastH3 8.19-8.25 -> 7.70-7.71 (-6.2%), Qwen-Image-2.1 2 GPUs 1.498 -> 1.425-1.427 (-4.8%), Cosmos3 T2I 0.635 -> 0.586-0.603 (-6.5%); the stack move alone: Qwen -2.6%, Cosmos3 T2I -1.9%, FastH3 none | its own worker-to-API and response overhead; sglang's time outside the stages is 9-30 ms on the image cells and 4-45 ms on H3 (section 4) |
 | TRT-LLM rc1 -> rc3 | per-request fixed cost about -1.1 s on H3; per-step unchanged | sglang's non-denoise time is already lower (section 4) |
-| LightX2V `19c19614..395e2ac4` | no cell moved | one idea, below |
+| LightX2V `19c19614..395e2ac4` | Qwen-Image-2.1 2.560 -> 2.478 (-3.2%), Z-Image 0.831 -> 0.852 (+2.5%), the rest within 1.3% | not attributed upstream-side (its only Qwen hot-path change casts a Triton norm kernel's `eps` to fp32; its Z-Image FA2 calls now take the varlen entry); neither is a path sglang runs |
 
 Checked and closed without a change: the Qwen-Image-2.1 VAE padding fold that B300 rejects costs at most 5 ms (forced on:
 2.126 / 2.130 against 2.135 / 2.132); LightX2V's fused anti-aliased SnakeBeta for the H3 vocoder (#1721) targets an audio
@@ -219,6 +269,10 @@ The full list behind sections 1-6: each competitor change inside the round's ver
 the way), what it does to a cell of ours, and where it ended. "have" = sglang already does it; "PR" = an sglang change;
 "profile" = the competitor's command in this repository changed; "none" = measured or read, nothing to take.
 
+Coverage was checked mechanically on 2026-11-19: every commit of each window was listed with the files it touches
+(`git log --name-only`), and each commit that touches code one of our cells runs is either a row below or falls in a row's
+category. The counts are under each heading.
+
 ### vLLM-Omni (`0da1d831e` -> `24e547284`, vllm 0.32.0 -> 0.33.0)
 
 | change | reaches our cells | verdict |
@@ -240,7 +294,19 @@ the way), what it does to a cell of ours, and where it ended. "have" = sglang al
 | FA4 extra, `--no-diffusion-compile-dynamic` on FastH3 | Blackwell cells | measured: not gaps |
 | #8072 reference-KV refresh, #9245 LiteVAE | lossy | out of scope |
 | #9669, #9248, #9440, #6711, #10283, #9088, #9455, #9804, #6662 | other backends, models or flags | none |
-| #9272 (dropped the decode graph per request, later fixed) | its own Qwen 1-GPU cells +6% in the 11-02 rows | a caution: keep graphs across requests, bounded by shape |
+| #9272 (dropped the decode graph per request, fixed by #10268) | its own Qwen 1-GPU cells +6% in the 11-02 rows | a caution: keep graphs across requests, bounded by shape |
+| #8714, #8718, #8746 attention schedules (approximate attention on the later steps or below a noise level; H3, Wan2.2) | opt-in | lossy; out of scope |
+| #4637 Cosmos3-Nano pipeline parallel, #9926 / #10122 Noisy pipeline parallel (CausVid) | a memory-split layout, off by default; another model | none |
+| #6374 chunked weight transport for distributed layerwise offload, #9259 contiguous host layers for H3 reference-KV offload | offload paths; its cells run resident | none |
+| #9977 serializer writes into a caller's buffer, #10117 | its stage-to-stage shared-memory hand-off | none: same family as #9487 |
+| #9333, #9850 one copy of the weights for colocated AR and DiT stages | HunyuanImage-3.0 memory | none |
+| #10077 Wan2.2 S2V audio injection compiled with the blocks | S2V only | none |
+
+Window: 626 commits. 245 touch no package code (docs, tests, CI, examples). 147 touch only other code (omni, TTS and speech
+models 55, other diffusion models 26, deployment YAML, NPU). 66 touch the engine, scheduler or serializer and no diffusion
+path: omni duplex and AR work except #10171 (above) and #9977 / #10117. 168 touch a path one of our cells runs; the 130 of
+them not in this table by number are fixes, other accelerators (Ascend, XPU, ROCm, MUSA), speech front ends, LoRA,
+quantized checkpoints and the lossy caches (Cache-DiT, TeaCache, SeaCache, TaylorSeer), read by title.
 
 ### TensorRT-LLM VisualGen (1.4.0rc1 -> rc3)
 
@@ -253,6 +319,12 @@ the way), what it does to a cell of ours, and where it ended. "have" = sglang al
 | #19773 SwiGLU in the GEMM epilogue | H3 | part have; changes bytes; not pursued |
 | `tp_layout: token_sharded`, CUDA graphs, TP2 x Ulysses 2, text-encoder TP | Wan2.2, H3 | measured as its candidates: slower, no gain, or the server exits |
 | SageAttention, NVFP4 / FP8 attention, static FP8 Cosmos3, Sol-Attn, TeaCache | lossy | out of scope |
+| #21396 the fused per-token AdaLN was gated on exactly SM100, so B300 ran the unfused path | Wan paths with per-token timesteps (TI2V-5B); the A14B T2V cell has one timestep per sample | none for the cell. Checked sglang's diffusion runtime for the same mistake: no fast path is gated on exactly `(10, 0)`; the SubBlock sparse backend refuses SM103 loudly |
+| #20176 H3 DiT tensor parallelism, #19807 H3 text-encoder TP | H3 | the PRs behind the TP2 x Ulysses 2 and text-encoder TP candidates above |
+| #21301 H3 CPU offload, #19401 video encode always on the thread pool (it already was by default) | memory; no change | none |
+
+Window: 510 commits, 27 of them touching VisualGen code. Besides the rows above: a paged K/V cache for causal models, LTX-2.3,
+FLUX.1 NVFP4, MXFP8 refit, kernel-tree moves and example fixes.
 
 ### LightX2V (`19c19614` -> `395e2ac4`)
 
@@ -264,15 +336,51 @@ the way), what it does to a cell of ours, and where it ended. "have" = sglang al
 | #1721 fused anti-aliased SnakeBeta in the H3 vocoder | H3 audio decode | none: 0.080-0.085 s of a request in sglang |
 | head-parallel Ulysses, fused QKV, traceable RMSNorm | H3 | measured as its candidates: slower |
 | #1656, #1698, #1697 / #1699, #1706, #1720, #1654, #1655, #1700, #1711, #1673 | no hot-path change for our cells | none |
+| #1650, #1657, #1692 causal (streaming) H3: Hopper FP8 GEMM, fused QKV cache updates | another model variant, Hopper, FP8 | none |
+| #1666 release the resident text encoder's host copy | host memory | none |
+
+Window: 43 commits. The 26 not named here are the ComfyUI integration, H3 Image, RelayVSR, InfiniteTalk, Depth Anything 3,
+Seko, MPS, training and docs.
+
+### ComfyUI (`1a82e6d0` -> `a308f3f1`, 148 commits)
+
+Every cell within 1% except FLUX.3 (3.340 -> 3.255, -2.5%, different boxes). The commits that touch a model path of ours:
+
+| change | reaches our cells | verdict |
+|---|---|---|
+| #17196 Flux2 VAE fused and stripped through comfy-kitchen | FLUX.3 decode | have (fused GroupNorm + SiLU in the FLUX.3 VAE) |
+| #17273, #17361 Qwen 3.x: adaptive-tree MTP, combined parallel linear weights; #17625 its fix | Qwen3 text encoders (Z-Image, FLUX.3) | none: sglang replays these encoders as CUDA graphs (Z-Image on one GPU already, FLUX.3 with #51562) |
+| #16941 `fp8_e4m3fn_fast` no longer falls back to bf16 compute under dynamic VRAM | Ideogram 4 fp8 (3.696 -> 3.685) | none |
+| #17413 skip the concat of a single cond, #17439 no `torch.equal` on the same tensor | host micro-costs | none |
+| #17274 dynamic-VRAM KV caches, #17290 NTK RoPE scaling, #17450 VAE compute dtype node, #17487, #17741 | options and fixes | none |
+| the other 130-odd commits | partner API nodes, front end, new models (MiniMax-H3 image, PAN2, WeVisOne, RelayVSR, MOSS) | none |
+
+ComfyUI is 1.4x to 5.8x behind sglang in every cell it runs.
+
+### FastVideo (`fa2d1324` -> `c938a8aa`, 76 commits)
+
+Its four cells moved by -0.5% to +1.1% (FastH3 9.196 -> 9.294). What the window holds for them:
+
+| change | reaches our cells | verdict |
+|---|---|---|
+| #2040 eight VAE tiles per decode call, #2041 fused QK RMSNorm + partial RoPE in the H3 VAE decoder | H3 decode | on by default and its cells did not move; sglang's H3 decode is 0.7-1.2 s of 31-96 s |
+| #2042 opt-in faster kernel tier for the DiT fused ops | H3 | default off; not measured (FastVideo trails sglang by 1.2x to 1.8x in these cells) |
+| #2046 FP4 attention padding, uint8 VAE pixel path, cuDNN FP4 GEMMs; #2052, #2051, #1989 NVFP4 / FP4 attention | NVFP4 paths | lossy; out of scope |
+| #2004 training-free token reduction | H3 | lossy; out of scope |
+| #2022 text conditioning reused across seed sweeps, #2058 free the negative-prompt encoder | H3 | have (conditioning cache); none |
+| #2102-#2105, #2107, #2093 DGX Spark work | GB10 | none |
+| the rest | new models (PAN2, Qwen-Image-2.1, Pika H3 Flex, Open-H3-Regenerate-2K), serving, LoRA, CI, docs | none |
 
 ### sglang itself
 
 | lead | verdict |
 |---|---|
-| regression between the rounds | none: old, pinned and main trees interleaved on one box over ten short cells; long cells within 1% across rounds; H3 throughput p50 118.290 -> 118.278 |
+| regression between the rounds | one: LTX-2.5 two-stage +1.3-1.6% since sglang #47301 (a replay's attention breaks moved to cuDNN's slower sub-tile kernel); PR sgl-project/sglang#51611, stages back to 1.020 / 1.540 s. The other six slower-reading cells are noise against the tree each row ran (section 2) |
 | FLUX.3: static text stream dropped under CFG parallel, slow SwiGLU kernel, sharded VAE decode, negative prompt re-encoded, `--component-precisions.vae` ignored, host-bound text encode | PR sgl-project/sglang#51380, #51387, #51406, #51411, #51529, #51562 |
 | Wan2.2 decode "2.95 s" | a timer artifact: 0.761 s with synchronized timers |
 | Qwen-Image-2.1 VAE padding fold rejected on B300 | at most 5 ms |
 | Cosmos3 decodes on every rank under CFG parallel | no measurable effect; draft PR sgl-project/sglang#51563 for consistency with the generic stage |
 | Z-Image under TP2: the text encoder (0.032 s of 0.31 s) runs eagerly because the native Qwen3 encoder's graphs step aside under tensor parallelism | a lead, not measured further: 25.9-27.8 ms eager against 11.5 ms replayed for the same encoder alone; filed as a follow-up |
 | time outside the stages on the CFG-parallel image cells | not a hand-off cost (0.05 ms); 12 ms with a plain client, as under TP2 |
+| `quality=exact` on LTX-2.5 two-stage with the auto-assigned K/V-gather degree | every request failed (a cross-attention key mask read as the query's); PR sgl-project/sglang#51620, requests complete |
+| a fast path gated on exactly SM100 that B300 (SM103) would silently miss (TRT-LLM's #21396 mistake) | none in the diffusion runtime: every `(10, 0)` test either admits `(10, 3)` beside it or belongs to the SubBlock sparse backend, which refuses SM103 with an error |

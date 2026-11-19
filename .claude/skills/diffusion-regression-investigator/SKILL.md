@@ -189,6 +189,35 @@ attention outputs are **byte-identical** (per (row, head) pair the KV scan
 order is the same), so a cross-mode check can assert md5 equality instead of a
 tolerance — and an md5 match is expected, not suspicious.
 
+## Did sglang regress between two rounds?
+
+Three things made the 2026-11-16 answer wrong the first time ("no") and right
+the second (LTX-2.5 two-stage, +1.3-1.6%):
+
+- **A round is not one sglang commit.** `merged.json`'s top-level `commit_sha`
+  is the *harness* commit. Each row's sglang commit is
+  `sglang_runtime.git_commit` in its raw result, and one round's rows can come
+  from several (2026-10-22: three, one of them the head of an unmerged PR).
+  Compare each cell against the commit *its own* previous row ran. Checking
+  "old" as one dated main commit cleared a cell whose row was older than that
+  commit, with the regression sitting in between.
+- **A row's commit may not be on main.** `setup_sglang_trees.sh` fetches
+  `origin main` only; a PR head needs
+  `git -C sgl-full fetch origin +refs/pull/<N>/head:refs/remotes/pr/<N>` first.
+- **Bisect by the stage's own time, not end to end,** when the step is tens of
+  milliseconds. `results[0].metrics.diagnostic_stages_s` repeats within 1-3 ms
+  for the denoise stages, while the decode stage (it absorbs the async tail)
+  moves by 30 ms between arms. An end-to-end threshold picked the wrong commit;
+  the stage times split the range cleanly (1.018-1.021 against 1.042-1.047 s).
+
+What the regression was is a pattern to look for again: an attention-routing
+change justified by an eager measurement ("FA4's host dispatch loses to cuDNN")
+was applied to the eager *breaks of a graph replay* too, where it had not been
+measured. There the two kernels tie at LTX-2.3's token counts and the "slow
+dispatch" one wins by 2% at LTX-2.5's. A routing rule argued from host cost
+needs its own measurement in each execution mode, and at each end of the shape
+range, it covers.
+
 ## Reporting
 
 Lead with the verdict:
