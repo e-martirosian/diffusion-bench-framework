@@ -5,7 +5,7 @@ Follow-up to the published round `b300x4-20261116`. Everything here was measured
 single-request end-to-end medians in seconds. Pins: sglang `25c1c43942` (round pin) and main `9fbab1f6ed`; vLLM-Omni
 `24e5472849` on vllm 0.33.0; TRT-LLM 1.4.0rc3; LightX2V `395e2ac49f`. Raw results: `results/r1118-b300/` (untracked).
 
-Status: the FLUX.3 work and the sglang checks are complete; seven sglang PRs are open or merged (sections 1 and 6). Section 5's confirmation rounds are in and the faster competitor commands are the B300-selected profiles; the published round predates them.
+Status: the FLUX.3 work and the sglang checks are complete; nine sglang PRs are open or merged (sections 1 and 6, one of them a draft). Section 5's confirmation rounds are in and the faster competitor commands are the B300-selected profiles; the published round predates them.
 
 ## 1. One cell where sglang was behind: FLUX.3 Klein Base (2 GPUs)
 
@@ -42,24 +42,36 @@ What it was, and the fixes (each measured alone against main, mirrored):
 The SwiGLU fix came from laying the two frameworks' torch-profiler tables side by side: GEMMs and cuDNN SDPA were the same
 kernels with the same call counts; vLLM-Omni's compiled SwiGLU ran 33 times for 1.75 ms per step, sglang's 38 times for 3.74 ms.
 
-Where it stands (2026-11-19, same box, mirrored against vLLM-Omni's selected FlashInfer command in one window):
+Where it stands (2026-11-19, a second 2xB300 box, the PR branches as pushed and merged onto main `5e32149fd6`, mirrored against
+vLLM-Omni's selected FlashInfer command in one window):
 
 | | s |
 |---|---:|
-| sglang, the five PRs, fp32 VAE (the checkpoint's) | 1.899 / 1.898 |
-| sglang, the five PRs and sgl-project/sglang#51529, `--component-precisions.vae bf16` | 1.892 / 1.888 |
-| vLLM-Omni `b300-cfg2-static-flashinfer` (bf16 VAE, no switch) | 1.885 / 1.883 |
+| sglang main | 2.043 / 2.043 |
+| sglang, the five open PRs of the table above and #51529 (fp32 VAE, the checkpoint's) | 1.901 / 1.901 |
+| the same with sgl-project/sglang#51562 (the text encoder's forward replayed as a CUDA graph) | 1.882 / 1.881 |
+| the same with `--component-precisions.vae bf16` (sgl-project/sglang#51529 makes the flag work) | 1.873 / 1.875 |
+| vLLM-Omni `b300-cfg2-static-flashinfer` (bf16 VAE, no switch) | 1.887 / 1.890 |
 
-sglang is 0.4% ahead of vLLM-Omni's cuDNN command (1.903 / 1.905) and still 0.7-0.8% behind its FlashInfer command, 0.2-0.4% at
-the same VAE precision. `--component-precisions.vae` used to be ignored for FLUX.3 (both VAE stages pinned the package's dtype);
-#51529 honors it: decode 0.052 -> 0.040 s, images against the fp32 decode PSNR 40.0-41.2 dB.
+With all seven changes sglang leads this cell by 0.3-0.5% while decoding at the checkpoint's fp32, and by 0.8% at vLLM-Omni's VAE
+precision. The gap that was left after the first five PRs was never in the denoising loop (sglang 1.795 s; vLLM-Omni about
+1.82 s by its progress bar) but in what surrounds it:
 
-Checked for the remainder and ruled out: the attention kernel (FlashInfer's `cute-dsl`, which vLLM-Omni's FlashInfer backend
-selects on Blackwell, is slower than cuDNN at this shape: section 6); the attention input layout (cuDNN SDPA takes transposed
-views, a strided QKV projection and contiguous BHLD inputs in the same 0.14-0.16 ms); the batch hand-off between the CFG ranks
-(a 248 KB pickle, 0.05 ms); the time outside the stages (12 ms with a plain client, the same as Z-Image under TP2). No lever is
-left that is known. The cell should not be published before the PRs land and it is measured again, and as measured it is not a
-cell sglang leads.
+- Text encode, 0.036 s: an eager `transformers` forward of a 32-layer language model over a prompt padded to a multiple of 80
+  tokens, almost all host time. Replayed as a CUDA graph it takes 0.018 s with the same bytes (#51562; Qwen-Image-2.1's stage
+  already did this, and the class is now shared).
+- Decode, 0.050 s in fp32 against 0.040 s in bf16. `--component-precisions.vae` was ignored for FLUX.3 because both VAE stages
+  pinned the package's dtype (#51529); images against the fp32 decode read PSNR 40.0-41.2 dB.
+
+Checked and ruled out: the attention kernel (FlashInfer's `cute-dsl`, which vLLM-Omni's FlashInfer backend selects on Blackwell,
+is slower than cuDNN at this shape: section 6); the attention input layout (cuDNN SDPA takes transposed views, a strided QKV
+projection and contiguous BHLD inputs in the same 0.14-0.16 ms); the batch hand-off between the CFG ranks (a 248 KB pickle,
+0.05 ms); the time outside the stages (12 ms with a plain client, as for Z-Image under TP2). In the VAE decode (41.5 ms alone in
+fp32, 32.8 in bf16) the mid attention over 16384 tokens takes 10 ms on fp32 SIMT GEMMs and 2.2 ms with TF32 matmul; TF32 is a
+`high`-tier approximation by sglang's numerics policy, so it is not a change for the default tier. `cudnn.benchmark` does
+nothing there and channels_last doubles the time.
+
+The cell should still not be published before the PRs land and it is measured again.
 
 ## 2. Did sglang regress between rounds? No
 
@@ -183,10 +195,10 @@ Main b6d4389a77 against the change, mirrored: FastH3 5.022 / 5.027 -> 4.965 / 4.
 window 4.961 / 4.954 against 5.033 / 5.021), Qwen-Image at Ulysses 4 1.780 against 1.798 (NCCL on both; the cell ranged
 1.748-1.831 over the day on either tree), MiniMax-H3 on four GPUs 31.493 against 31.475, MP4 md5s identical.
 
-Checked and dropped: Cosmos3's decode stage runs on every rank under CFG parallel (the generic decode stage runs on the main CFG
+Checked, no gain (draft PR sgl-project/sglang#51563 for consistency only): Cosmos3's decode stage runs on every rank under CFG parallel (the generic decode stage runs on the main CFG
 rank only), so the other rank decodes, converts and safety-checks an output nobody reads. Restricting it to the main CFG rank
 changed nothing measurable: T2I 0.528 / 0.514 against 0.519 / 0.513, T2V 22.654 against 22.721, I2V 22.719 against 22.706, peak
-memory per GPU and output bytes identical. No PR.
+memory per GPU and output bytes identical.
 
 Also settled here: vLLM-Omni's FlashInfer attention on Blackwell is FlashInfer's `cute-dsl` kernel, which at FLUX.3's shape
 (24 heads x 128, bf16) is slower than cuDNN in isolation (L=4352: 0.146-0.149 against 0.138-0.143 ms; L=4608: 0.195 against
@@ -212,7 +224,7 @@ the way), what it does to a cell of ours, and where it ended. "have" = sglang al
 | change | reaches our cells | verdict |
 |---|---|---|
 | stack: torch 2.14.0, cuDNN 9.24, NCCL 2.30.7, Triton 3.8 | every `CUDNN_ATTN` video cell -3% per step | have (torch 2.14.1 since 2026-10-04); library versions are now in every result JSON |
-| #9523 FLUX.3 | a new cell, and sglang was behind in it | PR x6 (section 1); still 0.2-0.8% behind |
+| #9523 FLUX.3 | a new cell, and sglang was behind in it | PR x7 (section 1): 2.043 -> 1.881 s against its 1.887-1.890 |
 | #10120 stored PNG, pybase64, orjson | every image cell, outside the engine | PR sgl-project/sglang#51318 (merged); stored PNG: have |
 | #9922 copy-engine Ulysses exchange (`--ulysses-a2a-permute`, default off) | every Ulysses cell | profile (nine cells, -1.1% to -5.7%); PR sgl-project/sglang#51554 for sglang's plain exchange |
 | #9487 bf16 tensors over shared memory as raw bits, #10171 shared-memory wakeup | its worker-to-API hand-off (FastH3 -6.2%, Qwen 2 GPUs -4.8%, Cosmos3 T2I -6.5% with #10120) | none: sglang has no tensor hand-off there; its time outside the stages is 9-30 ms |
@@ -258,8 +270,9 @@ the way), what it does to a cell of ours, and where it ended. "have" = sglang al
 | lead | verdict |
 |---|---|
 | regression between the rounds | none: old, pinned and main trees interleaved on one box over ten short cells; long cells within 1% across rounds; H3 throughput p50 118.290 -> 118.278 |
-| FLUX.3: static text stream dropped under CFG parallel, slow SwiGLU kernel, sharded VAE decode, negative prompt re-encoded, `--component-precisions.vae` ignored | PR sgl-project/sglang#51380, #51387, #51406, #51411, #51529 |
+| FLUX.3: static text stream dropped under CFG parallel, slow SwiGLU kernel, sharded VAE decode, negative prompt re-encoded, `--component-precisions.vae` ignored, host-bound text encode | PR sgl-project/sglang#51380, #51387, #51406, #51411, #51529, #51562 |
 | Wan2.2 decode "2.95 s" | a timer artifact: 0.761 s with synchronized timers |
 | Qwen-Image-2.1 VAE padding fold rejected on B300 | at most 5 ms |
-| Cosmos3 decodes on every rank under CFG parallel | no measurable effect; a draft change, not a fix |
+| Cosmos3 decodes on every rank under CFG parallel | no measurable effect; draft PR sgl-project/sglang#51563 for consistency with the generic stage |
+| Z-Image under TP2: the text encoder (0.032 s of 0.31 s) runs eagerly because the native Qwen3 encoder's graphs step aside under tensor parallelism | a lead, not measured further: 25.9-27.8 ms eager against 11.5 ms replayed for the same encoder alone; filed as a follow-up |
 | time outside the stages on the CFG-parallel image cells | not a hand-off cost (0.05 ms); 12 ms with a plain client, as under TP2 |
