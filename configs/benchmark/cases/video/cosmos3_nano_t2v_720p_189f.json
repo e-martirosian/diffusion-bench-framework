@@ -359,6 +359,13 @@
           },
           "num_gpus": 4,
           "notes": "With CFG parallel off each rank computes both guidance branches for its pipeline stage. MEASURED 2026-11-17 on b300r1116 (4xB300, harness single_e2e, one round, a fresh server per arm): 36.86 s against 26.29 s for the selected blackwell-cudnn-vaepp (CFG 2 x Ulysses 2). Not promoted."
+        },
+        "cand-a2a-permute": {
+          "num_gpus": 4,
+          "serve_args": "--num-gpus 4 --cfg-parallel-size 2 --ulysses-degree 2 --model-class-name Cosmos3OmniDiffusersPipeline --stage-init-timeout 900 --init-timeout 1800 --no-guardrails --diffusion-attention-backend CUDNN_ATTN --cache-backend none --vae-patch-parallel-size 4 --vae-parallel-mode spatial_shard_width --video-output-transport {\"enable_device_postprocess\":true} --no-diffusion-compile-dynamic --ulysses-a2a-permute",
+          "extra_env": {},
+          "description": "blackwell-cudnn-vaepp plus --ulysses-a2a-permute (copy-engine Ulysses exchange). Never selected on its own: A/B arm.",
+          "notes": "vLLM-Omni #9922 (2026-11-13): Ulysses all-to-all over the CUDA copy engine instead of NCCL, off by default (`--ulysses-a2a-permute`). Round 1, one 4xB300 box, 2026-11-19 (vLLM-Omni 24e5472849, single_e2e medians, selected profile -> cand-a2a-permute): Qwen-Image-2.1 2 GPUs 1.435 -> 1.385 s (-3.5%); FastH3 V2 7.785 -> 7.338 (-5.7%); MiniMax-H3 4 GPUs 36.613 -> 34.779 (-5.0%); Wan2.2 97.710 -> 94.642 (-3.1%). sglang on the same box: 1.311 / 5.040 / 31.530 / 88.967 s. VALIDATION PENDING on this cell (2026-11-19, 4xB300)."
         }
       }
     },
@@ -625,7 +632,7 @@
             }
           },
           "description": "default with VisualGen CUDA graphs on (the feature matrix lists Cosmos3 as supported). Never selected on its own: A/B arm.",
-          "notes": "A profile's visual_gen_args are DEEP-MERGED onto the framework entry's, so only the changed keys are listed. On Cosmos3 T2I the same option exited before the health check on 1.4.0rc1 (2026-10-22). VALIDATION PENDING (2026-11-18, 4xB300)."
+          "notes": "A profile's visual_gen_args are DEEP-MERGED onto the framework entry's, so only the changed keys are listed. On Cosmos3 T2I the same option exited before the health check on 1.4.0rc1 (2026-10-22). Round 1, one 4xB300 box, 2026-11-19 (1.4.0rc3): the server exits before the health check with CUDA graphs on (the Cosmos3 T2I cell does the same); default 25.605 s. Not usable."
         }
       },
       "extra_env_reason": "The harness exports PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True. Under it, the CUDA IPC handle TRT-LLM's rank 0 hands its media over with needs pidfd_getfd in the server process, which RunPod containers deny: every request logged 'pidfd_getfd: Operation not permitted' and hung to the read timeout (4xB300, 2026-10-22). Plain segments use cudaIpcMemHandle instead."

@@ -499,7 +499,7 @@
             "commit_date": "2026-07-30",
             "section": "T2I config with CFG parallel 2"
           },
-          "notes": "4xB300 2026-10-22: server exited before health check in both rounds (CUDA graphs on Cosmos3 T2I)."
+          "notes": "4xB300 2026-10-22: server exited before health check in both rounds (CUDA graphs on Cosmos3 T2I). On 1.4.0rc3 the server still exits before the health check with CUDA graphs on (one 4xB300 box, 2026-11-19); default 0.598 s."
         },
         "cand-cudnn": {
           "description": "cuDNN fused SDPA attention. Never selected on its own: A/B arm.",
