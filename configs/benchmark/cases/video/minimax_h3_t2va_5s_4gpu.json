@@ -235,6 +235,23 @@
         }
       },
       "command_profiles": {
+        "b300-sp4-sdpa-fusion-vaec": {
+          "num_gpus": 4,
+          "serve_args": "--model-variant fl2av",
+          "lightx2v_config": {
+            "attn_type": "torch_sdpa",
+            "parallel": {
+              "seq_p_tensor_fusion": true,
+              "seq_p_prepost_backend": "triton"
+            },
+            "vae_use_compile": true
+          },
+          "description": "B300: blackwell-sp4-sdpa plus the packed Ulysses exchange (seq_p_tensor_fusion, Triton pre/post) and vae_use_compile.",
+          "notes": "Promoted from cand-sp-fusion-vae-compile. Measured on one 4xB300 box, 2026-11-19 (LightX2V 395e2ac49f, single_e2e medians). MiniMax-H3 T2VA 2 GPUs, two rounds: selected 71.286 / 71.338 s; VAE compile 70.281 / 70.211; packed Ulysses exchange 70.788 / 70.627; both 69.644 / 69.632 (-2.4%). 4 GPUs, one round: 36.799 -> 36.262 (-1.5%). Ref2VA, one round: 112.33 -> 110.13 (-2.0%). sglang on the same box: 61.487 (T2VA 2 GPUs), 31.530 (4 GPUs), 94.778 (Ref2VA). B300 only: the other Blackwell hosts keep their profile until they are measured.",
+          "hardware": [
+            "b300"
+          ]
+        },
         "blackwell-sp4-sdpa": {
           "hardware": [
             "b200",
@@ -309,7 +326,7 @@
             "vae_use_compile": true
           },
           "description": "blackwell-sp4-sdpa plus the packed Ulysses exchange (seq_p_tensor_fusion, Triton pre/post) and vae_use_compile. Never selected on its own: A/B arm.",
-          "notes": "The pair that was faster on MiniMax-H3 T2VA 2 GPUs (cand-sp-fusion -0.70%, cand-vae-compile -1.41%, one round, 2026-11-19). VALIDATION PENDING (2026-11-19, 4xB300)."
+          "notes": "The pair that was faster on MiniMax-H3 T2VA 2 GPUs (cand-sp-fusion -0.70%, cand-vae-compile -1.41%, one round, 2026-11-19). Measured on one 4xB300 box, 2026-11-19 (LightX2V 395e2ac49f, single_e2e medians). MiniMax-H3 T2VA 2 GPUs, two rounds: selected 71.286 / 71.338 s; VAE compile 70.281 / 70.211; packed Ulysses exchange 70.788 / 70.627; both 69.644 / 69.632 (-2.4%). 4 GPUs, one round: 36.799 -> 36.262 (-1.5%). Ref2VA, one round: 112.33 -> 110.13 (-2.0%). sglang on the same box: 61.487 (T2VA 2 GPUs), 31.530 (4 GPUs), 94.778 (Ref2VA). Promoted as b300-sp4-sdpa-fusion-vaec."
         }
       }
     },

@@ -347,6 +347,19 @@
         "offload_granularity": "model"
       },
       "command_profiles": {
+        "b300-sdpa-vae-compile": {
+          "serve_args": "",
+          "lightx2v_config": {
+            "self_attn_1_type": "torch_sdpa",
+            "cross_attn_1_type": "torch_sdpa",
+            "vae_use_compile": true
+          },
+          "description": "B300: blackwell-sdpa plus vae_use_compile (torch.compile on the Wan VAE decoder, ModelTC/LightX2V#1646).",
+          "notes": "Promoted from cand-vae-compile. Measured on one 4xB300 box, 2026-11-19 (LightX2V 395e2ac49f), two rounds: blackwell-sdpa 99.904 / 99.274 s, with vae_use_compile 99.529 / 99.004 (-0.38% / -0.27%; the two rounds are 0.6% apart, the pairs agree in sign). sglang on the same box: 88.967 s. B300 only: the other Blackwell hosts keep their profile until they are measured.",
+          "hardware": [
+            "b300"
+          ]
+        },
         "blackwell-sdpa": {
           "framework_ref": "lightx2v-9bf4d39a-wan22+blackwell-fa2",
           "serve_args": "",
@@ -482,7 +495,7 @@
             "vae_use_compile": true
           },
           "description": "blackwell-sdpa plus vae_use_compile (torch.compile on the Wan VAE decoder). Never selected on its own: A/B arm.",
-          "notes": "New in LightX2V 395e2ac49f: ModelTC/LightX2V#1646 made the generic Wan runner compile the VAE encoder/decoder when vae_use_compile is set (models/runners/wan/wan_runner.py _configure_vae_compile); before, the key reached the tiny VAE only. Off by default. Measured on one 4xB300 box, 2026-11-19, one round: blackwell-sdpa 99.904 s, cand-noprof 99.836 s (-0.07%), cand-vae-compile 99.529 s (-0.38%). cand-noprof not promoted; cand-vae-compile second round pending."
+          "notes": "New in LightX2V 395e2ac49f: ModelTC/LightX2V#1646 made the generic Wan runner compile the VAE encoder/decoder when vae_use_compile is set (models/runners/wan/wan_runner.py _configure_vae_compile); before, the key reached the tiny VAE only. Off by default. Measured on one 4xB300 box, 2026-11-19, one round: blackwell-sdpa 99.904 s, cand-noprof 99.836 s (-0.07%), cand-vae-compile 99.529 s (-0.38%). cand-noprof not promoted; cand-vae-compile Measured on one 4xB300 box, 2026-11-19 (LightX2V 395e2ac49f), two rounds: blackwell-sdpa 99.904 / 99.274 s, with vae_use_compile 99.529 / 99.004 (-0.38% / -0.27%; the two rounds are 0.6% apart, the pairs agree in sign). sglang on the same box: 88.967 s. Promoted as b300-sdpa-vae-compile."
         }
       },
       "model_override_reason": "Same weights, different packaging: LightX2V reads Wan's original checkpoint layout, while sglang and vLLM-Omni read the Diffusers conversion (Wan2.2-T2V-A14B-Diffusers). Equivalent model path, not a different model."
