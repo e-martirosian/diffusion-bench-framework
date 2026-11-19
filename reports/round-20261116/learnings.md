@@ -200,3 +200,66 @@ Also settled here: vLLM-Omni's FlashInfer attention on Blackwell is FlashInfer's
   read 0.167 ms in sglang's trace (70% busy) and 0.192 ms in vLLM-Omni's (96% busy). Compare shares and call counts.
 - "They compile, we do not" was not the cause of the FLUX.3 gap; one slow kernel call was. Lay the kernel tables side by side
   before concluding.
+
+## Appendix: every change examined, and its verdict
+
+The full list behind sections 1-6: each competitor change inside the round's version window (and each lead that came up on
+the way), what it does to a cell of ours, and where it ended. "have" = sglang already does it; "PR" = an sglang change;
+"profile" = the competitor's command in this repository changed; "none" = measured or read, nothing to take.
+
+### vLLM-Omni (`0da1d831e` -> `24e547284`, vllm 0.32.0 -> 0.33.0)
+
+| change | reaches our cells | verdict |
+|---|---|---|
+| stack: torch 2.14.0, cuDNN 9.24, NCCL 2.30.7, Triton 3.8 | every `CUDNN_ATTN` video cell -3% per step | have (torch 2.14.1 since 2026-10-04); library versions are now in every result JSON |
+| #9523 FLUX.3 | a new cell, and sglang was behind in it | PR x6 (section 1); still 0.2-0.8% behind |
+| #10120 stored PNG, pybase64, orjson | every image cell, outside the engine | PR sgl-project/sglang#51318 (merged); stored PNG: have |
+| #9922 copy-engine Ulysses exchange (`--ulysses-a2a-permute`, default off) | every Ulysses cell | profile (nine cells, -1.1% to -5.7%); PR sgl-project/sglang#51554 for sglang's plain exchange |
+| #9487 bf16 tensors over shared memory as raw bits, #10171 shared-memory wakeup | its worker-to-API hand-off (FastH3 -6.2%, Qwen 2 GPUs -4.8%, Cosmos3 T2I -6.5% with #10120) | none: sglang has no tensor hand-off there; its time outside the stages is 9-30 ms |
+| #9194 OpenMP threads per worker = cores / GPUs | 2- and 4-GPU cells | have (stricter); `OMP_NUM_THREADS=8` for it measured: not a gap |
+| #4989 FlashInfer attention as one custom op under `torch.compile` | Z-Image -81 ms | none: compile-only; FlashInfer's `cute-dsl` kernel is slower than cuDNN alone at FLUX.3's shape |
+| #7597 one-launch QK-norm + RoPE | Z-Image | none: sglang upper bound with a fused in-place kernel -0.7% |
+| #9998 FlashInfer autotune (SM100+) | FP8 GEMMs only; first request +1.4 s | none (bf16 cells) |
+| #9553 Wan-family VAE fast-path installer | not installed for spatially sharded decodes | none |
+| #9424 Cosmos3 / Wan VAE peak memory | no speed claim | none |
+| #9074 MP4 encode overlapped with the decode | H3 outside denoise -0.3 s | have (`encode_while_decoding`) |
+| #9438 text-encoder TP, #9797 CFG batching, #9306 / #9597 denoise graph replay (all default off) | Qwen 2 GPUs, Wan, Z-Image | measured as its candidates: none faster |
+| `preencode_mp4` on Wan2.2 (documented, never sent) | Wan2.2 | profile (-0.3% / -0.5% on top of the exchange) |
+| FA4 extra, `--no-diffusion-compile-dynamic` on FastH3 | Blackwell cells | measured: not gaps |
+| #8072 reference-KV refresh, #9245 LiteVAE | lossy | out of scope |
+| #9669, #9248, #9440, #6711, #10283, #9088, #9455, #9804, #6662 | other backends, models or flags | none |
+| #9272 (dropped the decode graph per request, later fixed) | its own Qwen 1-GPU cells +6% in the 11-02 rows | a caution: keep graphs across requests, bounded by shape |
+
+### TensorRT-LLM VisualGen (1.4.0rc1 -> rc3)
+
+| change | reaches our cells | verdict |
+|---|---|---|
+| fixed cost per request -1.1 s on the three H3 cells (cause not found upstream) | H3 | none: sglang's time outside denoising is already lower (section 4) |
+| #20333 `async_ulysses` (default off) | H3 2 / 4 GPUs | profile (-1.5% to -1.7%); sglang pipelines its exchange already; Ref2VA: not promoted |
+| #17147 Q/K/V in one all-to-all | H3, Cosmos3 | have (packed QKV) |
+| #19645 fused QK-norm + RoPE | H3 | have |
+| #19773 SwiGLU in the GEMM epilogue | H3 | part have; changes bytes; not pursued |
+| `tp_layout: token_sharded`, CUDA graphs, TP2 x Ulysses 2, text-encoder TP | Wan2.2, H3 | measured as its candidates: slower, no gain, or the server exits |
+| SageAttention, NVFP4 / FP8 attention, static FP8 Cosmos3, Sol-Attn, TeaCache | lossy | out of scope |
+
+### LightX2V (`19c19614` -> `395e2ac4`)
+
+| change | reaches our cells | verdict |
+|---|---|---|
+| `PROFILING_DEBUG_LEVEL` defaults to 2 (a synchronize and a log line around every step) | every non-H3 cell | profile for Qwen-Image-2.1 (-1.4%); no difference elsewhere |
+| #1646 VAE compile | Wan2.2, H3 | profile (Wan -0.3%, H3 -1.4%) |
+| packed Ulysses exchange (`seq_p_tensor_fusion`, Triton pre/post) | H3 | profile with the VAE compile (-1.5% to -2.4%); sglang: have (packed QKV) |
+| #1721 fused anti-aliased SnakeBeta in the H3 vocoder | H3 audio decode | none: 0.080-0.085 s of a request in sglang |
+| head-parallel Ulysses, fused QKV, traceable RMSNorm | H3 | measured as its candidates: slower |
+| #1656, #1698, #1697 / #1699, #1706, #1720, #1654, #1655, #1700, #1711, #1673 | no hot-path change for our cells | none |
+
+### sglang itself
+
+| lead | verdict |
+|---|---|
+| regression between the rounds | none: old, pinned and main trees interleaved on one box over ten short cells; long cells within 1% across rounds; H3 throughput p50 118.290 -> 118.278 |
+| FLUX.3: static text stream dropped under CFG parallel, slow SwiGLU kernel, sharded VAE decode, negative prompt re-encoded, `--component-precisions.vae` ignored | PR sgl-project/sglang#51380, #51387, #51406, #51411, #51529 |
+| Wan2.2 decode "2.95 s" | a timer artifact: 0.761 s with synchronized timers |
+| Qwen-Image-2.1 VAE padding fold rejected on B300 | at most 5 ms |
+| Cosmos3 decodes on every rank under CFG parallel | no measurable effect; a draft change, not a fix |
+| time outside the stages on the CFG-parallel image cells | not a hand-off cost (0.05 ms); 12 ms with a plain client, as under TP2 |
