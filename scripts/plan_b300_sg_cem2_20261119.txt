@@ -1,0 +1,22 @@
+# 2026-11-19: breadth for sglang's N-rank copy-engine exchange (SGLANG_DIFFUSION_IPC_A2A_MULTI=1, off by default). FastH3 at Ulysses 4
+# measured 5.040 / 5.029 -> 4.952 / 4.951 s with it and MiniMax-H3 on four GPUs did not move (plan_b300_sg_cem_20261119.txt, MP4 md5s
+# identical). Before it can be a default: other four-rank Ulysses groups (candidate layouts, not ones these cells select), and the
+# two-rank groups every selected profile uses, which the switch must not slow. One 4xB300 box, single_e2e, a fresh server per arm.
+q4-sg-u4 sglang qwen_image_21_t2i_1024_2gpu single_e2e 0,1,2,3 cand-u4
+q4-sg-u4-cem sglang qwen_image_21_t2i_1024_2gpu single_e2e 0,1,2,3 cand-u4 SGLANG_DIFFUSION_IPC_A2A_MULTI=1
+c3v-sg-u4-cem sglang cosmos3_nano_t2v_720p_189f single_e2e 0,1,2,3 cand-u4-seqcfg SGLANG_DIFFUSION_IPC_A2A_MULTI=1
+c3v-sg-u4 sglang cosmos3_nano_t2v_720p_189f single_e2e 0,1,2,3 cand-u4-seqcfg
+wan-sg-u4 sglang wan22_t2v_a14b_720p single_e2e 0,1,2,3 cand-u4-seqcfg
+wan-sg-u4-cem sglang wan22_t2v_a14b_720p single_e2e 0,1,2,3 cand-u4-seqcfg SGLANG_DIFFUSION_IPC_A2A_MULTI=1
+q4-sg-u4-cem-r2 sglang qwen_image_21_t2i_1024_2gpu single_e2e 0,1,2,3 cand-u4 SGLANG_DIFFUSION_IPC_A2A_MULTI=1
+q4-sg-u4-r2 sglang qwen_image_21_t2i_1024_2gpu single_e2e 0,1,2,3 cand-u4
+q2-sg-u2 sglang qwen_image_21_t2i_1024_2gpu single_e2e 0,1 b200-2gpu-ulysses-fa
+q2-sg-u2-cem sglang qwen_image_21_t2i_1024_2gpu single_e2e 0,1 b200-2gpu-ulysses-fa SGLANG_DIFFUSION_IPC_A2A_MULTI=1
+ltx-sg-cem sglang ltx2.5_twostage_t2v_2gpus single_e2e 0,1 - SGLANG_DIFFUSION_IPC_A2A_MULTI=1
+ltx-sg sglang ltx2.5_twostage_t2v_2gpus single_e2e 0,1 -
+c3v-sg sglang cosmos3_nano_t2v_720p_189f single_e2e 0,1,2,3 -
+c3v-sg-cem sglang cosmos3_nano_t2v_720p_189f single_e2e 0,1,2,3 - SGLANG_DIFFUSION_IPC_A2A_MULTI=1
+h3-sg-cem sglang minimax_h3_t2va_5s single_e2e 0,1 - SGLANG_DIFFUSION_IPC_A2A_MULTI=1
+h3-sg sglang minimax_h3_t2va_5s single_e2e 0,1 -
+wan-sg sglang wan22_t2v_a14b_720p single_e2e 0,1,2,3 -
+wan-sg-cem sglang wan22_t2v_a14b_720p single_e2e 0,1,2,3 - SGLANG_DIFFUSION_IPC_A2A_MULTI=1

@@ -1003,6 +1003,16 @@
                             "num_gpus": 2,
                             "serve_args": "--model-type diffusion --warmup-mode server --ulysses-degree 1 --tp-size 2 --performance-mode speed --attention-backend fa --enable-breakable-cuda-graph true --warmup-resolutions 1024x1024",
                             "notes": "Derived from `gb300-2gpu-tp2` (the profile B300 selects). Audit 2026-10-23 (image sglang-side): Qwen-Image-2.1 BCG replays across prompt lengths since sglang#43633 (in 82f7249c) and was +1.9% on 2xH200 TP2, -0.5% on 1xH200; never measured on B300. The served size is 1024x1024, so that is the one warmup resolution. Grep the server log for '[Diffusion BCG] captured' and for MISSED replays. TP2 keeps the SP world size 1 the Qwen-2.1 padder needs. VALIDATION PENDING (wave 4, 4xB300)."
+                        },
+                        "cand-u4": {
+                            "sglang_ref": "current-main",
+                            "num_gpus": 4,
+                            "serve_args": "--model-type diffusion --warmup-mode server --ulysses-degree 4 --performance-mode speed --attention-backend fa",
+                            "extra_env": {
+                                "PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:False"
+                            },
+                            "description": "Ulysses 4 on four GPUs. Never selected on its own: A/B arm.",
+                            "notes": "VALIDATION PENDING (2026-11-19, 4xB300). A/B arm for sglang's N-rank copy-engine exchange (SGLANG_DIFFUSION_IPC_A2A_MULTI): a four-rank Ulysses group, so the plain exchange runs over more than two ranks. Not a layout this cell would select."
                         }
                     }
                 },
@@ -2211,6 +2221,16 @@
                             "sglang_ref": "current-main",
                             "serve_args": "--model-type diffusion --warmup-mode server --enable-cfg-parallel --ulysses-degree 2 --dit-cpu-offload false --pin-cpu-memory --dit-layerwise-offload false --performance-mode speed --enable-torch-compile false --attention-backend fa",
                             "notes": "Derived from `default` (the profile B300 selects). 2026-10-23 B300 bf16 microbenchmark at the real per-rank shapes: FA4 beat cuDNN SDPA by 1-4% at the Wan2.2 (75600 tokens, 20 heads) and H3 Ref2VA (49646, 28 heads) shapes and tied at H3 4-GPU, while sglang's auto selection (dynamic_cudnn_sdpa) runs cuDNN on sm10x. `--attention-backend fa` resolves to the FA4 CuTe kernels on Blackwell (platforms/cuda.py: set_fa_ver(4); head size 128 supported; Cosmos3's pinned fa ran flash_fwd_sm100 on this box). VALIDATION PENDING (wave 4, 4xB300)."
+                        },
+                        "cand-u4-seqcfg": {
+                            "sglang_ref": "current-main",
+                            "num_gpus": 4,
+                            "serve_args": "--model-type diffusion --warmup-mode server --ulysses-degree 4 --dit-cpu-offload false --pin-cpu-memory --dit-layerwise-offload false --performance-mode speed --enable-torch-compile false",
+                            "extra_env": {
+                                "PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:False"
+                            },
+                            "description": "b300-noexp with CFG parallel x Ulysses 2 replaced by Ulysses 4 (the CFG branches run one after the other). Never selected on its own: A/B arm.",
+                            "notes": "VALIDATION PENDING (2026-11-19, 4xB300). A/B arm for sglang's N-rank copy-engine exchange (SGLANG_DIFFUSION_IPC_A2A_MULTI): a four-rank Ulysses group, so the plain exchange runs over more than two ranks. Not a layout this cell would select."
                         }
                     }
                 },
@@ -2221,6 +2241,23 @@
                         "DIFFUSION_ATTENTION_BACKEND": "FLASH_ATTN"
                     },
                     "command_profiles": {
+                        "b300-4gpu-cfg2-usp2-a2a-preencode": {
+                            "num_gpus": 4,
+                            "serve_args": "--num-gpus 4 --cfg-parallel-size 2 --usp 2 --vae-patch-parallel-size 4 --vae-parallel-mode spatial_shard_width --no-diffusion-compile-dynamic --video-output-transport {\"enable_device_postprocess\":true} --ulysses-a2a-permute",
+                            "extra_env": {
+                                "DIFFUSION_ATTENTION_BACKEND": "CUDNN_ATTN"
+                            },
+                            "description": "B300: b300-4gpu-cfg2-usp2-vaepp-devpost-a2a plus extra_params.preencode_mp4 on every request (MP4 encoding overlapped with the VAE decode).",
+                            "notes": "Promoted from cand-a2a-preencode. Measured on one 4xB300 box, 2026-11-19 (vLLM-Omni 24e5472849, single_e2e medians), two mirrored rounds: copy-engine exchange alone 94.526 / 94.495 s, with preencode_mp4 on every request 94.246 / 94.018 s (-0.3% / -0.5%). sglang on the same box: 88.967 s; TRT-LLM: 93.673 s. B300 only: the other Blackwell hosts keep their profile until they are measured.",
+                            "request_extra": {
+                                "extra_params": {
+                                    "preencode_mp4": true
+                                }
+                            },
+                            "hardware": [
+                                "b300"
+                            ]
+                        },
                         "b300-4gpu-cfg2-usp2-vaepp-devpost-a2a": {
                             "num_gpus": 4,
                             "serve_args": "--num-gpus 4 --cfg-parallel-size 2 --usp 2 --vae-patch-parallel-size 4 --vae-parallel-mode spatial_shard_width --no-diffusion-compile-dynamic --video-output-transport {\"enable_device_postprocess\":true} --ulysses-a2a-permute",
@@ -2465,7 +2502,7 @@
                                 }
                             },
                             "description": "blackwell-4gpu-cfg2-usp2-vaepp-devpost with extra_params.preencode_mp4 on every request (MP4 encoding overlapped with the VAE decode). Never selected on its own: A/B arm.",
-                            "notes": "vLLM-Omni documents preencode_mp4 for MiniMax-H3 and Wan 2.2 (docs/serving/videos_api.md); the H3 cells have sent it since 2026-10-08, the Wan cell never did. On Wan the flag replaces vae.decode with decode_to_mp4, which decodes in batches of frames (wan2_2/pipeline_wan2_2.py, chunked_mp4.py), so it also replaces the 4-GPU spatial-shard VAE decode the base profile selects; which of the two is faster is the question. Round 1, one 4xB300 box, 2026-11-19: selected profile 97.517 s, cand-preencode 97.141 s (-0.39%). Second round pending."
+                            "notes": "vLLM-Omni documents preencode_mp4 for MiniMax-H3 and Wan 2.2 (docs/serving/videos_api.md); the H3 cells have sent it since 2026-10-08, the Wan cell never did. On Wan the flag replaces vae.decode with decode_to_mp4, which decodes in batches of frames (wan2_2/pipeline_wan2_2.py, chunked_mp4.py), so it also replaces the 4-GPU spatial-shard VAE decode the base profile selects; which of the two is faster is the question. Round 1, one 4xB300 box, 2026-11-19: selected profile 97.517 s, cand-preencode 97.141 s (-0.39%). On top of the copy-engine exchange it measured -0.3% / -0.5% over two rounds (cand-a2a-preencode)."
                         },
                         "cand-usp4-cfgbatch": {
                             "num_gpus": 4,
@@ -2483,7 +2520,7 @@
                                 "DIFFUSION_ATTENTION_BACKEND": "CUDNN_ATTN"
                             },
                             "description": "cand-a2a-permute plus extra_params.preencode_mp4 on every request. Never selected on its own: A/B arm.",
-                            "notes": "VALIDATION PENDING (2026-11-19, 4xB300). preencode_mp4 alone read 97.517 -> 97.141 s (-0.39%, one round); this arm asks whether it adds to the copy-engine exchange, which is the faster command on this cell.",
+                            "notes": "preencode_mp4 alone read 97.517 -> 97.141 s (-0.39%, one round). Measured on one 4xB300 box, 2026-11-19 (vLLM-Omni 24e5472849, single_e2e medians), two mirrored rounds: copy-engine exchange alone 94.526 / 94.495 s, with preencode_mp4 on every request 94.246 / 94.018 s (-0.3% / -0.5%). sglang on the same box: 88.967 s; TRT-LLM: 93.673 s. Promoted as b300-4gpu-cfg2-usp2-a2a-preencode.",
                             "request_extra": {
                                 "extra_params": {
                                     "preencode_mp4": true
@@ -4227,6 +4264,16 @@
                             "num_gpus": 4,
                             "serve_args": "--model-type diffusion --warmup-mode server --cfg-parallel-size 2 --ulysses-degree 2",
                             "notes": "Derived from `default` (the profile B300 selects). Audit 2026-10-23 (Cosmos3/Wan2.2 finding 8): the SKILL records that whether Cosmos3's pinned attention beats sglang's measured auto-selection on Blackwell is untested; auto resolves to dynamic_cudnn_sdpa on sm10x (cuDNN SDPA, FA4 fallback), and TRT-LLM measured torch SDPA 1.1% ahead of FA4 on these shapes. The pin dropped here is `--attention-backend fa`. VALIDATION PENDING (wave 4, 4xB300)."
+                        },
+                        "cand-u4-seqcfg": {
+                            "sglang_ref": "current-main",
+                            "num_gpus": 4,
+                            "serve_args": "--model-type diffusion --warmup-mode server --attention-backend fa --ulysses-degree 4",
+                            "extra_env": {
+                                "PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:False"
+                            },
+                            "description": "b300-noexp with CFG parallel x Ulysses 2 replaced by Ulysses 4 (the CFG branches run one after the other). Never selected on its own: A/B arm.",
+                            "notes": "VALIDATION PENDING (2026-11-19, 4xB300). A/B arm for sglang's N-rank copy-engine exchange (SGLANG_DIFFUSION_IPC_A2A_MULTI): a four-rank Ulysses group, so the plain exchange runs over more than two ranks. Not a layout this cell would select."
                         }
                     }
                 },

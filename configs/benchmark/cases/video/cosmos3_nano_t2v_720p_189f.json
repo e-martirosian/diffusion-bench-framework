@@ -156,6 +156,16 @@
           "num_gpus": 4,
           "serve_args": "--model-type diffusion --warmup-mode server --cfg-parallel-size 2 --ulysses-degree 2",
           "notes": "Derived from `default` (the profile B300 selects). Audit 2026-10-23 (Cosmos3/Wan2.2 finding 8): the SKILL records that whether Cosmos3's pinned attention beats sglang's measured auto-selection on Blackwell is untested; auto resolves to dynamic_cudnn_sdpa on sm10x (cuDNN SDPA, FA4 fallback), and TRT-LLM measured torch SDPA 1.1% ahead of FA4 on these shapes. The pin dropped here is `--attention-backend fa`. VALIDATION PENDING (wave 4, 4xB300)."
+        },
+        "cand-u4-seqcfg": {
+          "sglang_ref": "current-main",
+          "num_gpus": 4,
+          "serve_args": "--model-type diffusion --warmup-mode server --attention-backend fa --ulysses-degree 4",
+          "extra_env": {
+            "PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:False"
+          },
+          "description": "b300-noexp with CFG parallel x Ulysses 2 replaced by Ulysses 4 (the CFG branches run one after the other). Never selected on its own: A/B arm.",
+          "notes": "VALIDATION PENDING (2026-11-19, 4xB300). A/B arm for sglang's N-rank copy-engine exchange (SGLANG_DIFFUSION_IPC_A2A_MULTI): a four-rank Ulysses group, so the plain exchange runs over more than two ranks. Not a layout this cell would select."
         }
       }
     },

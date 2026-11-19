@@ -69,6 +69,16 @@
           "num_gpus": 2,
           "serve_args": "--model-type diffusion --warmup-mode server --ulysses-degree 1 --tp-size 2 --performance-mode speed --attention-backend fa --enable-breakable-cuda-graph true --warmup-resolutions 1024x1024",
           "notes": "Derived from `gb300-2gpu-tp2` (the profile B300 selects). Audit 2026-10-23 (image sglang-side): Qwen-Image-2.1 BCG replays across prompt lengths since sglang#43633 (in 82f7249c) and was +1.9% on 2xH200 TP2, -0.5% on 1xH200; never measured on B300. The served size is 1024x1024, so that is the one warmup resolution. Grep the server log for '[Diffusion BCG] captured' and for MISSED replays. TP2 keeps the SP world size 1 the Qwen-2.1 padder needs. VALIDATION PENDING (wave 4, 4xB300)."
+        },
+        "cand-u4": {
+          "sglang_ref": "current-main",
+          "num_gpus": 4,
+          "serve_args": "--model-type diffusion --warmup-mode server --ulysses-degree 4 --performance-mode speed --attention-backend fa",
+          "extra_env": {
+            "PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:False"
+          },
+          "description": "Ulysses 4 on four GPUs. Never selected on its own: A/B arm.",
+          "notes": "VALIDATION PENDING (2026-11-19, 4xB300). A/B arm for sglang's N-rank copy-engine exchange (SGLANG_DIFFUSION_IPC_A2A_MULTI): a four-rank Ulysses group, so the plain exchange runs over more than two ranks. Not a layout this cell would select."
         }
       }
     },
