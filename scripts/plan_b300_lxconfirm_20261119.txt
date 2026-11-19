@@ -1,0 +1,16 @@
+# 2026-11-19: second round for the LightX2V options that were faster in plan_b300_fairoff3_20261118.txt, on one 4xB300 box
+# (single_e2e, a fresh server per arm). MiniMax-H3 T2VA: the packed Ulysses exchange (fusion, -0.70%) and VAE compile (vaec,
+# -1.41%) again and together (both); the pair on the 4-GPU and Ref2VA cells; Wan2.2 VAE compile again (-0.38%); and the
+# Qwen-Image-2.1 cell through its new B300 selection (profiling off).
+h3-lx-r2 lightx2v minimax_h3_t2va_5s single_e2e 0,1 -
+h3-lx-both-r1 lightx2v minimax_h3_t2va_5s single_e2e 0,1 cand-sp-fusion-vae-compile
+h3-lx-vaec-r2 lightx2v minimax_h3_t2va_5s single_e2e 0,1 cand-vae-compile
+h3-lx-fusion-r2 lightx2v minimax_h3_t2va_5s single_e2e 0,1 cand-sp-fusion
+h3-lx-both-r2 lightx2v minimax_h3_t2va_5s single_e2e 0,1 cand-sp-fusion-vae-compile
+h34-lx-r1 lightx2v minimax_h3_t2va_5s_4gpu single_e2e 0,1,2,3 -
+h34-lx-both-r1 lightx2v minimax_h3_t2va_5s_4gpu single_e2e 0,1,2,3 cand-sp-fusion-vae-compile
+rv-lx-r1 lightx2v minimax_h3_ref2va_5s single_e2e 0,1 -
+rv-lx-both-r1 lightx2v minimax_h3_ref2va_5s single_e2e 0,1 cand-sp-fusion-vae-compile
+wan-lx-vaec-r2 lightx2v wan22_t2v_a14b_720p single_e2e 0,1,2,3 cand-vae-compile
+wan-lx-r2 lightx2v wan22_t2v_a14b_720p single_e2e 0,1,2,3 -
+q1-lx-r3 lightx2v qwen_image_21_t2i_1024 single_e2e 0 -

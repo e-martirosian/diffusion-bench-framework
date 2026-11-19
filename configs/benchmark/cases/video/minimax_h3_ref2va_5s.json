@@ -455,6 +455,23 @@
             "attn_type": "flash_attn2"
           },
           "notes": "VALIDATION PENDING (2026-10-08). flash_attn3 is a Hopper-only kernel; FlashAttention 2 (source-built for sm_100) is what every LightX2V Blackwell profile here runs, the same exact-softmax class. Untested alternative: torch_sdpa (cuDNN / flash SDPA, what sglang resolves for H3 on B200). Otherwise the default profile; see its notes."
+        },
+        "cand-sp-fusion-vae-compile": {
+          "num_gpus": 2,
+          "serve_args": "--model-variant ref2av",
+          "lightx2v_config": {
+            "attn_type": "torch_sdpa",
+            "parallel": {
+              "tensor_p_size": 1,
+              "seq_p_size": 2,
+              "seq_p_attn_type": "ulysses",
+              "seq_p_tensor_fusion": true,
+              "seq_p_prepost_backend": "triton"
+            },
+            "vae_use_compile": true
+          },
+          "description": "blackwell-sp2-sdpa plus the packed Ulysses exchange (seq_p_tensor_fusion, Triton pre/post) and vae_use_compile. Never selected on its own: A/B arm.",
+          "notes": "The pair that was faster on MiniMax-H3 T2VA 2 GPUs (cand-sp-fusion -0.70%, cand-vae-compile -1.41%, one round, 2026-11-19). VALIDATION PENDING (2026-11-19, 4xB300)."
         }
       }
     },

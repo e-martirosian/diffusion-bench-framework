@@ -553,6 +553,33 @@
                         "warmup": true
                     },
                     "command_profiles": {
+                        "b300-sdpa-noprof": {
+                            "num_gpus": 1,
+                            "serve_args": "",
+                            "lightx2v_config": {
+                                "resolution": 1024,
+                                "vae_scale_factor": 16,
+                                "attn_type": "torch_sdpa",
+                                "rope_type": "flashinfer_rope",
+                                "rms_norm_type": "fp32_variance",
+                                "layer_norm_type": "Triton",
+                                "modulate_type": "triton",
+                                "fused_qk_rms_norm": true,
+                                "fused_block_ops": true,
+                                "fused_block_min_tokens": 1024,
+                                "enable_cfg": false,
+                                "sample_guide_scale": 1.0,
+                                "warmup": true
+                            },
+                            "extra_env": {
+                                "PROFILING_DEBUG_LEVEL": "0"
+                            },
+                            "description": "B300: blackwell-sdpa with PROFILING_DEBUG_LEVEL=0 (LightX2V's default level 2 synchronizes the device and logs around every denoise step).",
+                            "notes": "Promoted from cand-noprof. Measured on one 4xB300 box, 2026-11-19, two mirrored rounds: blackwell-sdpa 2.483 / 2.480 s, with PROFILING_DEBUG_LEVEL=0 2.449 / 2.446 s (-1.4%). B300 only: the other Blackwell hosts keep blackwell-sdpa until they are measured.",
+                            "hardware": [
+                                "b300"
+                            ]
+                        },
                         "blackwell-sdpa": {
                             "framework_ref": "lightx2v main HEAD",
                             "num_gpus": 1,
@@ -731,7 +758,7 @@
                                 "PROFILING_DEBUG_LEVEL": "0"
                             },
                             "description": "blackwell-sdpa plus PROFILING_DEBUG_LEVEL=0 (no per-step device synchronize and log line). Never selected on its own: A/B arm.",
-                            "notes": "LightX2V 395e2ac49f sets PROFILING_DEBUG_LEVEL=2 unless the environment says otherwise (lightx2v/__init__.py), and at level 1 and above every denoise step runs inside profiling contexts (step_pre / infer_main / step_post in models/runners/default_runner.py) that synchronize the device and log a line. Its own doc string calls 0 the default. This harness set 0 for the MiniMax-H3 entries only; the run logs of both the 2026-10-22 and 2026-11-16 rounds carry the per-step profile lines for this cell. VALIDATION PENDING (2026-11-18, 4xB300)."
+                            "notes": "LightX2V 395e2ac49f sets PROFILING_DEBUG_LEVEL=2 unless the environment says otherwise (lightx2v/__init__.py), and at level 1 and above every denoise step runs inside profiling contexts (step_pre / infer_main / step_post in models/runners/default_runner.py) that synchronize the device and log a line. Its own doc string calls 0 the default. This harness set 0 for the MiniMax-H3 entries only; the run logs of both the 2026-10-22 and 2026-11-16 rounds carry the per-step profile lines for this cell. Measured on one 4xB300 box, 2026-11-19, two mirrored rounds: blackwell-sdpa 2.483 / 2.480 s, with PROFILING_DEBUG_LEVEL=0 2.449 / 2.446 s (-1.4%). Promoted as b300-sdpa-noprof."
                         }
                     }
                 },
@@ -1615,7 +1642,7 @@
                                 "PROFILING_DEBUG_LEVEL": "0"
                             },
                             "description": "blackwell-fa2-fusion plus PROFILING_DEBUG_LEVEL=0 (no per-step device synchronize and log line). Never selected on its own: A/B arm.",
-                            "notes": "LightX2V 395e2ac49f sets PROFILING_DEBUG_LEVEL=2 unless the environment says otherwise (lightx2v/__init__.py), and at level 1 and above every denoise step runs inside profiling contexts (step_pre / infer_main / step_post in models/runners/default_runner.py) that synchronize the device and log a line. Its own doc string calls 0 the default. This harness set 0 for the MiniMax-H3 entries only; the run logs of both the 2026-10-22 and 2026-11-16 rounds carry the per-step profile lines for this cell. VALIDATION PENDING (2026-11-18, 4xB300)."
+                            "notes": "LightX2V 395e2ac49f sets PROFILING_DEBUG_LEVEL=2 unless the environment says otherwise (lightx2v/__init__.py), and at level 1 and above every denoise step runs inside profiling contexts (step_pre / infer_main / step_post in models/runners/default_runner.py) that synchronize the device and log a line. Its own doc string calls 0 the default. This harness set 0 for the MiniMax-H3 entries only; the run logs of both the 2026-10-22 and 2026-11-16 rounds carry the per-step profile lines for this cell. Measured on one 4xB300 box, 2026-11-19, two mirrored rounds: blackwell-fa2-fusion 0.830 / 0.852 s, cand-noprof 0.832 / 0.852 s. No difference (the client's 20 ms poll quantum is larger than anything it could save). Not promoted."
                         }
                     }
                 },
@@ -2576,7 +2603,7 @@
                                 "PROFILING_DEBUG_LEVEL": "0"
                             },
                             "description": "blackwell-sdpa plus PROFILING_DEBUG_LEVEL=0 (no per-step device synchronize and log line). Never selected on its own: A/B arm.",
-                            "notes": "LightX2V 395e2ac49f sets PROFILING_DEBUG_LEVEL=2 unless the environment says otherwise (lightx2v/__init__.py), and at level 1 and above every denoise step runs inside profiling contexts (step_pre / infer_main / step_post in models/runners/default_runner.py) that synchronize the device and log a line. Its own doc string calls 0 the default. This harness set 0 for the MiniMax-H3 entries only; the run logs of both the 2026-10-22 and 2026-11-16 rounds carry the per-step profile lines for this cell. VALIDATION PENDING (2026-11-18, 4xB300)."
+                            "notes": "LightX2V 395e2ac49f sets PROFILING_DEBUG_LEVEL=2 unless the environment says otherwise (lightx2v/__init__.py), and at level 1 and above every denoise step runs inside profiling contexts (step_pre / infer_main / step_post in models/runners/default_runner.py) that synchronize the device and log a line. Its own doc string calls 0 the default. This harness set 0 for the MiniMax-H3 entries only; the run logs of both the 2026-10-22 and 2026-11-16 rounds carry the per-step profile lines for this cell. Measured on one 4xB300 box, 2026-11-19, one round: blackwell-sdpa 99.904 s, cand-noprof 99.836 s (-0.07%), cand-vae-compile 99.529 s (-0.38%). cand-noprof not promoted; cand-vae-compile second round pending."
                         },
                         "cand-vae-compile": {
                             "serve_args": "",
@@ -2586,7 +2613,7 @@
                                 "vae_use_compile": true
                             },
                             "description": "blackwell-sdpa plus vae_use_compile (torch.compile on the Wan VAE decoder). Never selected on its own: A/B arm.",
-                            "notes": "New in LightX2V 395e2ac49f: ModelTC/LightX2V#1646 made the generic Wan runner compile the VAE encoder/decoder when vae_use_compile is set (models/runners/wan/wan_runner.py _configure_vae_compile); before, the key reached the tiny VAE only. Off by default. VALIDATION PENDING (2026-11-18, 4xB300)."
+                            "notes": "New in LightX2V 395e2ac49f: ModelTC/LightX2V#1646 made the generic Wan runner compile the VAE encoder/decoder when vae_use_compile is set (models/runners/wan/wan_runner.py _configure_vae_compile); before, the key reached the tiny VAE only. Off by default. Measured on one 4xB300 box, 2026-11-19, one round: blackwell-sdpa 99.904 s, cand-noprof 99.836 s (-0.07%), cand-vae-compile 99.529 s (-0.38%). cand-noprof not promoted; cand-vae-compile second round pending."
                         }
                     },
                     "model_override_reason": "Same weights, different packaging: LightX2V reads Wan's original checkpoint layout, while sglang and vLLM-Omni read the Diffusers conversion (Wan2.2-T2V-A14B-Diffusers). Equivalent model path, not a different model."
@@ -4405,7 +4432,7 @@
                                 "PROFILING_DEBUG_LEVEL": "0"
                             },
                             "description": "blackwell-cfg2-sp2-sdpa plus PROFILING_DEBUG_LEVEL=0 (no per-step device synchronize and log line). Never selected on its own: A/B arm.",
-                            "notes": "LightX2V 395e2ac49f sets PROFILING_DEBUG_LEVEL=2 unless the environment says otherwise (lightx2v/__init__.py), and at level 1 and above every denoise step runs inside profiling contexts (step_pre / infer_main / step_post in models/runners/default_runner.py) that synchronize the device and log a line. Its own doc string calls 0 the default. This harness set 0 for the MiniMax-H3 entries only; the run logs of both the 2026-10-22 and 2026-11-16 rounds carry the per-step profile lines for this cell. VALIDATION PENDING (2026-11-18, 4xB300)."
+                            "notes": "LightX2V 395e2ac49f sets PROFILING_DEBUG_LEVEL=2 unless the environment says otherwise (lightx2v/__init__.py), and at level 1 and above every denoise step runs inside profiling contexts (step_pre / infer_main / step_post in models/runners/default_runner.py) that synchronize the device and log a line. Its own doc string calls 0 the default. This harness set 0 for the MiniMax-H3 entries only; the run logs of both the 2026-10-22 and 2026-11-16 rounds carry the per-step profile lines for this cell. Measured on one 4xB300 box, 2026-11-19, one round: blackwell-cfg2-sp2-sdpa 44.006 s (43.925 / 44.087), cand-noprof 44.794 s (44.067 / 45.520). No gain. Not promoted."
                         }
                     }
                 },
@@ -5653,7 +5680,7 @@
                                 }
                             },
                             "description": "blackwell-sp2-sdpa plus seq_p_tensor_fusion with the Triton pre/post backend (one packed all-to-all per attention). Never selected on its own: A/B arm.",
-                            "notes": "LightX2V 395e2ac49f reads parallel.seq_p_tensor_fusion and parallel.seq_p_prepost_backend in models/networks/minimax_h3/infer/transformer_infer.py, both off by default; upstream's own H3 sequence-parallel presets set them (configs/minimax_h3/fp8/minimax_h3_sp_5090.json), and this harness already selects the pair for Z-Image on Blackwell. VALIDATION PENDING (2026-11-18, 4xB300)."
+                            "notes": "LightX2V 395e2ac49f reads parallel.seq_p_tensor_fusion and parallel.seq_p_prepost_backend in models/networks/minimax_h3/infer/transformer_infer.py, both off by default; upstream's own H3 sequence-parallel presets set them (configs/minimax_h3/fp8/minimax_h3_sp_5090.json), and this harness already selects the pair for Z-Image on Blackwell. Round 1, one 4xB300 box, 2026-11-19 (LightX2V 395e2ac49f, single_e2e medians): selected profile 71.286 s; cand-sp-fusion 70.788 (-0.70%); cand-vae-compile 70.281 (-1.41%); cand-sp-head 84.761 (+18.9%); cand-fused-qkv 73.879 (+3.6%); cand-rms-native 72.244 (+1.3%). Second round and the combination pending."
                         },
                         "cand-sp-head": {
                             "num_gpus": 2,
@@ -5668,7 +5695,7 @@
                                 }
                             },
                             "description": "blackwell-sp2-sdpa plus seq_p_head_parallel. Never selected on its own: A/B arm.",
-                            "notes": "LightX2V 395e2ac49f reads parallel.seq_p_head_parallel in models/networks/minimax_h3/infer/transformer_infer.py, off by default; upstream's H3 sequence-parallel presets set it. VALIDATION PENDING (2026-11-18, 4xB300)."
+                            "notes": "LightX2V 395e2ac49f reads parallel.seq_p_head_parallel in models/networks/minimax_h3/infer/transformer_infer.py, off by default; upstream's H3 sequence-parallel presets set it. Round 1, one 4xB300 box, 2026-11-19 (LightX2V 395e2ac49f, single_e2e medians): selected profile 71.286 s; cand-sp-fusion 70.788 (-0.70%); cand-vae-compile 70.281 (-1.41%); cand-sp-head 84.761 (+18.9%); cand-fused-qkv 73.879 (+3.6%); cand-rms-native 72.244 (+1.3%). Not promoted: slower."
                         },
                         "cand-fused-qkv": {
                             "num_gpus": 2,
@@ -5684,7 +5711,7 @@
                                 "use_fused_qkv_norm_rope": true
                             },
                             "description": "blackwell-sp2-sdpa plus use_fused_qkv and use_fused_qkv_norm_rope. Never selected on its own: A/B arm.",
-                            "notes": "LightX2V 395e2ac49f reads use_fused_qkv / use_fused_qkv_norm_rope in models/networks/minimax_h3/infer/transformer_infer.py, both off by default (qkv_norm_rope_type defaults to triton). Whether they hold under torch.compile is not verified. VALIDATION PENDING (2026-11-18, 4xB300)."
+                            "notes": "LightX2V 395e2ac49f reads use_fused_qkv / use_fused_qkv_norm_rope in models/networks/minimax_h3/infer/transformer_infer.py, both off by default (qkv_norm_rope_type defaults to triton). Whether they hold under torch.compile is not verified. Round 1, one 4xB300 box, 2026-11-19 (LightX2V 395e2ac49f, single_e2e medians): selected profile 71.286 s; cand-sp-fusion 70.788 (-0.70%); cand-vae-compile 70.281 (-1.41%); cand-sp-head 84.761 (+18.9%); cand-fused-qkv 73.879 (+3.6%); cand-rms-native 72.244 (+1.3%). Not promoted: slower."
                         },
                         "cand-vae-compile": {
                             "num_gpus": 2,
@@ -5699,7 +5726,7 @@
                                 "vae_use_compile": true
                             },
                             "description": "blackwell-sp2-sdpa plus vae_use_compile (torch.compile on the video VAE). Never selected on its own: A/B arm.",
-                            "notes": "LightX2V 395e2ac49f passes vae_use_compile to the H3 video VAE (models/runners/minimax_h3/minimax_h3_runner.py), off by default. VALIDATION PENDING (2026-11-18, 4xB300)."
+                            "notes": "LightX2V 395e2ac49f passes vae_use_compile to the H3 video VAE (models/runners/minimax_h3/minimax_h3_runner.py), off by default. Round 1, one 4xB300 box, 2026-11-19 (LightX2V 395e2ac49f, single_e2e medians): selected profile 71.286 s; cand-sp-fusion 70.788 (-0.70%); cand-vae-compile 70.281 (-1.41%); cand-sp-head 84.761 (+18.9%); cand-fused-qkv 73.879 (+3.6%); cand-rms-native 72.244 (+1.3%). Second round and the combination pending."
                         },
                         "cand-rms-native": {
                             "num_gpus": 2,
@@ -5714,7 +5741,24 @@
                                 "rms_type": "torch_native"
                             },
                             "description": "blackwell-sp2-sdpa plus rms_type torch_native (an RMSNorm Inductor can trace, in place of the opaque sgl-kernel op). Never selected on its own: A/B arm.",
-                            "notes": "Upstream's newest BF16 compile preset uses rms_type torch_native (configs/minimax_h3/distill/8steps/minimax_h3_bf16_8step.json, LightX2V 395e2ac49f); this entry runs sgl-kernel. VALIDATION PENDING (2026-11-18, 4xB300)."
+                            "notes": "Upstream's newest BF16 compile preset uses rms_type torch_native (configs/minimax_h3/distill/8steps/minimax_h3_bf16_8step.json, LightX2V 395e2ac49f); this entry runs sgl-kernel. Round 1, one 4xB300 box, 2026-11-19 (LightX2V 395e2ac49f, single_e2e medians): selected profile 71.286 s; cand-sp-fusion 70.788 (-0.70%); cand-vae-compile 70.281 (-1.41%); cand-sp-head 84.761 (+18.9%); cand-fused-qkv 73.879 (+3.6%); cand-rms-native 72.244 (+1.3%). Not promoted: slower."
+                        },
+                        "cand-sp-fusion-vae-compile": {
+                            "num_gpus": 2,
+                            "serve_args": "--model-variant fl2av",
+                            "lightx2v_config": {
+                                "attn_type": "torch_sdpa",
+                                "parallel": {
+                                    "tensor_p_size": 1,
+                                    "seq_p_size": 2,
+                                    "seq_p_attn_type": "ulysses",
+                                    "seq_p_tensor_fusion": true,
+                                    "seq_p_prepost_backend": "triton"
+                                },
+                                "vae_use_compile": true
+                            },
+                            "description": "blackwell-sp2-sdpa plus the packed Ulysses exchange (seq_p_tensor_fusion, Triton pre/post) and vae_use_compile. Never selected on its own: A/B arm.",
+                            "notes": "The two LightX2V H3 options that were faster alone on B300, together. Round 1, one 4xB300 box, 2026-11-19 (LightX2V 395e2ac49f, single_e2e medians): selected profile 71.286 s; cand-sp-fusion 70.788 (-0.70%); cand-vae-compile 70.281 (-1.41%); cand-sp-head 84.761 (+18.9%); cand-fused-qkv 73.879 (+3.6%); cand-rms-native 72.244 (+1.3%). VALIDATION PENDING (2026-11-19, 4xB300)."
                         }
                     }
                 },
@@ -6623,6 +6667,20 @@
                                 "attn_type": "flash_attn2"
                             },
                             "notes": "VALIDATION PENDING (2026-10-08). flash_attn3 is a Hopper-only kernel; FlashAttention 2 (source-built for sm_100) is what every LightX2V Blackwell profile here runs, the same exact-softmax class. Untested alternative: torch_sdpa (cuDNN / flash SDPA, what sglang resolves for H3 on B200). Otherwise the default profile; see its notes."
+                        },
+                        "cand-sp-fusion-vae-compile": {
+                            "num_gpus": 4,
+                            "serve_args": "--model-variant fl2av",
+                            "lightx2v_config": {
+                                "attn_type": "torch_sdpa",
+                                "parallel": {
+                                    "seq_p_tensor_fusion": true,
+                                    "seq_p_prepost_backend": "triton"
+                                },
+                                "vae_use_compile": true
+                            },
+                            "description": "blackwell-sp4-sdpa plus the packed Ulysses exchange (seq_p_tensor_fusion, Triton pre/post) and vae_use_compile. Never selected on its own: A/B arm.",
+                            "notes": "The pair that was faster on MiniMax-H3 T2VA 2 GPUs (cand-sp-fusion -0.70%, cand-vae-compile -1.41%, one round, 2026-11-19). VALIDATION PENDING (2026-11-19, 4xB300)."
                         }
                     }
                 },
@@ -7706,6 +7764,23 @@
                                 "attn_type": "flash_attn2"
                             },
                             "notes": "VALIDATION PENDING (2026-10-08). flash_attn3 is a Hopper-only kernel; FlashAttention 2 (source-built for sm_100) is what every LightX2V Blackwell profile here runs, the same exact-softmax class. Untested alternative: torch_sdpa (cuDNN / flash SDPA, what sglang resolves for H3 on B200). Otherwise the default profile; see its notes."
+                        },
+                        "cand-sp-fusion-vae-compile": {
+                            "num_gpus": 2,
+                            "serve_args": "--model-variant ref2av",
+                            "lightx2v_config": {
+                                "attn_type": "torch_sdpa",
+                                "parallel": {
+                                    "tensor_p_size": 1,
+                                    "seq_p_size": 2,
+                                    "seq_p_attn_type": "ulysses",
+                                    "seq_p_tensor_fusion": true,
+                                    "seq_p_prepost_backend": "triton"
+                                },
+                                "vae_use_compile": true
+                            },
+                            "description": "blackwell-sp2-sdpa plus the packed Ulysses exchange (seq_p_tensor_fusion, Triton pre/post) and vae_use_compile. Never selected on its own: A/B arm.",
+                            "notes": "The pair that was faster on MiniMax-H3 T2VA 2 GPUs (cand-sp-fusion -0.70%, cand-vae-compile -1.41%, one round, 2026-11-19). VALIDATION PENDING (2026-11-19, 4xB300)."
                         }
                     }
                 },

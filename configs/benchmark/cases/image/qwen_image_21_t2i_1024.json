@@ -237,6 +237,33 @@
         "warmup": true
       },
       "command_profiles": {
+        "b300-sdpa-noprof": {
+          "num_gpus": 1,
+          "serve_args": "",
+          "lightx2v_config": {
+            "resolution": 1024,
+            "vae_scale_factor": 16,
+            "attn_type": "torch_sdpa",
+            "rope_type": "flashinfer_rope",
+            "rms_norm_type": "fp32_variance",
+            "layer_norm_type": "Triton",
+            "modulate_type": "triton",
+            "fused_qk_rms_norm": true,
+            "fused_block_ops": true,
+            "fused_block_min_tokens": 1024,
+            "enable_cfg": false,
+            "sample_guide_scale": 1.0,
+            "warmup": true
+          },
+          "extra_env": {
+            "PROFILING_DEBUG_LEVEL": "0"
+          },
+          "description": "B300: blackwell-sdpa with PROFILING_DEBUG_LEVEL=0 (LightX2V's default level 2 synchronizes the device and logs around every denoise step).",
+          "notes": "Promoted from cand-noprof. Measured on one 4xB300 box, 2026-11-19, two mirrored rounds: blackwell-sdpa 2.483 / 2.480 s, with PROFILING_DEBUG_LEVEL=0 2.449 / 2.446 s (-1.4%). B300 only: the other Blackwell hosts keep blackwell-sdpa until they are measured.",
+          "hardware": [
+            "b300"
+          ]
+        },
         "blackwell-sdpa": {
           "framework_ref": "lightx2v main HEAD",
           "num_gpus": 1,
@@ -415,7 +442,7 @@
             "PROFILING_DEBUG_LEVEL": "0"
           },
           "description": "blackwell-sdpa plus PROFILING_DEBUG_LEVEL=0 (no per-step device synchronize and log line). Never selected on its own: A/B arm.",
-          "notes": "LightX2V 395e2ac49f sets PROFILING_DEBUG_LEVEL=2 unless the environment says otherwise (lightx2v/__init__.py), and at level 1 and above every denoise step runs inside profiling contexts (step_pre / infer_main / step_post in models/runners/default_runner.py) that synchronize the device and log a line. Its own doc string calls 0 the default. This harness set 0 for the MiniMax-H3 entries only; the run logs of both the 2026-10-22 and 2026-11-16 rounds carry the per-step profile lines for this cell. VALIDATION PENDING (2026-11-18, 4xB300)."
+          "notes": "LightX2V 395e2ac49f sets PROFILING_DEBUG_LEVEL=2 unless the environment says otherwise (lightx2v/__init__.py), and at level 1 and above every denoise step runs inside profiling contexts (step_pre / infer_main / step_post in models/runners/default_runner.py) that synchronize the device and log a line. Its own doc string calls 0 the default. This harness set 0 for the MiniMax-H3 entries only; the run logs of both the 2026-10-22 and 2026-11-16 rounds carry the per-step profile lines for this cell. Measured on one 4xB300 box, 2026-11-19, two mirrored rounds: blackwell-sdpa 2.483 / 2.480 s, with PROFILING_DEBUG_LEVEL=0 2.449 / 2.446 s (-1.4%). Promoted as b300-sdpa-noprof."
         }
       }
     },
