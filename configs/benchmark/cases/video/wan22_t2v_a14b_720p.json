@@ -77,6 +77,18 @@
         "DIFFUSION_ATTENTION_BACKEND": "FLASH_ATTN"
       },
       "command_profiles": {
+        "b300-4gpu-cfg2-usp2-vaepp-devpost-a2a": {
+          "num_gpus": 4,
+          "serve_args": "--num-gpus 4 --cfg-parallel-size 2 --usp 2 --vae-patch-parallel-size 4 --vae-parallel-mode spatial_shard_width --no-diffusion-compile-dynamic --video-output-transport {\"enable_device_postprocess\":true} --ulysses-a2a-permute",
+          "extra_env": {
+            "DIFFUSION_ATTENTION_BACKEND": "CUDNN_ATTN"
+          },
+          "description": "B300: blackwell-4gpu-cfg2-usp2-vaepp-devpost plus --ulysses-a2a-permute (copy-engine Ulysses exchange, vllm-omni #9922).",
+          "notes": "Promoted from cand-a2a-permute. Measured on one 4xB300 box, 2026-11-19 (vLLM-Omni 24e5472849 on vllm 0.33.0, single_e2e medians, a fresh server per arm). Two rounds: 97.710 / 97.656 -> 94.642 / 94.561 s (-3.1% / -3.2%). sglang on the same box: 88.967 s; TRT-LLM: 93.673 s. B300 only: the other Blackwell hosts keep their profile until they are measured.",
+          "hardware": [
+            "b300"
+          ]
+        },
         "blackwell-4gpu-cfg2-usp2-vaepp-devpost": {
           "serve_args": "--num-gpus 4 --cfg-parallel-size 2 --usp 2 --vae-patch-parallel-size 4 --vae-parallel-mode spatial_shard_width --no-diffusion-compile-dynamic --video-output-transport {\"enable_device_postprocess\":true}",
           "extra_env": {
@@ -295,7 +307,7 @@
             "DIFFUSION_ATTENTION_BACKEND": "CUDNN_ATTN"
           },
           "description": "blackwell-4gpu-cfg2-usp2-vaepp-devpost plus --ulysses-a2a-permute (copy-engine Ulysses exchange). Never selected on its own: A/B arm.",
-          "notes": "vLLM-Omni #9922 (2026-11-13): Ulysses all-to-all over the CUDA copy engine instead of NCCL, off by default (`--ulysses-a2a-permute`). Upstream reports Qwen-Image SP2 1536^2 10.717 -> 10.467 s (-2.34%) and 512^2 5.524 -> 5.506 s on L20X, against its own earlier LSA kernel, pixel hashes identical. Round 1, one 4xB300 box, 2026-11-19 (vLLM-Omni 24e5472849, single_e2e medians, selected profile -> cand-a2a-permute): Qwen-Image-2.1 2 GPUs 1.435 -> 1.385 s (-3.5%); FastH3 V2 7.785 -> 7.338 (-5.7%); MiniMax-H3 4 GPUs 36.613 -> 34.779 (-5.0%); Wan2.2 97.710 -> 94.642 (-3.1%). sglang on the same box: 1.311 / 5.040 / 31.530 / 88.967 s. Second round pending."
+          "notes": "vLLM-Omni #9922 (2026-11-13): Ulysses all-to-all over the CUDA copy engine instead of NCCL, off by default (`--ulysses-a2a-permute`). Upstream reports Qwen-Image SP2 1536^2 10.717 -> 10.467 s (-2.34%) and 512^2 5.524 -> 5.506 s on L20X, against its own earlier LSA kernel, pixel hashes identical. Round 1, one 4xB300 box, 2026-11-19 (vLLM-Omni 24e5472849, single_e2e medians, selected profile -> cand-a2a-permute): Qwen-Image-2.1 2 GPUs 1.435 -> 1.385 s (-3.5%); FastH3 V2 7.785 -> 7.338 (-5.7%); MiniMax-H3 4 GPUs 36.613 -> 34.779 (-5.0%); Wan2.2 97.710 -> 94.642 (-3.1%). sglang on the same box: 1.311 / 5.040 / 31.530 / 88.967 s. Confirmation (2026-11-19): Two rounds: 97.710 / 97.656 -> 94.642 / 94.561 s (-3.1% / -3.2%). sglang on the same box: 88.967 s; TRT-LLM: 93.673 s. Promoted as b300-4gpu-cfg2-usp2-vaepp-devpost-a2a."
         },
         "cand-preencode": {
           "num_gpus": 4,

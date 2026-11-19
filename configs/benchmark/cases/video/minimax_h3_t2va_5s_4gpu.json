@@ -115,6 +115,16 @@
         "VLLM_OMNI_VIDEO_SYNC_TIMEOUT": "1800"
       },
       "command_profiles": {
+        "b300-4gpu-static-a2a": {
+          "num_gpus": 4,
+          "serve_args": "--trust-remote-code --task-type fl2va --num-gpus 4 --usp 4 --ring 1 --vae-patch-parallel-size 4 --vae-parallel-mode tile --vae-use-tiling --no-diffusion-compile-dynamic --ulysses-a2a-permute",
+          "extra_env": {},
+          "description": "B300: blackwell-4gpu-static plus --ulysses-a2a-permute (copy-engine Ulysses exchange, vllm-omni #9922).",
+          "notes": "Promoted from cand-a2a-permute. Measured on one 4xB300 box, 2026-11-19 (vLLM-Omni 24e5472849 on vllm 0.33.0, single_e2e medians, a fresh server per arm). Two rounds: 36.613 / 36.582 -> 34.779 / 34.764 s (-5.0% / -5.0%). sglang on the same box: 31.530 s. B300 only: the other Blackwell hosts keep their profile until they are measured.",
+          "hardware": [
+            "b300"
+          ]
+        },
         "blackwell-4gpu-static": {
           "serve_args": "--trust-remote-code --task-type fl2va --num-gpus 4 --usp 4 --ring 1 --vae-patch-parallel-size 4 --vae-parallel-mode tile --vae-use-tiling --no-diffusion-compile-dynamic",
           "extra_env": {},
@@ -179,7 +189,7 @@
           "serve_args": "--trust-remote-code --task-type fl2va --num-gpus 4 --usp 4 --ring 1 --vae-patch-parallel-size 4 --vae-parallel-mode tile --vae-use-tiling --no-diffusion-compile-dynamic --ulysses-a2a-permute",
           "extra_env": {},
           "description": "blackwell-4gpu-static plus --ulysses-a2a-permute (copy-engine Ulysses exchange). Never selected on its own: A/B arm.",
-          "notes": "vLLM-Omni #9922 (2026-11-13): Ulysses all-to-all over the CUDA copy engine instead of NCCL, off by default (`--ulysses-a2a-permute`). Upstream reports Qwen-Image SP2 1536^2 10.717 -> 10.467 s (-2.34%) and 512^2 5.524 -> 5.506 s on L20X, against its own earlier LSA kernel, pixel hashes identical. Round 1, one 4xB300 box, 2026-11-19 (vLLM-Omni 24e5472849, single_e2e medians, selected profile -> cand-a2a-permute): Qwen-Image-2.1 2 GPUs 1.435 -> 1.385 s (-3.5%); FastH3 V2 7.785 -> 7.338 (-5.7%); MiniMax-H3 4 GPUs 36.613 -> 34.779 (-5.0%); Wan2.2 97.710 -> 94.642 (-3.1%). sglang on the same box: 1.311 / 5.040 / 31.530 / 88.967 s. Second round pending."
+          "notes": "vLLM-Omni #9922 (2026-11-13): Ulysses all-to-all over the CUDA copy engine instead of NCCL, off by default (`--ulysses-a2a-permute`). Upstream reports Qwen-Image SP2 1536^2 10.717 -> 10.467 s (-2.34%) and 512^2 5.524 -> 5.506 s on L20X, against its own earlier LSA kernel, pixel hashes identical. Round 1, one 4xB300 box, 2026-11-19 (vLLM-Omni 24e5472849, single_e2e medians, selected profile -> cand-a2a-permute): Qwen-Image-2.1 2 GPUs 1.435 -> 1.385 s (-3.5%); FastH3 V2 7.785 -> 7.338 (-5.7%); MiniMax-H3 4 GPUs 36.613 -> 34.779 (-5.0%); Wan2.2 97.710 -> 94.642 (-3.1%). sglang on the same box: 1.311 / 5.040 / 31.530 / 88.967 s. Confirmation (2026-11-19): Two rounds: 36.613 / 36.582 -> 34.779 / 34.764 s (-5.0% / -5.0%). sglang on the same box: 31.530 s. Promoted as b300-4gpu-static-a2a."
         }
       },
       "reason": "Empirically validated 2026-08-07, first on minimax-h3-5090-2gpu-v4 (2x RTX 5090) then on 2xB200: the default (compiled) profile segfaults identically on both GPU classes 1 step into denoising (see command_profiles.default.notes) -- a confirmed hardware-independent vLLM-Omni bug, despite the recipe's own claim that torch.compile is 'not enabled by default on consumer paths.' --enforce-eager avoids that segfault, but on RTX 5090 it fails differently at startup (a diffusion worker process dies before completing its init handshake, surfaced as EOFError) and never completes a request on that GPU class. On 2xB200 the identical --enforce-eager command works cleanly and completes a correct generation -- see command_profiles.b200-2gpu for the validated numbers and the sglang comparison on the same hardware. Net: vLLM-Omni H3 support is real but fragile below the B200 class tested here; RTX 5090 has no working profile for this case in either variant."

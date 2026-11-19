@@ -5,8 +5,7 @@ Follow-up to the published round `b300x4-20261116`. Everything here was measured
 single-request end-to-end medians in seconds. Pins: sglang `25c1c43942` (round pin) and main `9fbab1f6ed`; vLLM-Omni
 `24e5472849` on vllm 0.33.0; TRT-LLM 1.4.0rc3; LightX2V `395e2ac49f`. Raw results: `results/r1118-b300/` (untracked).
 
-Status: the FLUX.3 work and the sglang checks are complete. Section 5's first rounds are in; the confirmation rounds
-(`plan_b300_lxconfirm_20261119.txt`, `plan_b300_a2a_confirm_20261119.txt`) are still running where a row says "pending".
+Status: the FLUX.3 work and the sglang checks are complete; five sglang PRs are open or merged (section 1) and a sixth change is being measured. Section 5's confirmation rounds are in and the faster competitor commands are the B300-selected profiles; the published round predates them.
 
 ## 1. One cell where sglang was behind: FLUX.3 Klein Base (2 GPUs)
 
@@ -117,7 +116,8 @@ sglang has no first-step penalty (H3 on four GPUs: 30.707 s against 49 x 0.625 s
 | TRT-LLM, MiniMax-H3 T2VA 2 / 4 GPUs | `parallel_config.async_ulysses` | -1.72% / -1.65% and -1.59% / -1.50%: promoted (`b300-omp8-async`, `b300-fa4-omp8-async`); the published TRT-LLM H3 rows predate it |
 | vLLM-Omni, FLUX.3 | the whole cell | section 1; B300 now selects `b300-cfg2-static-flashinfer` (1.885-1.892) |
 | vLLM-Omni | `OMP_NUM_THREADS=8`, FA4, FastH3 static compile | not gaps (2026-11-18 first box) |
-| vLLM-Omni | `--ulysses-a2a-permute` (copy-engine Ulysses exchange, #9922) | round 1: Qwen-Image-2.1 2 GPUs 1.435 -> 1.385 (-3.5%), FastH3 7.785 -> 7.338 (-5.7%), MiniMax-H3 4 GPUs 36.613 -> 34.779 (-5.0%), Wan2.2 97.710 -> 94.642 (-3.1%); sglang stays ahead on all four (1.311 / 5.040 / 31.530 / 88.967); second round and the other Ulysses cells pending |
+| vLLM-Omni | `--ulysses-a2a-permute` (copy-engine Ulysses exchange, #9922) | two rounds: Qwen-Image-2.1 2 GPUs 1.435 / 1.426 -> 1.385 / 1.395, FastH3 7.785 / 7.683 -> 7.338 / 7.305, MiniMax-H3 4 GPUs 36.613 / 36.582 -> 34.779 / 34.764, Wan2.2 97.710 / 97.656 -> 94.642 / 94.561; one round: Cosmos3 T2V 26.037 -> 25.746, I2V 25.621 -> 25.347, LTX-2.5 5.797 -> 5.697: all promoted as B300 profiles (`b300-*-a2a`); sglang on the same box 1.311 / 5.040 / 31.530 / 88.967 / 22.750 / (I2V not run) / 5.172 |
+| vLLM-Omni, MiniMax-H3 2 GPUs | Ulysses 2 with the copy-engine exchange in place of the selected TP2 | one round each: T2VA 67.114 -> 64.942 (-3.2%), Ref2VA 102.267 -> 99.703 (-2.5%): promoted (`b300-2gpu-usp2-static-a2a`); sglang on the same box 61.487 / 94.778, so the lead on these two cells is now 1.056x / 1.052x |
 | vLLM-Omni | denoise-step CUDA graph | no gain (Z-Image 0.449 -> 0.447, Wan2.2 97.710 -> 97.783) |
 | vLLM-Omni | text-encoder TP (Qwen 2 GPUs), Wan `preencode_mp4`, Wan Ulysses 4 + batched CFG | 1.424 -> 1.434 (none); 97.517 -> 97.141 (-0.39%, one round); 98.464 (slower) |
 | TRT-LLM, MiniMax-H3 Ref2VA | `async_ulysses` | -0.44% on the first box, +0.36% on the second (104.074 against 103.704): not promoted |

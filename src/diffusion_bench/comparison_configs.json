@@ -1010,6 +1010,18 @@
                     "num_gpus": 2,
                     "serve_args": "",
                     "command_profiles": {
+                        "b300-usp2-static-a2a": {
+                            "num_gpus": 2,
+                            "serve_args": "--usp 2 --no-diffusion-compile-dynamic --ulysses-a2a-permute",
+                            "extra_env": {
+                                "DIFFUSION_ATTENTION_BACKEND": "CUDNN_ATTN"
+                            },
+                            "description": "B300: blackwell-cudnn-static plus --ulysses-a2a-permute (copy-engine Ulysses exchange, vllm-omni #9922).",
+                            "notes": "Promoted from cand-a2a-permute. Measured on one 4xB300 box, 2026-11-19 (vLLM-Omni 24e5472849 on vllm 0.33.0, single_e2e medians, a fresh server per arm). Two rounds: 1.435 / 1.426 -> 1.385 / 1.395 s (-3.5% / -2.2%). sglang on the same box: 1.311 s. B300 only: the other Blackwell hosts keep their profile until they are measured.",
+                            "hardware": [
+                                "b300"
+                            ]
+                        },
                         "blackwell-cudnn-static": {
                             "serve_args": "--usp 2 --no-diffusion-compile-dynamic",
                             "extra_env": {
@@ -1122,7 +1134,7 @@
                                 "DIFFUSION_ATTENTION_BACKEND": "CUDNN_ATTN"
                             },
                             "description": "blackwell-cudnn-static plus --ulysses-a2a-permute (copy-engine Ulysses exchange). Never selected on its own: A/B arm.",
-                            "notes": "vLLM-Omni #9922 (2026-11-13): Ulysses all-to-all over the CUDA copy engine instead of NCCL, off by default (`--ulysses-a2a-permute`). Upstream reports Qwen-Image SP2 1536^2 10.717 -> 10.467 s (-2.34%) and 512^2 5.524 -> 5.506 s on L20X, against its own earlier LSA kernel, pixel hashes identical. Round 1, one 4xB300 box, 2026-11-19 (vLLM-Omni 24e5472849, single_e2e medians, selected profile -> cand-a2a-permute): Qwen-Image-2.1 2 GPUs 1.435 -> 1.385 s (-3.5%); FastH3 V2 7.785 -> 7.338 (-5.7%); MiniMax-H3 4 GPUs 36.613 -> 34.779 (-5.0%); Wan2.2 97.710 -> 94.642 (-3.1%). sglang on the same box: 1.311 / 5.040 / 31.530 / 88.967 s. Second round pending."
+                            "notes": "vLLM-Omni #9922 (2026-11-13): Ulysses all-to-all over the CUDA copy engine instead of NCCL, off by default (`--ulysses-a2a-permute`). Upstream reports Qwen-Image SP2 1536^2 10.717 -> 10.467 s (-2.34%) and 512^2 5.524 -> 5.506 s on L20X, against its own earlier LSA kernel, pixel hashes identical. Round 1, one 4xB300 box, 2026-11-19 (vLLM-Omni 24e5472849, single_e2e medians, selected profile -> cand-a2a-permute): Qwen-Image-2.1 2 GPUs 1.435 -> 1.385 s (-3.5%); FastH3 V2 7.785 -> 7.338 (-5.7%); MiniMax-H3 4 GPUs 36.613 -> 34.779 (-5.0%); Wan2.2 97.710 -> 94.642 (-3.1%). sglang on the same box: 1.311 / 5.040 / 31.530 / 88.967 s. Confirmation (2026-11-19): Two rounds: 1.435 / 1.426 -> 1.385 / 1.395 s (-3.5% / -2.2%). sglang on the same box: 1.311 s. Promoted as b300-usp2-static-a2a."
                         },
                         "cand-tetp2": {
                             "num_gpus": 2,
@@ -2209,6 +2221,18 @@
                         "DIFFUSION_ATTENTION_BACKEND": "FLASH_ATTN"
                     },
                     "command_profiles": {
+                        "b300-4gpu-cfg2-usp2-vaepp-devpost-a2a": {
+                            "num_gpus": 4,
+                            "serve_args": "--num-gpus 4 --cfg-parallel-size 2 --usp 2 --vae-patch-parallel-size 4 --vae-parallel-mode spatial_shard_width --no-diffusion-compile-dynamic --video-output-transport {\"enable_device_postprocess\":true} --ulysses-a2a-permute",
+                            "extra_env": {
+                                "DIFFUSION_ATTENTION_BACKEND": "CUDNN_ATTN"
+                            },
+                            "description": "B300: blackwell-4gpu-cfg2-usp2-vaepp-devpost plus --ulysses-a2a-permute (copy-engine Ulysses exchange, vllm-omni #9922).",
+                            "notes": "Promoted from cand-a2a-permute. Measured on one 4xB300 box, 2026-11-19 (vLLM-Omni 24e5472849 on vllm 0.33.0, single_e2e medians, a fresh server per arm). Two rounds: 97.710 / 97.656 -> 94.642 / 94.561 s (-3.1% / -3.2%). sglang on the same box: 88.967 s; TRT-LLM: 93.673 s. B300 only: the other Blackwell hosts keep their profile until they are measured.",
+                            "hardware": [
+                                "b300"
+                            ]
+                        },
                         "blackwell-4gpu-cfg2-usp2-vaepp-devpost": {
                             "serve_args": "--num-gpus 4 --cfg-parallel-size 2 --usp 2 --vae-patch-parallel-size 4 --vae-parallel-mode spatial_shard_width --no-diffusion-compile-dynamic --video-output-transport {\"enable_device_postprocess\":true}",
                             "extra_env": {
@@ -2427,7 +2451,7 @@
                                 "DIFFUSION_ATTENTION_BACKEND": "CUDNN_ATTN"
                             },
                             "description": "blackwell-4gpu-cfg2-usp2-vaepp-devpost plus --ulysses-a2a-permute (copy-engine Ulysses exchange). Never selected on its own: A/B arm.",
-                            "notes": "vLLM-Omni #9922 (2026-11-13): Ulysses all-to-all over the CUDA copy engine instead of NCCL, off by default (`--ulysses-a2a-permute`). Upstream reports Qwen-Image SP2 1536^2 10.717 -> 10.467 s (-2.34%) and 512^2 5.524 -> 5.506 s on L20X, against its own earlier LSA kernel, pixel hashes identical. Round 1, one 4xB300 box, 2026-11-19 (vLLM-Omni 24e5472849, single_e2e medians, selected profile -> cand-a2a-permute): Qwen-Image-2.1 2 GPUs 1.435 -> 1.385 s (-3.5%); FastH3 V2 7.785 -> 7.338 (-5.7%); MiniMax-H3 4 GPUs 36.613 -> 34.779 (-5.0%); Wan2.2 97.710 -> 94.642 (-3.1%). sglang on the same box: 1.311 / 5.040 / 31.530 / 88.967 s. Second round pending."
+                            "notes": "vLLM-Omni #9922 (2026-11-13): Ulysses all-to-all over the CUDA copy engine instead of NCCL, off by default (`--ulysses-a2a-permute`). Upstream reports Qwen-Image SP2 1536^2 10.717 -> 10.467 s (-2.34%) and 512^2 5.524 -> 5.506 s on L20X, against its own earlier LSA kernel, pixel hashes identical. Round 1, one 4xB300 box, 2026-11-19 (vLLM-Omni 24e5472849, single_e2e medians, selected profile -> cand-a2a-permute): Qwen-Image-2.1 2 GPUs 1.435 -> 1.385 s (-3.5%); FastH3 V2 7.785 -> 7.338 (-5.7%); MiniMax-H3 4 GPUs 36.613 -> 34.779 (-5.0%); Wan2.2 97.710 -> 94.642 (-3.1%). sglang on the same box: 1.311 / 5.040 / 31.530 / 88.967 s. Confirmation (2026-11-19): Two rounds: 97.710 / 97.656 -> 94.642 / 94.561 s (-3.1% / -3.2%). sglang on the same box: 88.967 s; TRT-LLM: 93.673 s. Promoted as b300-4gpu-cfg2-usp2-vaepp-devpost-a2a."
                         },
                         "cand-preencode": {
                             "num_gpus": 4,
@@ -3316,6 +3340,18 @@
                         "DIFFUSION_ATTENTION_BACKEND": "CUDNN_ATTN"
                     },
                     "command_profiles": {
+                        "b300-2gpu-distilled-usp2-a2a": {
+                            "num_gpus": 2,
+                            "serve_args": "--num-gpus 2 --usp 2 --model-class-name LTX2DistilledTwoStagePipeline --stage-init-timeout 900 --no-diffusion-compile-dynamic --stage-overrides {\"0\":{\"extras\":{\"ltx2_use_conv_vae\":true}}} --vae-patch-parallel-size 2 --vae-use-tiling --ulysses-a2a-permute",
+                            "extra_env": {
+                                "DIFFUSION_ATTENTION_BACKEND": "CUDNN_ATTN"
+                            },
+                            "description": "B300: blackwell-2gpu-distilled-usp2 plus --ulysses-a2a-permute (copy-engine Ulysses exchange, vllm-omni #9922).",
+                            "notes": "Promoted from cand-a2a-permute. Measured on one 4xB300 box, 2026-11-19 (vLLM-Omni 24e5472849 on vllm 0.33.0, single_e2e medians, a fresh server per arm). One round: 5.797 -> 5.697 s (-1.7%). sglang on the same box: 5.172 s. B300 only: the other Blackwell hosts keep their profile until they are measured.",
+                            "hardware": [
+                                "b300"
+                            ]
+                        },
                         "blackwell-2gpu-distilled-usp2": {
                             "description": "Blackwell: the recipe's distilled two-stage low-latency path at two GPUs (Ulysses 2, VAE patch parallel 2 over tiles), conv VAE, cuDNN attention.",
                             "hardware": [
@@ -3397,7 +3433,7 @@
                                 "DIFFUSION_ATTENTION_BACKEND": "CUDNN_ATTN"
                             },
                             "description": "blackwell-2gpu-distilled-usp2 plus --ulysses-a2a-permute (copy-engine Ulysses exchange). Never selected on its own: A/B arm.",
-                            "notes": "vLLM-Omni #9922 (2026-11-13): Ulysses all-to-all over the CUDA copy engine instead of NCCL, off by default (`--ulysses-a2a-permute`). Round 1, one 4xB300 box, 2026-11-19 (vLLM-Omni 24e5472849, single_e2e medians, selected profile -> cand-a2a-permute): Qwen-Image-2.1 2 GPUs 1.435 -> 1.385 s (-3.5%); FastH3 V2 7.785 -> 7.338 (-5.7%); MiniMax-H3 4 GPUs 36.613 -> 34.779 (-5.0%); Wan2.2 97.710 -> 94.642 (-3.1%). sglang on the same box: 1.311 / 5.040 / 31.530 / 88.967 s. VALIDATION PENDING on this cell (2026-11-19, 4xB300)."
+                            "notes": "vLLM-Omni #9922 (2026-11-13): Ulysses all-to-all over the CUDA copy engine instead of NCCL, off by default (`--ulysses-a2a-permute`). Round 1, one 4xB300 box, 2026-11-19 (vLLM-Omni 24e5472849, single_e2e medians, selected profile -> cand-a2a-permute): Qwen-Image-2.1 2 GPUs 1.435 -> 1.385 s (-3.5%); FastH3 V2 7.785 -> 7.338 (-5.7%); MiniMax-H3 4 GPUs 36.613 -> 34.779 (-5.0%); Wan2.2 97.710 -> 94.642 (-3.1%). sglang on the same box: 1.311 / 5.040 / 31.530 / 88.967 s. VALIDATION PENDING on this cell (2026-11-19, 4xB300). Confirmation (2026-11-19): One round: 5.797 -> 5.697 s (-1.7%). sglang on the same box: 5.172 s. Promoted as b300-2gpu-distilled-usp2-a2a."
                         }
                     }
                 }
@@ -4215,6 +4251,16 @@
                     "serve_args": "--num-gpus 4 --cfg-parallel-size 2 --ulysses-degree 2 --model-class-name Cosmos3OmniDiffusersPipeline --stage-init-timeout 900 --init-timeout 1800 --no-guardrails --diffusion-attention-backend FLASH_ATTN --cache-backend none",
                     "extra_env": {},
                     "command_profiles": {
+                        "b300-cudnn-vaepp-a2a": {
+                            "num_gpus": 4,
+                            "serve_args": "--num-gpus 4 --cfg-parallel-size 2 --ulysses-degree 2 --model-class-name Cosmos3OmniDiffusersPipeline --stage-init-timeout 900 --init-timeout 1800 --no-guardrails --diffusion-attention-backend CUDNN_ATTN --cache-backend none --vae-patch-parallel-size 4 --vae-parallel-mode spatial_shard_width --video-output-transport {\"enable_device_postprocess\":true} --no-diffusion-compile-dynamic --ulysses-a2a-permute",
+                            "extra_env": {},
+                            "description": "B300: blackwell-cudnn-vaepp plus --ulysses-a2a-permute (copy-engine Ulysses exchange, vllm-omni #9922).",
+                            "notes": "Promoted from cand-a2a-permute. Measured on one 4xB300 box, 2026-11-19 (vLLM-Omni 24e5472849 on vllm 0.33.0, single_e2e medians, a fresh server per arm). One round: 26.037 -> 25.746 s (-1.1%); the image-to-video cell moved by the same amount. sglang on the same box: 22.750 s. B300 only: the other Blackwell hosts keep their profile until they are measured.",
+                            "hardware": [
+                                "b300"
+                            ]
+                        },
                         "blackwell-cudnn-vaepp": {
                             "hardware": [
                                 "b200",
@@ -4399,7 +4445,7 @@
                             "serve_args": "--num-gpus 4 --cfg-parallel-size 2 --ulysses-degree 2 --model-class-name Cosmos3OmniDiffusersPipeline --stage-init-timeout 900 --init-timeout 1800 --no-guardrails --diffusion-attention-backend CUDNN_ATTN --cache-backend none --vae-patch-parallel-size 4 --vae-parallel-mode spatial_shard_width --video-output-transport {\"enable_device_postprocess\":true} --no-diffusion-compile-dynamic --ulysses-a2a-permute",
                             "extra_env": {},
                             "description": "blackwell-cudnn-vaepp plus --ulysses-a2a-permute (copy-engine Ulysses exchange). Never selected on its own: A/B arm.",
-                            "notes": "vLLM-Omni #9922 (2026-11-13): Ulysses all-to-all over the CUDA copy engine instead of NCCL, off by default (`--ulysses-a2a-permute`). Round 1, one 4xB300 box, 2026-11-19 (vLLM-Omni 24e5472849, single_e2e medians, selected profile -> cand-a2a-permute): Qwen-Image-2.1 2 GPUs 1.435 -> 1.385 s (-3.5%); FastH3 V2 7.785 -> 7.338 (-5.7%); MiniMax-H3 4 GPUs 36.613 -> 34.779 (-5.0%); Wan2.2 97.710 -> 94.642 (-3.1%). sglang on the same box: 1.311 / 5.040 / 31.530 / 88.967 s. VALIDATION PENDING on this cell (2026-11-19, 4xB300)."
+                            "notes": "vLLM-Omni #9922 (2026-11-13): Ulysses all-to-all over the CUDA copy engine instead of NCCL, off by default (`--ulysses-a2a-permute`). Round 1, one 4xB300 box, 2026-11-19 (vLLM-Omni 24e5472849, single_e2e medians, selected profile -> cand-a2a-permute): Qwen-Image-2.1 2 GPUs 1.435 -> 1.385 s (-3.5%); FastH3 V2 7.785 -> 7.338 (-5.7%); MiniMax-H3 4 GPUs 36.613 -> 34.779 (-5.0%); Wan2.2 97.710 -> 94.642 (-3.1%). sglang on the same box: 1.311 / 5.040 / 31.530 / 88.967 s. VALIDATION PENDING on this cell (2026-11-19, 4xB300). Confirmation (2026-11-19): One round: 26.037 -> 25.746 s (-1.1%); the image-to-video cell moved by the same amount. sglang on the same box: 22.750 s. Promoted as b300-cudnn-vaepp-a2a."
                         }
                     }
                 },
@@ -4867,6 +4913,16 @@
                     "serve_args": "--num-gpus 4 --cfg-parallel-size 2 --ulysses-degree 2 --model-class-name Cosmos3OmniDiffusersPipeline --stage-init-timeout 900 --init-timeout 1800 --no-guardrails --diffusion-attention-backend FLASH_ATTN --cache-backend none",
                     "extra_env": {},
                     "command_profiles": {
+                        "b300-cudnn-vaepp-a2a": {
+                            "num_gpus": 4,
+                            "serve_args": "--num-gpus 4 --cfg-parallel-size 2 --ulysses-degree 2 --model-class-name Cosmos3OmniDiffusersPipeline --stage-init-timeout 900 --init-timeout 1800 --no-guardrails --diffusion-attention-backend CUDNN_ATTN --cache-backend none --vae-patch-parallel-size 4 --vae-parallel-mode spatial_shard_width --video-output-transport {\"enable_device_postprocess\":true} --no-diffusion-compile-dynamic --ulysses-a2a-permute",
+                            "extra_env": {},
+                            "description": "B300: blackwell-cudnn-vaepp plus --ulysses-a2a-permute (copy-engine Ulysses exchange, vllm-omni #9922).",
+                            "notes": "Promoted from cand-a2a-permute. Measured on one 4xB300 box, 2026-11-19 (vLLM-Omni 24e5472849 on vllm 0.33.0, single_e2e medians, a fresh server per arm). One round: 25.621 -> 25.347 s (-1.1%); the text-to-video cell moved by the same amount. sglang was not run on this box for this cell (22.81 s in the published round). B300 only: the other Blackwell hosts keep their profile until they are measured.",
+                            "hardware": [
+                                "b300"
+                            ]
+                        },
                         "blackwell-cudnn-vaepp": {
                             "hardware": [
                                 "b200",
@@ -5020,7 +5076,7 @@
                             "serve_args": "--num-gpus 4 --cfg-parallel-size 2 --ulysses-degree 2 --model-class-name Cosmos3OmniDiffusersPipeline --stage-init-timeout 900 --init-timeout 1800 --no-guardrails --diffusion-attention-backend CUDNN_ATTN --cache-backend none --vae-patch-parallel-size 4 --vae-parallel-mode spatial_shard_width --video-output-transport {\"enable_device_postprocess\":true} --no-diffusion-compile-dynamic --ulysses-a2a-permute",
                             "extra_env": {},
                             "description": "blackwell-cudnn-vaepp plus --ulysses-a2a-permute (copy-engine Ulysses exchange). Never selected on its own: A/B arm.",
-                            "notes": "vLLM-Omni #9922 (2026-11-13): Ulysses all-to-all over the CUDA copy engine instead of NCCL, off by default (`--ulysses-a2a-permute`). Round 1, one 4xB300 box, 2026-11-19 (vLLM-Omni 24e5472849, single_e2e medians, selected profile -> cand-a2a-permute): Qwen-Image-2.1 2 GPUs 1.435 -> 1.385 s (-3.5%); FastH3 V2 7.785 -> 7.338 (-5.7%); MiniMax-H3 4 GPUs 36.613 -> 34.779 (-5.0%); Wan2.2 97.710 -> 94.642 (-3.1%). sglang on the same box: 1.311 / 5.040 / 31.530 / 88.967 s. VALIDATION PENDING on this cell (2026-11-19, 4xB300)."
+                            "notes": "vLLM-Omni #9922 (2026-11-13): Ulysses all-to-all over the CUDA copy engine instead of NCCL, off by default (`--ulysses-a2a-permute`). Round 1, one 4xB300 box, 2026-11-19 (vLLM-Omni 24e5472849, single_e2e medians, selected profile -> cand-a2a-permute): Qwen-Image-2.1 2 GPUs 1.435 -> 1.385 s (-3.5%); FastH3 V2 7.785 -> 7.338 (-5.7%); MiniMax-H3 4 GPUs 36.613 -> 34.779 (-5.0%); Wan2.2 97.710 -> 94.642 (-3.1%). sglang on the same box: 1.311 / 5.040 / 31.530 / 88.967 s. VALIDATION PENDING on this cell (2026-11-19, 4xB300). Confirmation (2026-11-19): One round: 25.621 -> 25.347 s (-1.1%); the text-to-video cell moved by the same amount. sglang was not run on this box for this cell (22.81 s in the published round). Promoted as b300-cudnn-vaepp-a2a."
                         }
                     }
                 },
@@ -5398,6 +5454,16 @@
                         "VLLM_OMNI_VIDEO_SYNC_TIMEOUT": "1800"
                     },
                     "command_profiles": {
+                        "b300-2gpu-usp2-static-a2a": {
+                            "num_gpus": 2,
+                            "serve_args": "--trust-remote-code --task-type fl2va --num-gpus 2 --usp 2 --ring 1 --text-encoder-tp-size 2 --vae-patch-parallel-size 2 --vae-parallel-mode tile --vae-use-tiling --diffusion-attention-backend CUDNN_ATTN --no-diffusion-compile-dynamic --ulysses-a2a-permute",
+                            "extra_env": {},
+                            "description": "B300: Ulysses 2 with --ulysses-a2a-permute (copy-engine exchange, vllm-omni #9922) in place of blackwell-2gpu-static's TP2.",
+                            "notes": "Promoted from cand-usp2-a2a. Measured on one 4xB300 box, 2026-11-19 (vLLM-Omni 24e5472849 on vllm 0.33.0, single_e2e medians, a fresh server per arm). One round: TP2 67.114 -> Ulysses 2 with the copy-engine exchange 64.942 s (-3.2%); Ref2VA moved the same way (-2.5%). sglang on the same box: 61.487 s. B300 only: the other Blackwell hosts keep their profile until they are measured.",
+                            "hardware": [
+                                "b300"
+                            ]
+                        },
                         "blackwell-2gpu-static": {
                             "serve_args": "--trust-remote-code --task-type fl2va --num-gpus 2 --tensor-parallel-size 2 --usp 1 --ring 1 --text-encoder-tp-size 2 --vae-patch-parallel-size 2 --vae-parallel-mode tile --vae-use-tiling --diffusion-attention-backend CUDNN_ATTN --no-diffusion-compile-dynamic",
                             "extra_env": {},
@@ -5602,7 +5668,7 @@
                             "serve_args": "--trust-remote-code --task-type fl2va --num-gpus 2 --usp 2 --ring 1 --text-encoder-tp-size 2 --vae-patch-parallel-size 2 --vae-parallel-mode tile --vae-use-tiling --diffusion-attention-backend CUDNN_ATTN --no-diffusion-compile-dynamic --ulysses-a2a-permute",
                             "extra_env": {},
                             "description": "cand-usp2 (Ulysses 2 in place of the selected TP2) plus --ulysses-a2a-permute. Never selected on its own: A/B arm.",
-                            "notes": "The selected B300 profile is TP2; with the copy-engine exchange Ulysses 2 may now be the faster layout. vLLM-Omni #9922 (2026-11-13): Ulysses all-to-all over the CUDA copy engine instead of NCCL, off by default (`--ulysses-a2a-permute`). Round 1, one 4xB300 box, 2026-11-19 (vLLM-Omni 24e5472849, single_e2e medians, selected profile -> cand-a2a-permute): Qwen-Image-2.1 2 GPUs 1.435 -> 1.385 s (-3.5%); FastH3 V2 7.785 -> 7.338 (-5.7%); MiniMax-H3 4 GPUs 36.613 -> 34.779 (-5.0%); Wan2.2 97.710 -> 94.642 (-3.1%). sglang on the same box: 1.311 / 5.040 / 31.530 / 88.967 s. VALIDATION PENDING on this cell (2026-11-19, 4xB300)."
+                            "notes": "The selected B300 profile is TP2; with the copy-engine exchange Ulysses 2 may now be the faster layout. vLLM-Omni #9922 (2026-11-13): Ulysses all-to-all over the CUDA copy engine instead of NCCL, off by default (`--ulysses-a2a-permute`). Round 1, one 4xB300 box, 2026-11-19 (vLLM-Omni 24e5472849, single_e2e medians, selected profile -> cand-a2a-permute): Qwen-Image-2.1 2 GPUs 1.435 -> 1.385 s (-3.5%); FastH3 V2 7.785 -> 7.338 (-5.7%); MiniMax-H3 4 GPUs 36.613 -> 34.779 (-5.0%); Wan2.2 97.710 -> 94.642 (-3.1%). sglang on the same box: 1.311 / 5.040 / 31.530 / 88.967 s. VALIDATION PENDING on this cell (2026-11-19, 4xB300). Confirmation (2026-11-19): One round: TP2 67.114 -> Ulysses 2 with the copy-engine exchange 64.942 s (-3.2%); Ref2VA moved the same way (-2.5%). sglang on the same box: 61.487 s. Promoted as b300-2gpu-usp2-static-a2a."
                         }
                     },
                     "reason": "Empirically validated 2026-08-07, first on minimax-h3-5090-2gpu-v4 (2x RTX 5090) then on 2xB200: the default (compiled) profile segfaults identically on both GPU classes 1 step into denoising (see command_profiles.default.notes) -- a confirmed hardware-independent vLLM-Omni bug, despite the recipe's own claim that torch.compile is 'not enabled by default on consumer paths.' --enforce-eager avoids that segfault, but on RTX 5090 it fails differently at startup (a diffusion worker process dies before completing its init handshake, surfaced as EOFError) and never completes a request on that GPU class. On 2xB200 the identical --enforce-eager command works cleanly and completes a correct generation -- see command_profiles.b200-2gpu for the validated numbers and the sglang comparison on the same hardware. Net: vLLM-Omni H3 support is real but fragile below the B200 class tested here; RTX 5090 has no working profile for this case in either variant."
@@ -6564,6 +6630,16 @@
                         "VLLM_OMNI_VIDEO_SYNC_TIMEOUT": "1800"
                     },
                     "command_profiles": {
+                        "b300-4gpu-static-a2a": {
+                            "num_gpus": 4,
+                            "serve_args": "--trust-remote-code --task-type fl2va --num-gpus 4 --usp 4 --ring 1 --vae-patch-parallel-size 4 --vae-parallel-mode tile --vae-use-tiling --no-diffusion-compile-dynamic --ulysses-a2a-permute",
+                            "extra_env": {},
+                            "description": "B300: blackwell-4gpu-static plus --ulysses-a2a-permute (copy-engine Ulysses exchange, vllm-omni #9922).",
+                            "notes": "Promoted from cand-a2a-permute. Measured on one 4xB300 box, 2026-11-19 (vLLM-Omni 24e5472849 on vllm 0.33.0, single_e2e medians, a fresh server per arm). Two rounds: 36.613 / 36.582 -> 34.779 / 34.764 s (-5.0% / -5.0%). sglang on the same box: 31.530 s. B300 only: the other Blackwell hosts keep their profile until they are measured.",
+                            "hardware": [
+                                "b300"
+                            ]
+                        },
                         "blackwell-4gpu-static": {
                             "serve_args": "--trust-remote-code --task-type fl2va --num-gpus 4 --usp 4 --ring 1 --vae-patch-parallel-size 4 --vae-parallel-mode tile --vae-use-tiling --no-diffusion-compile-dynamic",
                             "extra_env": {},
@@ -6628,7 +6704,7 @@
                             "serve_args": "--trust-remote-code --task-type fl2va --num-gpus 4 --usp 4 --ring 1 --vae-patch-parallel-size 4 --vae-parallel-mode tile --vae-use-tiling --no-diffusion-compile-dynamic --ulysses-a2a-permute",
                             "extra_env": {},
                             "description": "blackwell-4gpu-static plus --ulysses-a2a-permute (copy-engine Ulysses exchange). Never selected on its own: A/B arm.",
-                            "notes": "vLLM-Omni #9922 (2026-11-13): Ulysses all-to-all over the CUDA copy engine instead of NCCL, off by default (`--ulysses-a2a-permute`). Upstream reports Qwen-Image SP2 1536^2 10.717 -> 10.467 s (-2.34%) and 512^2 5.524 -> 5.506 s on L20X, against its own earlier LSA kernel, pixel hashes identical. Round 1, one 4xB300 box, 2026-11-19 (vLLM-Omni 24e5472849, single_e2e medians, selected profile -> cand-a2a-permute): Qwen-Image-2.1 2 GPUs 1.435 -> 1.385 s (-3.5%); FastH3 V2 7.785 -> 7.338 (-5.7%); MiniMax-H3 4 GPUs 36.613 -> 34.779 (-5.0%); Wan2.2 97.710 -> 94.642 (-3.1%). sglang on the same box: 1.311 / 5.040 / 31.530 / 88.967 s. Second round pending."
+                            "notes": "vLLM-Omni #9922 (2026-11-13): Ulysses all-to-all over the CUDA copy engine instead of NCCL, off by default (`--ulysses-a2a-permute`). Upstream reports Qwen-Image SP2 1536^2 10.717 -> 10.467 s (-2.34%) and 512^2 5.524 -> 5.506 s on L20X, against its own earlier LSA kernel, pixel hashes identical. Round 1, one 4xB300 box, 2026-11-19 (vLLM-Omni 24e5472849, single_e2e medians, selected profile -> cand-a2a-permute): Qwen-Image-2.1 2 GPUs 1.435 -> 1.385 s (-3.5%); FastH3 V2 7.785 -> 7.338 (-5.7%); MiniMax-H3 4 GPUs 36.613 -> 34.779 (-5.0%); Wan2.2 97.710 -> 94.642 (-3.1%). sglang on the same box: 1.311 / 5.040 / 31.530 / 88.967 s. Confirmation (2026-11-19): Two rounds: 36.613 / 36.582 -> 34.779 / 34.764 s (-5.0% / -5.0%). sglang on the same box: 31.530 s. Promoted as b300-4gpu-static-a2a."
                         }
                     },
                     "reason": "Empirically validated 2026-08-07, first on minimax-h3-5090-2gpu-v4 (2x RTX 5090) then on 2xB200: the default (compiled) profile segfaults identically on both GPU classes 1 step into denoising (see command_profiles.default.notes) -- a confirmed hardware-independent vLLM-Omni bug, despite the recipe's own claim that torch.compile is 'not enabled by default on consumer paths.' --enforce-eager avoids that segfault, but on RTX 5090 it fails differently at startup (a diffusion worker process dies before completing its init handshake, surfaced as EOFError) and never completes a request on that GPU class. On 2xB200 the identical --enforce-eager command works cleanly and completes a correct generation -- see command_profiles.b200-2gpu for the validated numbers and the sglang comparison on the same hardware. Net: vLLM-Omni H3 support is real but fragile below the B200 class tested here; RTX 5090 has no working profile for this case in either variant."
@@ -7571,6 +7647,16 @@
                         "VLLM_OMNI_VIDEO_SYNC_TIMEOUT": "1800"
                     },
                     "command_profiles": {
+                        "b300-2gpu-usp2-static-a2a": {
+                            "num_gpus": 2,
+                            "serve_args": "--trust-remote-code --task-type ref2va --num-gpus 2 --usp 2 --ring 1 --text-encoder-tp-size 2 --vae-patch-parallel-size 2 --vae-parallel-mode tile --vae-use-tiling --diffusion-attention-backend CUDNN_ATTN --no-diffusion-compile-dynamic --ulysses-a2a-permute",
+                            "extra_env": {},
+                            "description": "B300: Ulysses 2 with --ulysses-a2a-permute (copy-engine exchange, vllm-omni #9922) in place of blackwell-2gpu-static's TP2.",
+                            "notes": "Promoted from cand-usp2-a2a. Measured on one 4xB300 box, 2026-11-19 (vLLM-Omni 24e5472849 on vllm 0.33.0, single_e2e medians, a fresh server per arm). One round: TP2 102.267 -> Ulysses 2 with the copy-engine exchange 99.703 s (-2.5%); T2VA moved the same way (-3.2%). sglang on the same box: 94.778 s. B300 only: the other Blackwell hosts keep their profile until they are measured.",
+                            "hardware": [
+                                "b300"
+                            ]
+                        },
                         "blackwell-2gpu-static": {
                             "serve_args": "--trust-remote-code --task-type ref2va --num-gpus 2 --tensor-parallel-size 2 --usp 1 --ring 1 --text-encoder-tp-size 2 --vae-patch-parallel-size 2 --vae-parallel-mode tile --vae-use-tiling --diffusion-attention-backend CUDNN_ATTN --no-diffusion-compile-dynamic",
                             "extra_env": {},
@@ -7743,7 +7829,7 @@
                             "serve_args": "--trust-remote-code --task-type ref2va --num-gpus 2 --usp 2 --ring 1 --text-encoder-tp-size 2 --vae-patch-parallel-size 2 --vae-parallel-mode tile --vae-use-tiling --diffusion-attention-backend CUDNN_ATTN --no-diffusion-compile-dynamic --ulysses-a2a-permute",
                             "extra_env": {},
                             "description": "cand-usp2 (Ulysses 2 in place of the selected TP2) plus --ulysses-a2a-permute. Never selected on its own: A/B arm.",
-                            "notes": "The selected B300 profile is TP2; with the copy-engine exchange Ulysses 2 may now be the faster layout. vLLM-Omni #9922 (2026-11-13): Ulysses all-to-all over the CUDA copy engine instead of NCCL, off by default (`--ulysses-a2a-permute`). Round 1, one 4xB300 box, 2026-11-19 (vLLM-Omni 24e5472849, single_e2e medians, selected profile -> cand-a2a-permute): Qwen-Image-2.1 2 GPUs 1.435 -> 1.385 s (-3.5%); FastH3 V2 7.785 -> 7.338 (-5.7%); MiniMax-H3 4 GPUs 36.613 -> 34.779 (-5.0%); Wan2.2 97.710 -> 94.642 (-3.1%). sglang on the same box: 1.311 / 5.040 / 31.530 / 88.967 s. VALIDATION PENDING on this cell (2026-11-19, 4xB300)."
+                            "notes": "The selected B300 profile is TP2; with the copy-engine exchange Ulysses 2 may now be the faster layout. vLLM-Omni #9922 (2026-11-13): Ulysses all-to-all over the CUDA copy engine instead of NCCL, off by default (`--ulysses-a2a-permute`). Round 1, one 4xB300 box, 2026-11-19 (vLLM-Omni 24e5472849, single_e2e medians, selected profile -> cand-a2a-permute): Qwen-Image-2.1 2 GPUs 1.435 -> 1.385 s (-3.5%); FastH3 V2 7.785 -> 7.338 (-5.7%); MiniMax-H3 4 GPUs 36.613 -> 34.779 (-5.0%); Wan2.2 97.710 -> 94.642 (-3.1%). sglang on the same box: 1.311 / 5.040 / 31.530 / 88.967 s. VALIDATION PENDING on this cell (2026-11-19, 4xB300). Confirmation (2026-11-19): One round: TP2 102.267 -> Ulysses 2 with the copy-engine exchange 99.703 s (-2.5%); T2VA moved the same way (-3.2%). sglang on the same box: 94.778 s. Promoted as b300-2gpu-usp2-static-a2a."
                         }
                     },
                     "reason": "Empirically validated 2026-08-07, first on minimax-h3-5090-2gpu-v4 (2x RTX 5090) then on 2xB200: the default (compiled) profile segfaults identically on both GPU classes 1 step into denoising (see command_profiles.default.notes) -- a confirmed hardware-independent vLLM-Omni bug, despite the recipe's own claim that torch.compile is 'not enabled by default on consumer paths.' --enforce-eager avoids that segfault, but on RTX 5090 it fails differently at startup (a diffusion worker process dies before completing its init handshake, surfaced as EOFError) and never completes a request on that GPU class. On 2xB200 the identical --enforce-eager command works cleanly and completes a correct generation -- see command_profiles.b200-2gpu for the validated numbers and the sglang comparison on the same hardware. Net: vLLM-Omni H3 support is real but fragile below the B200 class tested here; RTX 5090 has no working profile for this case in either variant."
@@ -8525,6 +8611,16 @@
                         "VLLM_OMNI_VIDEO_SYNC_TIMEOUT": "1800"
                     },
                     "command_profiles": {
+                        "b300-usp4-vsa-a2a": {
+                            "num_gpus": 4,
+                            "serve_args": "--trust-remote-code --task-type fl2va --num-gpus 4 --usp 4 --ring 1 --vae-patch-parallel-size 4 --vae-parallel-mode tile --vae-use-tiling --diffusion-attention-backend FASTVIDEO_VSA --revision 71a17d72c58ce3eeec418144de2a5a2090cb4c04 --ulysses-a2a-permute",
+                            "extra_env": {},
+                            "description": "B300: default plus --ulysses-a2a-permute (copy-engine Ulysses exchange, vllm-omni #9922).",
+                            "notes": "Promoted from cand-a2a-permute. Measured on one 4xB300 box, 2026-11-19 (vLLM-Omni 24e5472849 on vllm 0.33.0, single_e2e medians, a fresh server per arm). Two rounds: 7.785 / 7.683 -> 7.338 / 7.305 s (-5.7% / -4.9%). sglang on the same box: 5.040 s. B300 only: the other Blackwell hosts keep their profile until they are measured.",
+                            "hardware": [
+                                "b300"
+                            ]
+                        },
                         "default": {
                             "description": "vLLM-Omni's FastH3 8-Step V2 recipe: USP 4, VAE tile patch parallel 4, FASTVIDEO_VSA (fastvideo-kernel, vllm-omni's `vsa` extra).",
                             "framework_ref": "vllm-omni main 56763cd6c383 + vllm==0.30.0 + fastvideo-kernel==0.3.5 installed --no-deps (VLLM_OMNI_VSA_KERNEL_SPEC)",
@@ -8582,7 +8678,7 @@
                             "serve_args": "--trust-remote-code --task-type fl2va --num-gpus 4 --usp 4 --ring 1 --vae-patch-parallel-size 4 --vae-parallel-mode tile --vae-use-tiling --diffusion-attention-backend FASTVIDEO_VSA --revision 71a17d72c58ce3eeec418144de2a5a2090cb4c04 --ulysses-a2a-permute",
                             "extra_env": {},
                             "description": "default plus --ulysses-a2a-permute (copy-engine Ulysses exchange). Never selected on its own: A/B arm.",
-                            "notes": "vLLM-Omni #9922 (2026-11-13): Ulysses all-to-all over the CUDA copy engine instead of NCCL, off by default (`--ulysses-a2a-permute`). Upstream reports Qwen-Image SP2 1536^2 10.717 -> 10.467 s (-2.34%) and 512^2 5.524 -> 5.506 s on L20X, against its own earlier LSA kernel, pixel hashes identical. Round 1, one 4xB300 box, 2026-11-19 (vLLM-Omni 24e5472849, single_e2e medians, selected profile -> cand-a2a-permute): Qwen-Image-2.1 2 GPUs 1.435 -> 1.385 s (-3.5%); FastH3 V2 7.785 -> 7.338 (-5.7%); MiniMax-H3 4 GPUs 36.613 -> 34.779 (-5.0%); Wan2.2 97.710 -> 94.642 (-3.1%). sglang on the same box: 1.311 / 5.040 / 31.530 / 88.967 s. Second round pending."
+                            "notes": "vLLM-Omni #9922 (2026-11-13): Ulysses all-to-all over the CUDA copy engine instead of NCCL, off by default (`--ulysses-a2a-permute`). Upstream reports Qwen-Image SP2 1536^2 10.717 -> 10.467 s (-2.34%) and 512^2 5.524 -> 5.506 s on L20X, against its own earlier LSA kernel, pixel hashes identical. Round 1, one 4xB300 box, 2026-11-19 (vLLM-Omni 24e5472849, single_e2e medians, selected profile -> cand-a2a-permute): Qwen-Image-2.1 2 GPUs 1.435 -> 1.385 s (-3.5%); FastH3 V2 7.785 -> 7.338 (-5.7%); MiniMax-H3 4 GPUs 36.613 -> 34.779 (-5.0%); Wan2.2 97.710 -> 94.642 (-3.1%). sglang on the same box: 1.311 / 5.040 / 31.530 / 88.967 s. Confirmation (2026-11-19): Two rounds: 7.785 / 7.683 -> 7.338 / 7.305 s (-5.7% / -4.9%). sglang on the same box: 5.040 s. Promoted as b300-usp4-vsa-a2a."
                         }
                     },
                     "framework_ref": "vllm-omni main 56763cd6c383 + vllm==0.30.0 + fastvideo-kernel==0.3.5 installed --no-deps (VLLM_OMNI_VSA_KERNEL_SPEC)"

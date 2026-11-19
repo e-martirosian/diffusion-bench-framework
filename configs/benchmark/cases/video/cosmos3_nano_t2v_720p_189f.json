@@ -181,6 +181,16 @@
       "serve_args": "--num-gpus 4 --cfg-parallel-size 2 --ulysses-degree 2 --model-class-name Cosmos3OmniDiffusersPipeline --stage-init-timeout 900 --init-timeout 1800 --no-guardrails --diffusion-attention-backend FLASH_ATTN --cache-backend none",
       "extra_env": {},
       "command_profiles": {
+        "b300-cudnn-vaepp-a2a": {
+          "num_gpus": 4,
+          "serve_args": "--num-gpus 4 --cfg-parallel-size 2 --ulysses-degree 2 --model-class-name Cosmos3OmniDiffusersPipeline --stage-init-timeout 900 --init-timeout 1800 --no-guardrails --diffusion-attention-backend CUDNN_ATTN --cache-backend none --vae-patch-parallel-size 4 --vae-parallel-mode spatial_shard_width --video-output-transport {\"enable_device_postprocess\":true} --no-diffusion-compile-dynamic --ulysses-a2a-permute",
+          "extra_env": {},
+          "description": "B300: blackwell-cudnn-vaepp plus --ulysses-a2a-permute (copy-engine Ulysses exchange, vllm-omni #9922).",
+          "notes": "Promoted from cand-a2a-permute. Measured on one 4xB300 box, 2026-11-19 (vLLM-Omni 24e5472849 on vllm 0.33.0, single_e2e medians, a fresh server per arm). One round: 26.037 -> 25.746 s (-1.1%); the image-to-video cell moved by the same amount. sglang on the same box: 22.750 s. B300 only: the other Blackwell hosts keep their profile until they are measured.",
+          "hardware": [
+            "b300"
+          ]
+        },
         "blackwell-cudnn-vaepp": {
           "hardware": [
             "b200",
@@ -365,7 +375,7 @@
           "serve_args": "--num-gpus 4 --cfg-parallel-size 2 --ulysses-degree 2 --model-class-name Cosmos3OmniDiffusersPipeline --stage-init-timeout 900 --init-timeout 1800 --no-guardrails --diffusion-attention-backend CUDNN_ATTN --cache-backend none --vae-patch-parallel-size 4 --vae-parallel-mode spatial_shard_width --video-output-transport {\"enable_device_postprocess\":true} --no-diffusion-compile-dynamic --ulysses-a2a-permute",
           "extra_env": {},
           "description": "blackwell-cudnn-vaepp plus --ulysses-a2a-permute (copy-engine Ulysses exchange). Never selected on its own: A/B arm.",
-          "notes": "vLLM-Omni #9922 (2026-11-13): Ulysses all-to-all over the CUDA copy engine instead of NCCL, off by default (`--ulysses-a2a-permute`). Round 1, one 4xB300 box, 2026-11-19 (vLLM-Omni 24e5472849, single_e2e medians, selected profile -> cand-a2a-permute): Qwen-Image-2.1 2 GPUs 1.435 -> 1.385 s (-3.5%); FastH3 V2 7.785 -> 7.338 (-5.7%); MiniMax-H3 4 GPUs 36.613 -> 34.779 (-5.0%); Wan2.2 97.710 -> 94.642 (-3.1%). sglang on the same box: 1.311 / 5.040 / 31.530 / 88.967 s. VALIDATION PENDING on this cell (2026-11-19, 4xB300)."
+          "notes": "vLLM-Omni #9922 (2026-11-13): Ulysses all-to-all over the CUDA copy engine instead of NCCL, off by default (`--ulysses-a2a-permute`). Round 1, one 4xB300 box, 2026-11-19 (vLLM-Omni 24e5472849, single_e2e medians, selected profile -> cand-a2a-permute): Qwen-Image-2.1 2 GPUs 1.435 -> 1.385 s (-3.5%); FastH3 V2 7.785 -> 7.338 (-5.7%); MiniMax-H3 4 GPUs 36.613 -> 34.779 (-5.0%); Wan2.2 97.710 -> 94.642 (-3.1%). sglang on the same box: 1.311 / 5.040 / 31.530 / 88.967 s. VALIDATION PENDING on this cell (2026-11-19, 4xB300). Confirmation (2026-11-19): One round: 26.037 -> 25.746 s (-1.1%); the image-to-video cell moved by the same amount. sglang on the same box: 22.750 s. Promoted as b300-cudnn-vaepp-a2a."
         }
       }
     },

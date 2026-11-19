@@ -79,6 +79,18 @@
         "DIFFUSION_ATTENTION_BACKEND": "CUDNN_ATTN"
       },
       "command_profiles": {
+        "b300-2gpu-distilled-usp2-a2a": {
+          "num_gpus": 2,
+          "serve_args": "--num-gpus 2 --usp 2 --model-class-name LTX2DistilledTwoStagePipeline --stage-init-timeout 900 --no-diffusion-compile-dynamic --stage-overrides {\"0\":{\"extras\":{\"ltx2_use_conv_vae\":true}}} --vae-patch-parallel-size 2 --vae-use-tiling --ulysses-a2a-permute",
+          "extra_env": {
+            "DIFFUSION_ATTENTION_BACKEND": "CUDNN_ATTN"
+          },
+          "description": "B300: blackwell-2gpu-distilled-usp2 plus --ulysses-a2a-permute (copy-engine Ulysses exchange, vllm-omni #9922).",
+          "notes": "Promoted from cand-a2a-permute. Measured on one 4xB300 box, 2026-11-19 (vLLM-Omni 24e5472849 on vllm 0.33.0, single_e2e medians, a fresh server per arm). One round: 5.797 -> 5.697 s (-1.7%). sglang on the same box: 5.172 s. B300 only: the other Blackwell hosts keep their profile until they are measured.",
+          "hardware": [
+            "b300"
+          ]
+        },
         "blackwell-2gpu-distilled-usp2": {
           "description": "Blackwell: the recipe's distilled two-stage low-latency path at two GPUs (Ulysses 2, VAE patch parallel 2 over tiles), conv VAE, cuDNN attention.",
           "hardware": [
@@ -160,7 +172,7 @@
             "DIFFUSION_ATTENTION_BACKEND": "CUDNN_ATTN"
           },
           "description": "blackwell-2gpu-distilled-usp2 plus --ulysses-a2a-permute (copy-engine Ulysses exchange). Never selected on its own: A/B arm.",
-          "notes": "vLLM-Omni #9922 (2026-11-13): Ulysses all-to-all over the CUDA copy engine instead of NCCL, off by default (`--ulysses-a2a-permute`). Round 1, one 4xB300 box, 2026-11-19 (vLLM-Omni 24e5472849, single_e2e medians, selected profile -> cand-a2a-permute): Qwen-Image-2.1 2 GPUs 1.435 -> 1.385 s (-3.5%); FastH3 V2 7.785 -> 7.338 (-5.7%); MiniMax-H3 4 GPUs 36.613 -> 34.779 (-5.0%); Wan2.2 97.710 -> 94.642 (-3.1%). sglang on the same box: 1.311 / 5.040 / 31.530 / 88.967 s. VALIDATION PENDING on this cell (2026-11-19, 4xB300)."
+          "notes": "vLLM-Omni #9922 (2026-11-13): Ulysses all-to-all over the CUDA copy engine instead of NCCL, off by default (`--ulysses-a2a-permute`). Round 1, one 4xB300 box, 2026-11-19 (vLLM-Omni 24e5472849, single_e2e medians, selected profile -> cand-a2a-permute): Qwen-Image-2.1 2 GPUs 1.435 -> 1.385 s (-3.5%); FastH3 V2 7.785 -> 7.338 (-5.7%); MiniMax-H3 4 GPUs 36.613 -> 34.779 (-5.0%); Wan2.2 97.710 -> 94.642 (-3.1%). sglang on the same box: 1.311 / 5.040 / 31.530 / 88.967 s. VALIDATION PENDING on this cell (2026-11-19, 4xB300). Confirmation (2026-11-19): One round: 5.797 -> 5.697 s (-1.7%). sglang on the same box: 5.172 s. Promoted as b300-2gpu-distilled-usp2-a2a."
         }
       }
     },
