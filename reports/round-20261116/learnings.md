@@ -131,7 +131,46 @@ sglang has no first-step penalty (H3 on four GPUs: 30.707 s against 49 x 0.625 s
 
 Fairness note for the FLUX.3 cell: vLLM-Omni decodes with a bf16 VAE where the checkpoint is fp32.
 
-## 6. Method notes worth keeping
+## 6. What sglang takes from the copy-engine exchange
+
+vLLM-Omni's gain made the question concrete: sglang has had an N-rank copy-engine all-to-all since October, used by the
+pipelined dense attention (MiniMax-H3, plain `USPAttention`) and off for the plain exchange
+(`SGLANG_DIFFUSION_IPC_A2A_MULTI`). Same box, the switch forced on, MP4 md5s identical between arms wherever a video is saved:
+
+| cell | layout | default | switch on |
+|---|---|---:|---:|
+| FastH3 V2 | Ulysses 4, sparse attention (selected) | 5.040 / 5.029 | 4.952 / 4.951 (-1.6%) |
+| MiniMax-H3 T2VA, 4 GPUs | Ulysses 4 (selected) | 31.520 | 31.504 |
+| Qwen-Image-2.1 | Ulysses 4 on 4 GPUs (candidate) | 1.756 / 1.823 | 1.909 / 1.889 (+8.7% / +3.6%) |
+| Cosmos3 T2V | Ulysses 4, CFG in sequence (candidate) | 23.352 | 23.326 |
+| Wan2.2 | Ulysses 4, CFG in sequence (candidate) | 90.563 | 90.458 |
+| Qwen-Image-2.1 | Ulysses 2 on 2 GPUs (candidate) | 1.734 | 1.738 |
+| LTX-2.5 | selected | 5.173 | 5.164 |
+| Cosmos3 T2V | CFG 2 x Ulysses 2 (selected) | 22.665 | 22.661 |
+| MiniMax-H3 T2VA, 2 GPUs | Ulysses 2 (selected) | 61.477 | 61.446 |
+| Wan2.2 | CFG 2 x Ulysses 2 (selected) | 88.546 | 88.581 |
+
+It pays where the plain exchange carries a large payload over more than two ranks (FastH3) and costs where the payload is
+small (Qwen-Image at Ulysses 4, about 20 MB per exchange); the pairs and the pipelined cells do not move. The exchange alone, by
+payload (`bench_a2a_sweep.py`, bf16, mean ms per exchange, one 4xB300 box):
+
+| MB sent per rank | 4 ranks: NCCL | copy engine | 2 ranks: NCCL | copy engine |
+|---:|---:|---:|---:|---:|
+| 1 | 0.032 | 0.089 | 0.030 | 0.042 |
+| 16 | 0.045 | 0.090 | 0.047 | 0.042 |
+| 64 | 0.126 | 0.130 | 0.124 | 0.077 |
+| 128 | 0.225 | 0.226 | 0.220 | 0.134 |
+| 256 | 0.423 | 0.359 | 0.414 | 0.243 |
+| 512 | 0.814 | 0.638 | 0.792 | 0.455 |
+| 1024 | 1.481 | 1.196 | 1.227 | 0.882 |
+
+So the default cannot simply flip: the transport is chosen per exchange by payload and group size (sglang change in progress).
+
+Also settled here: vLLM-Omni's FlashInfer attention on Blackwell is FlashInfer's `cute-dsl` kernel, which at FLUX.3's shape
+(24 heads x 128, bf16) is slower than cuDNN in isolation (L=4352: 0.146-0.149 against 0.138-0.143 ms; L=4608: 0.195 against
+0.153; `fa2` 0.62-0.67). Its end-to-end edge over its own cuDNN command is not a faster kernel, and sglang already runs cuDNN.
+
+## 7. Method notes worth keeping
 
 - Short cells (0.3-0.5 s) differ by 2-5% between boxes and between arms on a shared host; judge a regression only by old and
   new trees interleaved on one box, by the fastest sample.

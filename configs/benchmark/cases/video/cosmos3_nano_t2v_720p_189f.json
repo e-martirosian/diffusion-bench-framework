@@ -165,7 +165,7 @@
             "PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:False"
           },
           "description": "b300-noexp with CFG parallel x Ulysses 2 replaced by Ulysses 4 (the CFG branches run one after the other). Never selected on its own: A/B arm.",
-          "notes": "VALIDATION PENDING (2026-11-19, 4xB300). A/B arm for sglang's N-rank copy-engine exchange (SGLANG_DIFFUSION_IPC_A2A_MULTI): a four-rank Ulysses group, so the plain exchange runs over more than two ranks. Not a layout this cell would select."
+          "notes": "A/B arm for sglang's N-rank copy-engine exchange (SGLANG_DIFFUSION_IPC_A2A_MULTI): a four-rank Ulysses group, so the plain exchange runs over more than two ranks. Not a layout this cell would select. Measured 2026-11-19, one 4xB300 box: 23.352 s, with SGLANG_DIFFUSION_IPC_A2A_MULTI=1 23.326 s (MP4 md5s identical). The selected CFG 2 x Ulysses 2 reads 22.665 s."
         }
       }
     },

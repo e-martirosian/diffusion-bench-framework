@@ -78,7 +78,7 @@
             "PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:False"
           },
           "description": "Ulysses 4 on four GPUs. Never selected on its own: A/B arm.",
-          "notes": "VALIDATION PENDING (2026-11-19, 4xB300). A/B arm for sglang's N-rank copy-engine exchange (SGLANG_DIFFUSION_IPC_A2A_MULTI): a four-rank Ulysses group, so the plain exchange runs over more than two ranks. Not a layout this cell would select."
+          "notes": "A/B arm for sglang's N-rank copy-engine exchange (SGLANG_DIFFUSION_IPC_A2A_MULTI): a four-rank Ulysses group, so the plain exchange runs over more than two ranks. Not a layout this cell would select. Measured 2026-11-19, one 4xB300 box, two mirrored rounds: 1.756 / 1.823 s, with SGLANG_DIFFUSION_IPC_A2A_MULTI=1 1.909 / 1.889 s (the copy engine loses at this cell's ~20 MB exchanges). The selected TP2 on two GPUs reads 1.311 s."
         }
       }
     },
