@@ -370,6 +370,12 @@ Every cell within 1% except FLUX.3 (3.340 -> 3.255, -2.5%, different boxes). The
 | #17274 dynamic-VRAM KV caches, #17290 NTK RoPE scaling, #17450 VAE compute dtype node, #17487, #17741 | options and fixes | none |
 | the other 130-odd commits | partner API nodes, front end, new models (MiniMax-H3 image, PAN2, WeVisOne, RelayVSR, MOSS) | none |
 
+Window: 148 commits. 49 touch code a ComfyUI cell of ours runs (`comfy/` core, its text encoders, the node and execution
+layers). Besides the rows above they are new models (PAN2, MiniMax-H3 Image and its VAE and upscaler, UltraTex, WeVisOne,
+RelayVSR, MOSS-Image), Qwen 3.x text generation and video input (not the text-encoding path), AMD and DirectML, video save
+formats, feature flags, and correctness fixes to offload and dynamic VRAM (#17297, #16490-class buffer restore); read by
+title, none on a cell's hot path.
+
 ComfyUI is 1.4x to 5.8x behind sglang in every cell it runs.
 
 ### FastVideo (`fa2d1324` -> `c938a8aa`, 76 commits)
@@ -385,6 +391,10 @@ Its four cells moved by -0.5% to +1.1% (FastH3 9.196 -> 9.294). What the window 
 | #2022 text conditioning reused across seed sweeps, #2058 free the negative-prompt encoder | H3 | have (conditioning cache); none |
 | #2102-#2105, #2107, #2093 DGX Spark work | GB10 | none |
 | the rest | new models (PAN2, Qwen-Image-2.1, Pika H3 Flex, Open-H3-Regenerate-2K), serving, LoRA, CI, docs | none |
+| #2043 FA4 varlen keywords only where the installed kernel takes them, #2080 masked FA keeps its mask and scale, #2049 | crash and correctness fixes in its FA4 wrappers | none: sglang vendors its FA4 and passes `max_seqlen` (the omission #2043 warns over-sizes the launch) |
+
+Window: 76 commits, 46 of them on its runtime paths. Besides the rows above: the model catalog server, Ray health, MPS and NPU
+fixes, Wan compile and causal-mask fixes, OpenAI API fields, LoRA lifecycle fixes.
 
 ### sglang itself
 
