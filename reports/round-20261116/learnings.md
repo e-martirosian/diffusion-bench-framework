@@ -153,7 +153,11 @@ is: across the published rounds all five read faster (H3 -0.4% / -1.0% / -0.7%, 
 | Qwen-Image-2.1 T2I 2 GPUs | 1.357 | 1.311 | 1.311 |
 
 A regression from before 2026-11-02 could hide under those cells' net gains; for Cosmos3 T2V the same-box check above
-replaces this table's earlier row.
+replaces this table's earlier row. The one regression found does not reach these five, read from their server logs and the
+code they run: Qwen-Image-2.1 serves `--attention-backend fa` and FastH3 `video_sparse_attn_h3`, so neither enters the
+sub-tile routing; the H3 DiT and its text refiner use `dynamic_cudnn_sdpa`, but only for self-attention, packed with one
+`cu_seqlens` for queries and keys, so no call has one side under 128 tokens and the other above. The H3 cells run eager
+(no graph captured), where #47301's route is the one it measured as faster.
 
 The "Cosmos3 T2I got 5% slower" reading of the published tables was cross-box noise: five trees on one box agree within 1% by
 the fastest sample, and sglang #49162 (the suspect) measures 0.512 before and 0.511 after. No other cell's row read slower
