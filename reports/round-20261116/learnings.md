@@ -373,7 +373,7 @@ Every cell within 1% except FLUX.3 (3.340 -> 3.255, -2.5%, different boxes). The
 Window: 148 commits. 49 touch code a ComfyUI cell of ours runs (`comfy/` core, its text encoders, the node and execution
 layers). Besides the rows above they are new models (PAN2, MiniMax-H3 Image and its VAE and upscaler, UltraTex, WeVisOne,
 RelayVSR, MOSS-Image), Qwen 3.x text generation and video input (not the text-encoding path), AMD and DirectML, video save
-formats, feature flags, and correctness fixes to offload and dynamic VRAM (#17297, #16490-class buffer restore); read by
+formats, feature flags, and correctness fixes to offload and dynamic VRAM (#17297, #16491); read by
 title, none on a cell's hot path.
 
 ComfyUI is 1.4x to 5.8x behind sglang in every cell it runs.
