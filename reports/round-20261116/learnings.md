@@ -5,7 +5,7 @@ Follow-up to the published round `b300x4-20261116`. Everything here was measured
 single-request end-to-end medians in seconds. Pins: sglang `25c1c43942` (round pin) and main `9fbab1f6ed`; vLLM-Omni
 `24e5472849` on vllm 0.33.0; TRT-LLM 1.4.0rc3; LightX2V `395e2ac49f`. Raw results: `results/r1118-b300/` (untracked).
 
-Status: the FLUX.3 work and the sglang checks are complete; eleven sglang PRs are open or merged (sections 1, 2 and 6, one of them a draft). Section 5's confirmation rounds are in and the faster competitor commands are the B300-selected profiles; the published round predates them.
+Status: eleven sglang PRs, seven merged (sections 1, 2 and 6; #51562, #51611 and #51620 open, #51563 a draft). The regression check covers every current cell except five that read faster across the rounds (section 2). Section 5's confirmation rounds are in and the faster competitor commands are the B300-selected profiles; the published round predates them.
 
 ## 1. One cell where sglang was behind: FLUX.3 Klein Base (2 GPUs)
 
@@ -78,9 +78,10 @@ The cell should still not be published before the PRs land and it is measured ag
 Across the two published rounds (different boxes) sglang's own rows read slower in seven cells: Cosmos3 T2I +4.6%, LTX-2.5
 +2.7%, Qwen-Image-2.1 T2I +1.6%, Edit +1.5%, FLUX.3 +1.0%, Ideogram 4 +1.0%, Wan2.2 +0.4%. The previous round's rows did not
 all run one sglang commit (the per-row commit is `sglang_runtime.git_commit` in each raw result; `merged.json`'s `commit_sha`
-is the harness): `ca819c11cd` (2026-11-02) for most, `1ab008f5b0` (2026-10-29) for Cosmos3 T2I, FLUX.3 and Ideogram 4
-(Z-Image was checked against it as well), and for LTX-2.5 the head of sglang PR #47411 (`4e1a4bb5c3`, 2026-10-30). Each cell against the tree its own row ran, one 2xB300 box, mirrored arms,
-main `5e32149fd6`, medians:
+is the harness): `1ab008f5b0` (2026-10-29) for most, `ca819c11cd` (2026-11-02) for the two single-GPU Qwen-Image-2.1 rows,
+`82f7249ce6` (2026-10-21) for FastH3, and for LTX-2.5 the head of sglang PR #47411 (`4e1a4bb5c3`, 2026-10-30). Each cell
+against the tree its own row ran, one box per table, mirrored arms, medians. Image cells and LTX-2.5 on 2xB300 against main
+`5e32149fd6`:
 
 | cell | previous row's tree | that tree | main |
 |---|---|---:|---:|
@@ -92,9 +93,17 @@ main `5e32149fd6`, medians:
 | Z-Image Turbo | `1ab008f5b0` | 0.342 / 0.343 | 0.311 / 0.314 |
 | **LTX-2.5 two-stage** | `4e1a4bb5c3` | **5.091 / 5.118** | **5.188 / 5.172** |
 
-Six of the seven are cross-box noise. Wan2.2 (+0.4% of 97 s, four GPUs) was not put on one box. LTX-2.5 is a real regression
-of 1.3-1.6%, and an earlier version of this section missed it: its "old" tree was `ca819c11cd` for every cell, three days
-newer than the LTX-2.5 row's, with the regression in between.
+The 4-GPU video cells on 4xB300 against main `2bf882aefc`:
+
+| cell | previous row's tree | that tree | main |
+|---|---|---:|---:|
+| Cosmos3 T2V 189f | `1ab008f5b0` | 22.687 / 22.769 | 22.693 / 22.720 |
+| Cosmos3 I2V 189f | `1ab008f5b0` | 22.839 | 22.701 |
+| Wan2.2 T2V A14B | `1ab008f5b0` | 88.677 / 88.713 | 88.652 |
+
+Six of the seven slower-reading cells are cross-box noise. LTX-2.5 is a real regression of 1.3-1.6%, and an earlier version
+of this section missed it: its "old" tree was `ca819c11cd` for every cell, three days newer than the LTX-2.5 row's, with the
+regression in between.
 
 Bisected by the two denoise stages' own times (they repeat within 3 ms; the decode stage absorbs the asynchronous tail and
 moves by 30 ms, which sent an end-to-end bisect to the wrong commit):
@@ -132,13 +141,19 @@ Getting that reference found a second defect: on this server command (two GPUs, 
 attention passes the video's mask as a key mask, and the masked K/V-gather path read it as the query's. With
 sgl-project/sglang#51620 the call takes the Ulysses exchange instead and the requests complete (6.757 / 6.751 s).
 
-The cells whose previous rows ran `ca819c11cd`, on the first (4xB300) box, old / round pin / main:
+Not measured against their own row's tree on one box: MiniMax-H3 T2VA on 2 and 4 GPUs, H3 Ref2VA, Qwen-Image-2.1 on 2
+GPUs (rows at `1ab008f5b0`) and FastH3 V2 (`82f7249ce6`). The 4-GPU H3 arms ran on 2026-11-19, but the box's lifetime ran out
+before their results were pulled, and no 4xB300 or 4xB200 capacity outside the NDA pool was free for the next hour. What there
+is: across the published rounds all five read faster (H3 -0.4% / -1.0% / -0.7%, Qwen 2 GPUs -3.3%, FastH3 -3.0%), and against
+`ca819c11cd` (2026-11-02) on the first 4xB300 box, old / round pin / main:
 
-| cell | old | pin | main |
+| cell | `ca819c11cd` | pin | main |
 |---|---:|---:|---:|
-| Cosmos3 T2V 189f | 22.726 | 22.750 | 22.724 |
 | FastH3 V2 | 5.081 | 5.045 | 5.040 |
 | Qwen-Image-2.1 T2I 2 GPUs | 1.357 | 1.311 | 1.311 |
+
+A regression from before 2026-11-02 could hide under those cells' net gains; for Cosmos3 T2V the same-box check above
+replaces this table's earlier row.
 
 The "Cosmos3 T2I got 5% slower" reading of the published tables was cross-box noise: five trees on one box agree within 1% by
 the fastest sample, and sglang #49162 (the suspect) measures 0.512 before and 0.511 after. No other cell's row read slower
@@ -375,7 +390,7 @@ Its four cells moved by -0.5% to +1.1% (FastH3 9.196 -> 9.294). What the window 
 
 | lead | verdict |
 |---|---|
-| regression between the rounds | one: LTX-2.5 two-stage +1.3-1.6% since sglang #47301 (a replay's attention breaks moved to cuDNN's slower sub-tile kernel); PR sgl-project/sglang#51611, stages back to 1.020 / 1.540 s. The other six slower-reading cells are noise against the tree each row ran (section 2) |
+| regression between the rounds | one: LTX-2.5 two-stage +1.3-1.6% since sglang #47301 (a replay's attention breaks moved to cuDNN's slower sub-tile kernel); PR sgl-project/sglang#51611, stages back to 1.020 / 1.540 s. The other six slower-reading cells, and Cosmos3 T2V / I2V and Wan2.2, are flat against the tree each row ran. Not measured that way: the three H3 cells, Qwen-Image-2.1 on 2 GPUs and FastH3, all faster across the rounds (section 2) |
 | FLUX.3: static text stream dropped under CFG parallel, slow SwiGLU kernel, sharded VAE decode, negative prompt re-encoded, `--component-precisions.vae` ignored, host-bound text encode | PR sgl-project/sglang#51380, #51387, #51406, #51411, #51529, #51562 |
 | Wan2.2 decode "2.95 s" | a timer artifact: 0.761 s with synchronized timers |
 | Qwen-Image-2.1 VAE padding fold rejected on B300 | at most 5 ms |
