@@ -9,7 +9,9 @@
 # BISECT_THRESHOLD is a single_e2e median in seconds between the two endpoints' values: a probe at or below it counts
 # as good (set BISECT_FASTER_IS=bad when the newer side is the faster one). BISECT_STAGE=<stage name> compares that
 # stage's own time (results[0].metrics.diagnostic_stages_s) instead: when the step is tens of milliseconds, the
-# end-to-end time carries the decode stage's asynchronous tail (+-30 ms) and bisects to the wrong commit. Measure both endpoints on this box first
+# end-to-end time carries the decode stage's asynchronous tail (+-30 ms) and bisects to the wrong commit. Stage timers
+# are asynchronous too: before calling the found commit a regression, read its request time and the time outside the
+# stages against its parent (MiniMax-H3 on 4 GPUs: denoise +0.29 s, outside -0.45 s, request -0.16 s). Measure both endpoints on this box first
 # and leave the threshold well clear of the arm-to-arm noise. Commits are the first-parent ones that touch
 # BISECT_PATHS (default python/sglang) in good..bad. Needs $DBF_STATE_DIR/sgl-full (scripts/setup_sglang_trees.sh).
 # Prints `PROBE <sha> <latency> good|bad <subject>` per step and `FIRST <good|bad> <sha> ...` at the end.

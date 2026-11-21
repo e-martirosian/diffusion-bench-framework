@@ -209,6 +209,12 @@ the second (LTX-2.5 two-stage, +1.3-1.6%):
   for the denoise stages, while the decode stage (it absorbs the async tail)
   moves by 30 ms between arms. An end-to-end threshold picked the wrong commit;
   the stage times split the range cleanly (1.018-1.021 against 1.042-1.047 s).
+- **Then check the found commit end to end.** A stage-time step can be
+  attribution: the stage timers are asynchronous, so a change can move work
+  across a stage boundary. MiniMax-H3 on 4 GPUs bisected to sglang #47565 with
+  denoise +0.29 s, while the time outside the stages fell 0.45 s and the
+  request got 0.16 s faster. Print request, each stage and request minus the
+  stages for the found commit and its parent before calling it a regression.
 
 What the regression was is a pattern to look for again: an attention-routing
 change justified by an eager measurement ("FA4's host dispatch loses to cuDNN")

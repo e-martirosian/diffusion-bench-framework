@@ -5,7 +5,7 @@ Follow-up to the published round `b300x4-20261116`. Everything here was measured
 single-request end-to-end medians in seconds. Pins: sglang `25c1c43942` (round pin) and main `9fbab1f6ed`; vLLM-Omni
 `24e5472849` on vllm 0.33.0; TRT-LLM 1.4.0rc3; LightX2V `395e2ac49f`. Raw results: `results/r1118-b300/` (untracked).
 
-Status: eleven sglang PRs, seven merged (sections 1, 2 and 6; #51562, #51611 and #51620 open, #51563 a draft). The regression check covers every current cell except five that read faster across the rounds (section 2). Section 5's confirmation rounds are in and the faster competitor commands are the B300-selected profiles; the published round predates them.
+Status: eleven sglang PRs, ten merged (sections 1, 2 and 6; #51563 is a draft). Every current cell has been measured against the sglang tree its own previous-round row ran (section 2). Section 5's confirmation rounds are in and the faster competitor commands are the B300-selected profiles; the published round predates them.
 
 ## 1. One cell where sglang was behind: FLUX.3 Klein Base (2 GPUs)
 
@@ -141,23 +141,24 @@ Getting that reference found a second defect: on this server command (two GPUs, 
 attention passes the video's mask as a key mask, and the masked K/V-gather path read it as the query's. With
 sgl-project/sglang#51620 the call takes the Ulysses exchange instead and the requests complete (6.757 / 6.751 s).
 
-Not measured against their own row's tree on one box: MiniMax-H3 T2VA on 2 and 4 GPUs, H3 Ref2VA, Qwen-Image-2.1 on 2
-GPUs (rows at `1ab008f5b0`) and FastH3 V2 (`82f7249ce6`). The 4-GPU H3 arms ran on 2026-11-19, but the box's lifetime ran out
-before their results were pulled, and no 4xB300 or 4xB200 capacity outside the NDA pool was free for the next hour. What there
-is: across the published rounds all five read faster (H3 -0.4% / -1.0% / -0.7%, Qwen 2 GPUs -3.3%, FastH3 -3.0%), and against
-`ca819c11cd` (2026-11-02) on the first 4xB300 box, old / round pin / main:
+The other five cells on a third 4xB300 box (2026-11-21), each row's tree against the round's pin `25c1c43942`, mirrored;
+request, then the denoise stage's own time:
 
-| cell | `ca819c11cd` | pin | main |
-|---|---:|---:|---:|
-| FastH3 V2 | 5.081 | 5.045 | 5.040 |
-| Qwen-Image-2.1 T2I 2 GPUs | 1.357 | 1.311 | 1.311 |
+| cell | previous row's tree | that tree: request / denoise | pin: request / denoise |
+|---|---|---:|---:|
+| FastH3 V2 | `82f7249ce6` | 5.096 / 5.089; 4.044 / 4.040 | 5.067 / 5.059; 4.029 / 4.027 |
+| Qwen-Image-2.1 T2I 2 GPUs | `1ab008f5b0` | 1.384 / 1.386; 1.217 / 1.218 | 1.319 / 1.323; 1.155 / 1.156 |
+| MiniMax-H3 T2VA 2 GPUs | `1ab008f5b0` | 62.890 / 62.882; 60.572 / 60.588 | 62.480; 60.145 |
+| MiniMax-H3 Ref2VA | `1ab008f5b0` | 96.684 / 96.695; 92.482 / 92.542 | 96.072; 92.033 |
+| **MiniMax-H3 T2VA 4 GPUs** | `1ab008f5b0` | 31.969 / 32.025; **30.535 / 30.536** | 31.596 / 31.615; **30.623 / 30.632** |
 
-A regression from before 2026-11-02 could hide under those cells' net gains; for Cosmos3 T2V the same-box check above
-replaces this table's earlier row. The one regression found does not reach these five, read from their server logs and the
-code they run: Qwen-Image-2.1 serves `--attention-backend fa` and FastH3 `video_sparse_attn_h3`, so neither enters the
-sub-tile routing; the H3 DiT and its text refiner use `dynamic_cudnn_sdpa`, but only for self-attention, packed with one
-`cu_seqlens` for queries and keys, so no call has one side under 128 tokens and the other above. The H3 cells run eager
-(no graph captured), where #47301's route is the one it measured as faster.
+Every request is faster on the pin. One stage is not: H3 on 4 GPUs denoises 88-96 ms slower (+0.3%), repeatable within 9 ms,
+under a request that is 1.2% faster. Bisected by that stage's time, the step is sglang #47565 (`67bd749ada`, 2026-10-31,
+Ulysses attention pipelined over 7 head groups instead of 2 at this shape): denoise 30.547-30.560 -> 30.848 s, but the time
+outside the stages 0.630-0.661 -> 0.200 s and the request 31.976-32.007 -> 31.840 s, the -0.16 s that PR claimed at 1344x768.
+The asynchronous stage timer charged work to the denoise stage that it used to charge outside it. Not a regression.
+
+So: one real regression between the rounds (LTX-2.5), fixed; every other cell flat or faster against the tree its own row ran.
 
 The "Cosmos3 T2I got 5% slower" reading of the published tables was cross-box noise: five trees on one box agree within 1% by
 the fastest sample, and sglang #49162 (the suspect) measures 0.512 before and 0.511 after. No other cell's row read slower
@@ -404,7 +405,7 @@ fixes, Wan compile and causal-mask fixes, OpenAI API fields, LoRA lifecycle fixe
 
 | lead | verdict |
 |---|---|
-| regression between the rounds | one: LTX-2.5 two-stage +1.3-1.6% since sglang #47301 (a replay's attention breaks moved to cuDNN's slower sub-tile kernel); PR sgl-project/sglang#51611, stages back to 1.020 / 1.540 s. The other six slower-reading cells, and Cosmos3 T2V / I2V and Wan2.2, are flat against the tree each row ran. Not measured that way: the three H3 cells, Qwen-Image-2.1 on 2 GPUs and FastH3, all faster across the rounds (section 2) |
+| regression between the rounds | one: LTX-2.5 two-stage +1.3-1.6% since sglang #47301 (a replay's attention breaks moved to cuDNN's slower sub-tile kernel); PR sgl-project/sglang#51611, stages back to 1.020 / 1.540 s. Every other cell is flat or faster against the tree its own row ran; H3 on 4 GPUs' slower denoise stage is timer attribution from sglang #47565, whose request is 0.16 s faster (section 2) |
 | FLUX.3: static text stream dropped under CFG parallel, slow SwiGLU kernel, sharded VAE decode, negative prompt re-encoded, `--component-precisions.vae` ignored, host-bound text encode | PR sgl-project/sglang#51380, #51387, #51406, #51411, #51529, #51562 |
 | Wan2.2 decode "2.95 s" | a timer artifact: 0.761 s with synchronized timers |
 | Qwen-Image-2.1 VAE padding fold rejected on B300 | at most 5 ms |
