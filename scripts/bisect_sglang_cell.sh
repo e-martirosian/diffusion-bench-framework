@@ -7,7 +7,9 @@
 #     bash scripts/bisect_sglang_cell.sh
 #
 # BISECT_THRESHOLD is a single_e2e median in seconds between the two endpoints' values: a probe at or below it counts
-# as good (set BISECT_FASTER_IS=bad when the newer side is the faster one). Measure both endpoints on this box first
+# as good (set BISECT_FASTER_IS=bad when the newer side is the faster one). BISECT_STAGE=<stage name> compares that
+# stage's own time (results[0].metrics.diagnostic_stages_s) instead: when the step is tens of milliseconds, the
+# end-to-end time carries the decode stage's asynchronous tail (+-30 ms) and bisects to the wrong commit. Measure both endpoints on this box first
 # and leave the threshold well clear of the arm-to-arm noise. Commits are the first-parent ones that touch
 # BISECT_PATHS (default python/sglang) in good..bad. Needs $DBF_STATE_DIR/sgl-full (scripts/setup_sglang_trees.sh).
 # Prints `PROBE <sha> <latency> good|bad <subject>` per step and `FIRST <good|bad> <sha> ...` at the end.
@@ -27,7 +29,7 @@ LOGS="${DBF_LOG_DIR:-${STATE}/logs-ab}"
 
 commits=()  # no mapfile: macOS ships bash 3.2
 while IFS= read -r sha; do commits+=("${sha}"); done < <(git -C "${FULL}" rev-list --first-parent --reverse "${GOOD}..${BAD}" -- ${PATHS})
-echo "BISECT ${CASE} good=${GOOD:0:10} bad=${BAD:0:10} threshold=${THRESHOLD} candidates=${#commits[@]}"
+echo "BISECT ${CASE} good=${GOOD:0:10} bad=${BAD:0:10} threshold=${THRESHOLD} stage=${BISECT_STAGE:-e2e} candidates=${#commits[@]}"
 [[ ${#commits[@]} -gt 0 ]] || { echo "no commits in range"; exit 1; }
 [[ -d "${TREE}" ]] || git -C "${FULL}" -c http.https://github.com/.extraheader= worktree add -q --detach "${TREE}" "${GOOD}" || exit 1
 
@@ -38,11 +40,16 @@ probe() {  # <sha> -> prints the median latency, or "fail"
   echo "p-${sha:0:10} sglang ${CASE} single_e2e ${GPUS} - DBF_SGLANG_PYTHONPATH=${TREE}/python" > "${plan}"
   PLAN="${plan}" PLAN_TAG="bis${TAG}" bash "${REPO}/scripts/run_plan_ab.sh" > "${LOGS}/bis${TAG}_${sha:0:10}.log" 2>&1
   rm -f "${plan}"
-  python3 - "${LOGS}/run_bis${TAG}_p-${sha:0:10}_${CASE}.json" <<'PY'
+  python3 - "${LOGS}/run_bis${TAG}_p-${sha:0:10}_${CASE}.json" "${BISECT_STAGE:-}" <<'PY'
 import json, sys
 try:
     rows = [r for r in json.load(open(sys.argv[1]))["results"] if r["framework"] == "sglang" and r.get("latency_s")]
-    print(rows[0]["latency_s"] if rows else "fail")
+    if not rows:
+        print("fail")
+    elif sys.argv[2]:
+        print(rows[0]["metrics"]["diagnostic_stages_s"][sys.argv[2]])
+    else:
+        print(rows[0]["latency_s"])
 except (OSError, ValueError, KeyError):
     print("fail")
 PY
