@@ -41,6 +41,7 @@ HARDWARE_TOKENS = (
     "gb300", "gb200", "b300", "b200", "h200", "h100", "a100",
     "l40", "l4", "rtxpro6000", "rtx5090", "rtx4090", "rtx3090",
     "mi355x", "mi350x", "mi325x", "mi300x",
+    "a3", "a2",
 )
 # One left-to-right scan in which a token claims its span; the tuple lists each
 # token before any token it contains (`gb300` before `b300`, `l40` before `l4`).

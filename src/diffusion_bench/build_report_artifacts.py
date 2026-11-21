@@ -17,6 +17,8 @@ from diffusion_bench.generate_dashboard import (
 
 
 FRAMEWORK_ORDER = {"sglang": 0, "vllm-omni": 1, "lightx2v": 2, "trtllm-visual": 3, "comfyui": 4, "diffusers": 5}
+# GPU before NPU so a framework's two backends sit side by side, GPU as baseline.
+DEVICE_ORDER = {"gpu": 0, "npu": 1}
 
 
 def _load(path: Path) -> dict:
@@ -43,14 +45,21 @@ def _case_order(config_path: Path) -> dict[str, int]:
     return {case["id"]: idx for idx, case in enumerate(config.get("cases", []))}
 
 
-def _entry_sort_key(case_rank: dict[str, int], entry: dict) -> tuple[int, int, str, str]:
+def _entry_device(entry: dict, fallback: str | None) -> str:
+    return str(entry.get("device") or fallback or "gpu")
+
+
+def _entry_sort_key(case_rank: dict[str, int], entry: dict) -> tuple[int, int, int, str, str, str]:
     case_id = str(entry.get("case_id") or "")
     framework = str(entry.get("framework") or "")
+    device = str(entry.get("device") or "gpu")
     return (
         case_rank.get(case_id, 10_000),
         FRAMEWORK_ORDER.get(framework, 100),
+        DEVICE_ORDER.get(device, 100),
         case_id,
         framework,
+        device,
     )
 
 
@@ -66,12 +75,18 @@ def _merge_dict(dst: dict, src: dict | None) -> dict:
 
 
 def _merge_entries(runs: list[tuple[Path, dict]], key: str, case_rank: dict[str, int]) -> list[dict]:
-    by_key: dict[tuple[str, str], dict] = {}
+    by_key: dict[tuple[str, str, str], dict] = {}
     for path, data in runs:
+        run_device = str((data.get("hardware") or {}).get("device") or "gpu")
         for entry in data.get(key, []) or []:
-            entry_key = (str(entry.get("case_id") or ""), str(entry.get("framework") or ""))
+            entry_key = (
+                str(entry.get("case_id") or ""),
+                str(entry.get("framework") or ""),
+                _entry_device(entry, run_device),
+            )
             cloned = copy.deepcopy(entry)
             cloned.setdefault("source_result", path.as_posix())
+            cloned.setdefault("device", entry_key[2])
             by_key[entry_key] = cloned
     return sorted(by_key.values(), key=lambda entry: _entry_sort_key(case_rank, entry))
 
@@ -192,6 +207,9 @@ def merge_results(paths: list[Path], output_json: Path, config_path: Path, run_i
             modes.add("throughput")
 
     merged["benchmark_modes"] = sorted(modes)
+    merged["devices"] = sorted(
+        {str(e.get("device") or "gpu") for e in merged["results"] + merged["throughput_results"]}
+    )
     _flag_isolated_request_anomalies(merged)
     output_json.parent.mkdir(parents=True, exist_ok=True)
     output_json.write_text(json.dumps(merged, indent=2) + "\n", encoding="utf-8")

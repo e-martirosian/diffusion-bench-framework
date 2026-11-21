@@ -3992,12 +3992,25 @@
         const isTput = section.mode === "throughput";
         const labels = data.frameworks || {};
         const versions = section.framework_versions || {};
+        // Columns from the cells actually present, ordered by canonical framework
+        // rank then device: a multi-device merge keys cells `fw@device` (e.g.
+        // `sglang@npu`), so hardcoding BNX_ORDER would drop every NPU bar.
+        const present = new Set();
+        (section.rows || []).forEach((r) => Object.keys(r.cells || {}).forEach((k) => present.add(k)));
+        const fwOf = (k) => String(k).split("@")[0];
+        const rankOf = (k) => { const i = BNX_ORDER.indexOf(fwOf(k)); return i < 0 ? 99 : i; };
+        const cols = [...present].sort((a, b) => rankOf(a) - rankOf(b) || a.localeCompare(b));
+        const shortOf = (k) =>
+          BNX_SHORT[k] ||
+          (k.includes("@") ? `${BNX_SHORT[fwOf(k)] || labels[fwOf(k)] || fwOf(k)} ${k.split("@")[1].toUpperCase()}` : (labels[k] || k));
+        const colorOf = (k) => BNX_COLOR[fwOf(k)] || BNX_COLOR[k] || "var(--bar-neutral)";
+        const multi = !present.has("sglang");
         const unit = isTput ? "q/s" : "s";
         const fmt = (v) => isTput ? (v >= 1 ? v.toFixed(2) : v.toFixed(3)) : (v >= 100 ? v.toFixed(0) : v.toFixed(2));
         const rowsHtml = section.rows.map((row) => {
           const cells = row.cells || {};
           const sglGpus = (cells.sglang || {}).gpus;
-          const oks = BNX_ORDER.filter((k) => bnxVal(cells[k], isTput) != null);
+          const oks = cols.filter((k) => bnxVal(cells[k], isTput) != null);
           const rowMax = oks.length ? Math.max(...oks.map((k) => bnxVal(cells[k], isTput))) : 1;
           // winner: throughput -> highest QPS; latency -> lowest
           const best = oks.length ? oks.reduce((a, k) => {
@@ -4005,13 +4018,13 @@
                                   : bnxVal(cells[k], isTput) < bnxVal(cells[a], isTput);
             return better ? k : a;
           }, oks[0]) : null;
-          const bars = BNX_ORDER.map((k) => {
+          const bars = cols.map((k) => {
             const c = cells[k];
             if (!c) return "";
             const V = bnxVal(c, isTput);
             if (V == null) {
               const status = String(c.status || "n/a").replace(/_/g, " ");
-              return `<div class="bnx-brow"><span class="bnx-fw">${BNX_SHORT[k]}</span>`
+              return `<div class="bnx-brow"><span class="bnx-fw">${shortOf(k)}</span>`
                 + `<span class="bnx-na" title="${escapeHtml(c.reason || status)}"><span class="bnx-dash"></span>`
                 + `<span class="bnx-chip">${escapeHtml(status)}</span></span></div>`;
             }
@@ -4026,8 +4039,8 @@
             // a bar measured on a different GPU count than SGLang's says so
             const gpuTag = c.gpus && sglGpus && c.gpus !== sglGpus
               ? `<small class="bnx-gpus">${c.gpus} GPU${c.gpus > 1 ? "s" : ""}</small>` : "";
-            return `<div class="bnx-brow${win ? " win" : ""}"><span class="bnx-fw">${BNX_SHORT[k]}${gpuTag}</span>`
-              + `<span class="bnx-track"><i style="width:${w.toFixed(1)}%;background:${BNX_COLOR[k]};--grow:${grow.toFixed(2)}s"></i></span>`
+            return `<div class="bnx-brow${win ? " win" : ""}"><span class="bnx-fw">${shortOf(k)}${gpuTag}</span>`
+              + `<span class="bnx-track"><i style="width:${w.toFixed(1)}%;background:${colorOf(k)};--grow:${grow.toFixed(2)}s"></i></span>`
               + `<span class="bnx-val">${fmt(V)}<span class="u">${unit}</span></span></div>`;
           }).join("");
           const sample = row.sample || (row.cells && row.cells.sglang && row.cells.sglang.sample);
@@ -4038,26 +4051,27 @@
             + `</div>`
             + `<div class="bnx-bars">${bars}</div></div>`;
         }).join("");
-        const standRows = BNX_ORDER.map((k) => {
+        const standRows = cols.map((k) => {
           let wins = 0, served = 0, ratios = [];
           section.rows.forEach((row) => {
             const c = (row.cells || {})[k];
             const V = bnxVal(c, isTput);
             if (V == null) return;
             served++;
-            if (Number.isFinite(c.ratio_to_sglang) && c.ratio_to_sglang > 0) ratios.push(c.ratio_to_sglang);
-            const others = BNX_ORDER.map((x) => bnxVal((row.cells || {})[x], isTput)).filter((v) => v != null);
+            if (!multi && Number.isFinite(c.ratio_to_sglang) && c.ratio_to_sglang > 0) ratios.push(c.ratio_to_sglang);
+            const others = cols.map((x) => bnxVal((row.cells || {})[x], isTput)).filter((v) => v != null);
             if (V === (isTput ? Math.max(...others) : Math.min(...others))) wins++;
           });
           const avg = ratios.length ? ratios.reduce((a, b) => a + b, 0) / ratios.length : null;
-          const lead = k === "sglang";
+          const lead = !multi && k === "sglang";
           const m1 = lead
             ? { v: `${wins} / ${served}`, l: isTput ? "highest QPS of served" : "fastest of served" }
             : { v: avg ? `${avg.toFixed(2)}×` : "—", l: isTput ? "avg QPS vs SGLang" : "avg vs SGLang" };
           const ver = versions[k] || BNX_VER[k] || "";
+          const name = labels[k] || shortOf(k) || k;
           return `<div class="bnx-st${lead ? " lead" : ""}">`
-            + `<span class="bnx-sw" style="background:${BNX_COLOR[k]}"></span>`
-            + `<div><div class="bnx-stname">${escapeHtml(labels[k] || k)}</div>`
+            + `<span class="bnx-sw" style="background:${colorOf(k)}"></span>`
+            + `<div><div class="bnx-stname">${escapeHtml(name)}</div>`
             + `<div class="bnx-stsub">${ver ? escapeHtml(ver) + " · " : ""}served ${served}/${section.rows.length}</div></div>`
             + `<div class="bnx-m"><div class="bnx-mv">${m1.v}</div><div class="bnx-ml">${m1.l}</div></div>`
             + `<div class="bnx-m"><div class="bnx-mv">${wins}</div><div class="bnx-ml">${isTput ? "top QPS" : "fastest"}</div></div></div>`;

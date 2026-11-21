@@ -29,6 +29,7 @@ sys.path.insert(0, str(ROOT / "src"))
 from diffusion_bench.page_export import (  # noqa: E402
     FRAMEWORK_LABELS,
     build_sections,
+    framework_order,
     measured_frameworks,
     thinnest_lead,
 )
@@ -122,6 +123,8 @@ def _headline_summary(section: dict, args) -> dict:
     with the table beneath it.
     """
     rows = section.get("rows") or []
+    # Multi-device merges key cells `fw@device`, so there is no plain `sglang`.
+    multi = bool(rows) and "sglang" not in (rows[0].get("cells") or {})
     wins: dict[str, int] = {}
     comparable = 0
     for row in rows:
@@ -133,6 +136,17 @@ def _headline_summary(section: dict, args) -> dict:
         if winner:
             wins[winner] = wins.get(winner, 0) + 1
     sglang_wins = wins.get("sglang", 0)
+    if multi:
+        return {
+            "cases": len(rows),
+            "comparable_rows": comparable,
+            "wins": wins,
+            "note": (
+                f"Steady-state single-request latency on {args.gpu}, best lossless "
+                f"config per framework, GPU and NPU side by side. Throughput is "
+                f"reported separately."
+            ),
+        }
     return {
         "cases": len(rows),
         "comparable_rows": comparable,
@@ -323,7 +337,7 @@ def main() -> int:
         latest["frameworks"] = dict(FRAMEWORK_LABELS)
         # The page draws the latest table's columns from framework_order, so an
         # inherited list silently dropped a framework new to this run (ComfyUI).
-        latest["framework_order"] = list(FRAMEWORK_LABELS)
+        latest["framework_order"] = framework_order(merged)
         # Named in the page footer; inherited, it kept citing the July H100 report.
         report_dir = args.merged.resolve().parent
         latest["source_report"] = (

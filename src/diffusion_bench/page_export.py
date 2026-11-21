@@ -24,6 +24,52 @@ FRAMEWORK_LABELS = {
     "comfyui": "ComfyUI",
     "fastvideo": "FastVideo",
 }
+DEVICE_LABELS = {"gpu": "GPU", "npu": "NPU"}
+
+
+def _merged_devices(merged: dict) -> list[str]:
+    """Devices present in a merge, GPU before NPU so GPU is the baseline."""
+    rows = merged.get("results", []) + merged.get("throughput_results", [])
+    devices = {str(row.get("device") or "gpu") for row in rows}
+    return sorted(devices, key=lambda d: {"gpu": 0, "npu": 1}.get(d, 2))
+
+
+def render_columns(merged: dict) -> tuple[list[dict], bool]:
+    """Ordered framework columns for a merge.
+
+    Single-device merges keep flat framework keys (back-compat with committed
+    data and the page's ``FRAMEWORK_META``). A multi-device merge splits each
+    framework into per-device columns keyed ``fw@device`` (``sglang@gpu`` /
+    ``sglang@npu``) so NPU and GPU sit side by side per framework.
+    """
+    devices = _merged_devices(merged)
+    multi = len(devices) > 1
+    cols: list[dict] = []
+    for fw in FRAMEWORK_ORDER:
+        for dev in (devices if multi else [devices[0] if devices else "gpu"]):
+            key = f"{fw}@{dev}" if multi else fw
+            label = FRAMEWORK_LABELS.get(fw, fw)
+            if multi:
+                label = f"{label} ({DEVICE_LABELS.get(dev, dev.upper())})"
+            cols.append({"fw": fw, "dev": dev, "key": key, "label": label})
+    return cols, multi
+
+
+def framework_order(merged: dict) -> list:
+    """``framework_order`` for the page: strings single-device, labeled objects
+    multi-device (so the live renderer shows the ``(GPU)``/``(NPU)`` suffix)."""
+    cols, multi = render_columns(merged)
+    if not multi:
+        return [c["key"] for c in cols]
+    return [
+        {"key": c["key"], "label": c["label"], "bar": _bar_of(c["fw"]), "sgl": c["fw"] == "sglang"}
+        for c in cols
+    ]
+
+
+def _bar_of(fw: str) -> str:
+    return {"sglang": "sgl", "vllm-omni": "vllm", "lightx2v": "lightx2v",
+            "trtllm-visual": "trtllm", "comfyui": "comfyui", "fastvideo": "fastvideo"}.get(fw, "neutral")
 
 
 def reproduce_link(path: str, commit: str | None) -> dict:
@@ -65,12 +111,17 @@ def case_label(case: dict) -> str:
     return f"{label} · {gpus} GPU{'' if gpus == 1 else 's'}"
 
 
-def _rows_by_mode(merged: dict, mode: str) -> tuple[dict, dict]:
+def _column_key(row: dict, multi: bool) -> str:
+    fw = row.get("framework")
+    return fw if not multi else f"{fw}@{row.get('device') or 'gpu'}"
+
+
+def _rows_by_mode(merged: dict, mode: str, multi: bool) -> tuple[dict, dict]:
     key_field = "results" if mode == "single_e2e" else "throughput_results"
     ok_rows: dict[tuple[str, str], dict] = {}
     failed_rows: dict[tuple[str, str], str] = {}
     for row in merged.get(key_field, []):
-        key = (row["case_id"], row["framework"])
+        key = (row["case_id"], _column_key(row, multi))
         has_latency = isinstance(row.get("latency_s"), (int, float))
         has_qps = isinstance((row.get("metrics") or {}).get("throughput_rps"), (int, float))
         if row.get("error") or not (has_latency or has_qps):
@@ -80,13 +131,14 @@ def _rows_by_mode(merged: dict, mode: str) -> tuple[dict, dict]:
     return ok_rows, failed_rows
 
 
-def _classify_cell(case_id: str, fw: str, ok_rows, failed_rows, config_cases) -> dict | None:
+def _classify_cell(case_id: str, key: str, ok_rows, failed_rows, config_cases) -> dict | None:
     """Non-OK cell dict, or None when the cell has a real measurement."""
-    key = (case_id, fw)
-    if key in failed_rows:
-        return {"status": "failed", "reason": failed_rows[key]}
-    if key in ok_rows:
+    row_key = (case_id, key)
+    if row_key in failed_rows:
+        return {"status": "failed", "reason": failed_rows[row_key]}
+    if row_key in ok_rows:
         return None
+    fw = key.split("@", 1)[0]
     case_cfg = config_cases[case_id]
     statuses = case_cfg.get("report_framework_statuses") or {}
     reasons = case_cfg.get("report_framework_reasons") or {}
@@ -100,10 +152,54 @@ def _profile_of(row: dict) -> str:
     return (row.get("framework_metadata") or {}).get("profile") or "default"
 
 
+def _device_note(cells: dict, cols: list[dict], multi: bool, mode: str) -> str | None:
+    """Per-framework NPU-vs-GPU summary, only for a multi-device row."""
+    if not multi:
+        return None
+    metric = "latency_s" if mode == "single_e2e" else "qps"
+    parts = []
+    for fw in FRAMEWORK_ORDER:
+        gpu = next((c for c in cols if c["fw"] == fw and c["dev"] == "gpu"), None)
+        npu = next((c for c in cols if c["fw"] == fw and c["dev"] == "npu"), None)
+        if gpu is None or npu is None:
+            continue
+        g, n = cells.get(gpu["key"]), cells.get(npu["key"])
+        if not (g and n and g.get("status") == "ok" and n.get("status") == "ok"):
+            continue
+        gv, nv = g.get(metric), n.get(metric)
+        if not (isinstance(gv, (int, float)) and isinstance(nv, (int, float)) and gv):
+            continue
+        ratio = nv / gv
+        # latency: ratio > 1 means NPU slower; throughput: ratio > 1 means NPU faster
+        slower = ratio >= 1 if mode == "single_e2e" else ratio < 1
+        rel = f"{ratio if ratio >= 1 else 1 / ratio:.2f}× {'slower' if slower else 'faster'}"
+        parts.append(f"{FRAMEWORK_LABELS.get(fw, fw)} {rel} on NPU")
+    return " · ".join(parts) or None
+
+
+def _multi_winner(cells: dict, mode: str) -> tuple[str | None, str | None]:
+    """Fastest framework×device cell for a multi-device row, or (None, None)."""
+    metric = "latency_s" if mode == "single_e2e" else "qps"
+    ok = {k: c for k, c in cells.items() if c.get("status") == "ok" and isinstance(c.get(metric), (int, float))}
+    if len(ok) < 2:
+        return (None, None)
+    pick = min if mode == "single_e2e" else max
+    best_key = pick(ok, key=lambda k: ok[k][metric])
+    best = ok[best_key][metric]
+    rest = [ok[k][metric] for k in ok if k != best_key]
+    if not rest:
+        return (best_key, None)
+    second = pick(rest)
+    # spread between the fastest and runner-up, always >= 1
+    return (best_key, f"{max(best, second) / min(best, second):.2f}x")
+
+
 def build_single_e2e_rows(merged: dict, config_cases: dict, case_order) -> tuple[list, int, int]:
-    ok_rows, failed_rows = _rows_by_mode(merged, "single_e2e")
+    cols, multi = render_columns(merged)
+    ok_rows, failed_rows = _rows_by_mode(merged, "single_e2e", multi)
     # A case that ran only in throughput mode has no single-request row to show.
-    measured = {cid for (cid, _fw) in list(ok_rows) + list(failed_rows)}
+    measured = {cid for (cid, _key) in list(ok_rows) + list(failed_rows)}
+    key_label = {c["key"]: c["label"] for c in cols}
     rows, wins, comparable = [], 0, 0
     for case_id in case_order:
         if case_id not in measured:
@@ -111,30 +207,24 @@ def build_single_e2e_rows(merged: dict, config_cases: dict, case_order) -> tuple
         cfg = config_cases[case_id]
         cells: dict[str, Any] = {}
         competitor_lat: dict[str, float] = {}
-        for fw in FRAMEWORK_ORDER:
-            override = _classify_cell(case_id, fw, ok_rows, failed_rows, config_cases)
+        for col in cols:
+            key = col["key"]
+            override = _classify_cell(case_id, key, ok_rows, failed_rows, config_cases)
             if override is not None:
-                cells[fw] = override
+                cells[key] = override
                 continue
-            row = ok_rows[(case_id, fw)]
+            row = ok_rows[(case_id, key)]
             # `status: "ok"` is load-bearing, not decoration: the live renderer
             # (bnxVal in docs/index.html) treats any cell without it as missing,
             # so omitting it publishes a whole run as "n/a".
-            cells[fw] = {
+            cells[key] = {
                 "gpus": row.get("num_gpus", cfg["num_gpus"]),
                 "profile": _profile_of(row),
                 "status": "ok",
                 "latency_s": round(row["latency_s"], 3),
             }
-            if fw != "sglang":
-                competitor_lat[fw] = row["latency_s"]
-        sgl = ok_rows.get((case_id, "sglang"))
-        # latency ratios are competitor/sglang, so >1 means slower than sglang.
-        # (Throughput uses the opposite orientation -- see build_throughput_rows.)
-        if sgl:
-            for fw, cell in cells.items():
-                if cell.get("status") == "ok":
-                    cell["ratio_to_sglang"] = round(cell["latency_s"] / sgl["latency_s"], 3)
+            if not multi and col["fw"] != "sglang":
+                competitor_lat[col["fw"]] = row["latency_s"]
         entry = {
             "case_id": case_id,
             "case": case_label(cfg),
@@ -143,6 +233,25 @@ def build_single_e2e_rows(merged: dict, config_cases: dict, case_order) -> tuple
             "mode": "single_e2e",
             "cells": cells,
         }
+        if multi:
+            note = _device_note(cells, cols, True, "single_e2e")
+            if note:
+                entry["note"] = note
+            winner_key, speedup = _multi_winner(cells, "single_e2e")
+            entry["winner"] = key_label.get(winner_key, winner_key) if winner_key else "n/a"
+            if speedup:
+                entry["winner_speedup"] = speedup
+            if winner_key:
+                comparable += 1
+            rows.append(entry)
+            continue
+        sgl = ok_rows.get((case_id, "sglang"))
+        # latency ratios are competitor/sglang, so >1 means slower than sglang.
+        # (Throughput uses the opposite orientation -- see build_throughput_rows.)
+        if sgl:
+            for key, cell in cells.items():
+                if cell.get("status") == "ok":
+                    cell["ratio_to_sglang"] = round(cell["latency_s"] / sgl["latency_s"], 3)
         if sgl is None:
             entry["winner"] = (
                 min(competitor_lat, key=competitor_lat.get) if competitor_lat else "n/a"
@@ -170,8 +279,10 @@ def build_single_e2e_rows(merged: dict, config_cases: dict, case_order) -> tuple
 def build_throughput_rows(merged: dict, config_cases: dict, case_order) -> tuple[list, int, int]:
     """Throughput is opt-in per case, so only the cases that actually produced
     throughput rows appear — an absent case is out of scope, not a failure."""
-    ok_rows, failed_rows = _rows_by_mode(merged, "throughput")
-    measured = {cid for (cid, _fw) in list(ok_rows) + list(failed_rows)}
+    cols, multi = render_columns(merged)
+    ok_rows, failed_rows = _rows_by_mode(merged, "throughput", multi)
+    measured = {cid for (cid, _key) in list(ok_rows) + list(failed_rows)}
+    key_label = {c["key"]: c["label"] for c in cols}
     rows, wins, comparable = [], 0, 0
     for case_id in case_order:
         if case_id not in measured:
@@ -179,12 +290,13 @@ def build_throughput_rows(merged: dict, config_cases: dict, case_order) -> tuple
         cfg = config_cases[case_id]
         cells: dict[str, Any] = {}
         competitor_qps: dict[str, float] = {}
-        for fw in FRAMEWORK_ORDER:
-            override = _classify_cell(case_id, fw, ok_rows, failed_rows, config_cases)
+        for col in cols:
+            key = col["key"]
+            override = _classify_cell(case_id, key, ok_rows, failed_rows, config_cases)
             if override is not None:
-                cells[fw] = override
+                cells[key] = override
                 continue
-            row = ok_rows[(case_id, fw)]
+            row = ok_rows[(case_id, key)]
             metrics = row.get("metrics") or {}
             cell = {
                 "gpus": row.get("num_gpus", cfg["num_gpus"]),
@@ -201,17 +313,9 @@ def build_throughput_rows(merged: dict, config_cases: dict, case_order) -> tuple
             ):
                 if isinstance(metrics.get(src), (int, float)):
                     cell[dst] = round(metrics[src], 4)
-            cells[fw] = cell
-            if fw != "sglang" and isinstance(metrics.get("throughput_rps"), (int, float)):
-                competitor_qps[fw] = metrics["throughput_rps"]
-        sgl = ok_rows.get((case_id, "sglang"))
-        sgl_qps = ((sgl or {}).get("metrics") or {}).get("throughput_rps")
-        # throughput ratios are sglang/competitor, so <1 again means slower than
-        # sglang -- the same reading as the latency ratio despite the flip.
-        if isinstance(sgl_qps, (int, float)) and sgl_qps:
-            for cell in cells.values():
-                if cell.get("status") == "ok" and isinstance(cell.get("qps"), (int, float)):
-                    cell["ratio_to_sglang"] = round(cell["qps"] / sgl_qps, 3)
+            cells[key] = cell
+            if not multi and col["fw"] != "sglang" and isinstance(metrics.get("throughput_rps"), (int, float)):
+                competitor_qps[col["fw"]] = metrics["throughput_rps"]
         entry = {
             "case_id": case_id,
             "case": case_label(cfg),
@@ -220,6 +324,26 @@ def build_throughput_rows(merged: dict, config_cases: dict, case_order) -> tuple
             "mode": "throughput",
             "cells": cells,
         }
+        if multi:
+            note = _device_note(cells, cols, True, "throughput")
+            if note:
+                entry["note"] = note
+            winner_key, speedup = _multi_winner(cells, "throughput")
+            entry["winner"] = key_label.get(winner_key, winner_key) if winner_key else "n/a"
+            if speedup:
+                entry["winner_speedup"] = speedup
+            if winner_key:
+                comparable += 1
+            rows.append(entry)
+            continue
+        sgl = ok_rows.get((case_id, "sglang"))
+        sgl_qps = ((sgl or {}).get("metrics") or {}).get("throughput_rps")
+        # throughput ratios are sglang/competitor, so <1 again means slower than
+        # sglang -- the same reading as the latency ratio despite the flip.
+        if isinstance(sgl_qps, (int, float)) and sgl_qps:
+            for cell in cells.values():
+                if cell.get("status") == "ok" and isinstance(cell.get("qps"), (int, float)):
+                    cell["ratio_to_sglang"] = round(cell["qps"] / sgl_qps, 3)
         if not isinstance(sgl_qps, (int, float)):
             entry["winner"] = (
                 max(competitor_qps, key=competitor_qps.get) if competitor_qps else "n/a"
@@ -271,6 +395,11 @@ def thinnest_lead(
     Ranked on the page's own ratio_to_sglang. A comparable row sglang did not
     measure has no lead at all and ranks first; ties keep case order.
     """
+    rows = section.get("rows") or []
+    if rows and "sglang" not in (rows[0].get("cells") or {}):
+        # Multi-device merges split sglang into sglang@gpu / sglang@npu, so there
+        # is no single sglang reference column to rank a lead against.
+        return []
     mode = section["mode"]
     metric = MODE_METRIC[mode]
     tails = (
@@ -430,6 +559,7 @@ def build_sections(
     config_cases = {c["id"]: c for c in resolved_config["cases"]}
     case_order = [c["id"] for c in config["cases"] if c["id"] in attempted]
     versions = framework_versions(merged)
+    _, multi = render_columns(merged)
     sections = []
 
     single_rows, s_wins, s_cmp = build_single_e2e_rows(merged, config_cases, case_order)
@@ -443,8 +573,12 @@ def build_sections(
                 "gpu": gpu,
                 "title": run_label,
                 "subtitle": (
-                    f"Steady-state single-request latency, best lossless config per framework "
-                    f"(compile on, no caches, no quantization). SGLang-Diffusion fastest in "
+                    "Steady-state single-request latency, best lossless config per framework "
+                    "(compile on, no caches, no quantization). Each framework is shown on GPU "
+                    "and NPU side by side."
+                    if multi
+                    else "Steady-state single-request latency, best lossless config per framework "
+                    "(compile on, no caches, no quantization). SGLang-Diffusion fastest in "
                     f"{s_wins}/{s_cmp} comparable cases."
                 ),
                 "mode": "single_e2e",
@@ -471,6 +605,11 @@ def build_sections(
                 "title": f"{run_label} — throughput",
                 "subtitle": (
                     "High-pressure throughput on a representative pair (one popular image model, "
+                    "one video+audio case) — the matrix is deliberately not swept, see "
+                    "configs/benchmark/workloads.json. Each framework is shown on GPU and NPU "
+                    "side by side."
+                    if multi
+                    else "High-pressure throughput on a representative pair (one popular image model, "
                     "one video+audio case) — the matrix is deliberately not swept, see "
                     "configs/benchmark/workloads.json. "
                     f"SGLang-Diffusion highest QPS in {t_wins}/{t_cmp} comparable cases."

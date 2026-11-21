@@ -191,6 +191,7 @@ DEFAULT_PROFILE = "default"
 DEFAULT_SGLANG_PROFILE = DEFAULT_PROFILE
 HARDWARE_PROFILE_ENV = "SGLANG_BENCH_HARDWARE_PROFILE"
 SGLANG_EXTRA_SERVE_ARGS_ENV = "DIFFUSION_BENCH_SGLANG_EXTRA_SERVE_ARGS"
+DEVICE_ENV = "DIFFUSION_BENCH_DEVICE"
 HF_CACHE_DIR_ENV = "DIFFUSION_BENCH_HF_CACHE_DIR"
 SKIP_FRAMEWORK_INSTALL_ENV = "SGLANG_DIFFUSION_SKIP_FRAMEWORK_INSTALL"
 DISABLE_TORCH_COMPILE_ENV = "DIFFUSION_BENCH_DISABLE_TORCH_COMPILE"
@@ -322,6 +323,8 @@ def _build_sglang_cmd(case: dict, fw_cfg: dict, port: int) -> list[str]:
         "--backend",
         "sglang",
     ]
+    if _is_npu():
+        cmd += ["--device", "npu"]
     if num_gpus > 1:
         cmd += ["--num-gpus", str(num_gpus)]
     if fw_cfg.get("serve_args", "").strip():
@@ -345,6 +348,8 @@ def _build_vllm_cmd(case: dict, fw_cfg: dict, port: int) -> list[str]:
         "--host",
         DEFAULT_HOST,
     ]
+    if _is_npu():
+        cmd += ["--device", "npu"]
     if fw_cfg.get("use_omni_arg", True):
         cmd.append("--omni")
     if fw_cfg.get("serve_args", "").strip():
@@ -900,19 +905,23 @@ def _build_fastvideo_cmd(case: dict, fw_cfg: dict, port: int) -> list[str]:
 
 
 def _visible_gpus_env(env: dict[str, str], num_gpus: int) -> dict[str, str]:
-    """Expose only the first `num_gpus` of the GPUs this process can see.
+    """Expose only the first `num_gpus` of the accelerators this process can see.
 
-    Every framework gets exactly its cell's GPU count, so a command that asks for
-    more fails at startup instead of quietly using them: vLLM-Omni's
+    Every framework gets exactly its cell's accelerator count, so a command that
+    asks for more fails at startup instead of quietly using them: vLLM-Omni's
     `--usp 2 --tensor-parallel-size 2` ran a "2-GPU" cell on four GPUs of a 4-GPU
     pod (GB300, 2026-10-10). ComfyUI has no GPU-count flag at all.
+
+    Ascend NPUs read ``ASCEND_RT_VISIBLE_DEVICES``; everything else reads
+    ``CUDA_VISIBLE_DEVICES``.
     """
-    visible = env.get("CUDA_VISIBLE_DEVICES")
+    var = "ASCEND_RT_VISIBLE_DEVICES" if _is_npu() else "CUDA_VISIBLE_DEVICES"
+    visible = env.get(var)
     ids = [x for x in visible.split(",") if x.strip()] if visible else [str(i) for i in range(num_gpus)]
     if len(ids) < num_gpus:
-        raise RuntimeError(f"case needs {num_gpus} GPU(s) but only {ids} are visible")
+        raise RuntimeError(f"case needs {num_gpus} accelerator(s) but only {ids} are visible")
     env = dict(env)
-    env["CUDA_VISIBLE_DEVICES"] = ",".join(ids[:num_gpus])
+    env[var] = ",".join(ids[:num_gpus])
     return env
 
 
@@ -973,6 +982,8 @@ HARDWARE_PROFILE_TOKENS = (
     "mi350x",
     "mi325x",
     "mi300x",
+    "a3",
+    "a2",
 )
 # One left-to-right scan in which a token claims its span; the tuple lists each
 # token before any token it contains. `gb300` contains `b300`, so a substring test
@@ -1001,6 +1012,29 @@ def _hardware_profile_candidates(hardware_metadata: dict | None) -> list[str]:
     ]
     found = _hardware_tokens(" ".join(str(value) for value in values if value))
     return [token for token in HARDWARE_PROFILE_TOKENS if token in found]
+
+
+def _device_class(hardware_metadata: dict | None) -> str:
+    """The binary axis the cross-hardware comparison splits each framework on.
+
+    ``"npu"`` on Ascend NPUs (A2/A3), ``"gpu"`` otherwise. A single run is
+    one device; merging an NPU run with a GPU run yields rows on both, which the
+    report renders as per-framework NPU/GPU columns.
+    """
+    metadata = hardware_metadata or {}
+    values = [
+        metadata.get("hardware_profile_override"),
+        metadata.get("gpu_config"),
+        metadata.get("runner_labels"),
+        *(metadata.get("gpus") or []),
+    ]
+    text = " ".join(str(value) for value in values if value)
+    return "npu" if _hardware_tokens(text) & {"a2", "a3"} else "gpu"
+
+
+def _is_npu() -> bool:
+    """True when the current run resolved to an Ascend NPU (see ``_device_class``)."""
+    return os.environ.get(DEVICE_ENV) == "npu"
 
 
 def _profile_hardware_values(profile_cfg: dict) -> list[str]:
@@ -2499,6 +2533,10 @@ def _collect_hardware_metadata() -> dict:
     except (FileNotFoundError, subprocess.TimeoutExpired):
         pass
     if "gpus" not in metadata:
+        npu_gpus = _npu_smi_gpus()
+        if npu_gpus:
+            metadata["gpus"] = npu_gpus
+    if "gpus" not in metadata:
         rocm_gpus = _rocm_smi_gpus()
         if rocm_gpus:
             metadata["gpus"] = rocm_gpus
@@ -2527,6 +2565,36 @@ def _rocm_smi_gpus() -> list[str]:
         total = vram.get(device, "")
         mib = f"{int(total) // (1024 * 1024)} MiB" if total.isdigit() else "unknown MiB"
         gpus.append(f"{name}, {mib}, {driver}")
+    return gpus
+
+
+def _npu_smi_gpus() -> list[str]:
+    """Ascend NPUs as nvidia-smi-shaped lines: '<name>, <MiB> MiB, <driver>'.
+
+    `npu-smi info` prints a table whose chip column carries the model name
+    (e.g. ``A2``/``A3``, aka 910B/910C) and whose memory column is ``<used> / <total>`` in
+    MiB. Parsing is tolerant: the chip name is what profile selection needs, so
+    a line with the chip but no readable total still records ``unknown MiB``.
+    """
+    try:
+        ret = subprocess.run(
+            ["npu-smi", "info"], capture_output=True, text=True, timeout=15
+        )
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        return []
+    if ret.returncode != 0:
+        return []
+    gpus = []
+    codename = {"910B": "A2", "910C": "A3", "A2": "A2", "A3": "A3"}
+    for line in ret.stdout.splitlines():
+        chip = next((t for t in ("910B", "910C", "A2", "A3") if t in line.upper()), None)
+        if chip is None:
+            continue
+        mib = "unknown MiB"
+        match = re.search(r"(\d+)\s*/\s*(\d+)\s*(?:MiB|MB)?", line, re.IGNORECASE)
+        if match:
+            mib = f"{match.group(2)} MiB"
+        gpus.append(f"Ascend {codename[chip]}, {mib}, npu-smi")
     return gpus
 
 
@@ -3597,6 +3665,10 @@ def _write_run_artifact(
     frameworks were skipped.
     """
     data = dict(meta)
+    device = meta.get("device")
+    if device:
+        for row in results + throughput_results:
+            row.setdefault("device", device)
     data["results"] = results
     data["throughput_results"] = throughput_results
     data["partial"] = partial
@@ -3678,6 +3750,8 @@ def run_comparison(
     hardware_metadata = _collect_hardware_metadata()
     if hardware_profile:
         hardware_metadata["hardware_profile_override"] = hardware_profile
+    hardware_metadata["device"] = _device_class(hardware_metadata)
+    os.environ[DEVICE_ENV] = hardware_metadata["device"]
 
     # Resolve `status_by_hardware` once, here, against this box: a framework
     # classified unsupported/failed for THIS hardware leaves `case["frameworks"]`
@@ -3736,6 +3810,7 @@ def run_comparison(
         "commit_sha": commit_sha,
         "run_id": run_id,
         "hardware": hardware_metadata,
+        "device": hardware_metadata.get("device", "gpu"),
         "sglang_runtime": _collect_sglang_runtime_metadata(),
         "framework_runtime": _collect_framework_runtime_metadata(),
         "benchmark_env": benchmark_env,
