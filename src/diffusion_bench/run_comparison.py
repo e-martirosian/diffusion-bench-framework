@@ -641,8 +641,69 @@ def _resolve_hf_uris(value):
     return value
 
 
+_MODEL_PATHS_ENV = "DBF_MODEL_PATHS"
+_model_paths_table: dict | None = None
+
+
+def _load_model_paths() -> dict:
+    """Load the $DBF_MODEL_PATHS JSON map of model id -> local path (cached)."""
+    global _model_paths_table
+    if _model_paths_table is not None:
+        return _model_paths_table
+    table: dict = {}
+    path = os.environ.get(_MODEL_PATHS_ENV, "").strip()
+    if path and os.path.isfile(path):
+        try:
+            with open(path, "r", encoding="utf-8") as fh:
+                data = json.load(fh)
+            if isinstance(data, dict):
+                table = {str(k): str(v) for k, v in data.items()}
+        except Exception as exc:
+            print(f"  WARNING: could not load {_MODEL_PATHS_ENV}={path}: {exc}")
+    _model_paths_table = table
+    return table
+
+
+def _local_model_override(model_ref: str) -> str | None:
+    """Local path for `model_ref` from $DBF_MODEL_PATHS, else None.
+
+    Keys may be a bare repo id ("org/repo") or an hf:// URI; the lookup strips an
+    hf:// prefix and, for URIs with a subpath, also tries the bare "org/repo".
+    """
+    table = _load_model_paths()
+    if not table:
+        return None
+    ref = model_ref[len(HF_URI_PREFIX):] if model_ref.startswith(HF_URI_PREFIX) else model_ref
+    if ref in table:
+        return table[ref]
+    if "/" in ref:
+        org_repo = "/".join(ref.split("/")[:2])
+        if org_repo in table:
+            return table[org_repo]
+    return None
+
+
 def _server_model_path(case: dict, fw_cfg: dict) -> str:
-    return _resolve_hf_uris(os.path.expandvars(str(fw_cfg.get("model_path") or case["model"])))
+    raw = os.path.expandvars(str(fw_cfg.get("model_path") or case["model"]))
+    override = _local_model_override(raw)
+    return override if override is not None else _resolve_hf_uris(raw)
+
+
+def _npu_missing_model_reason(case: dict, fw_cfg: dict) -> str | None:
+    """Skip reason when an NPU run has no local path for this model, else None.
+
+    NPU boxes have no HuggingFace access, so every model must be in
+    $DBF_MODEL_PATHS; a miss is skipped with a message instead of downloading.
+    """
+    if not _is_npu():
+        return None
+    raw = os.path.expandvars(str(fw_cfg.get("model_path") or case["model"]))
+    if _local_model_override(raw) is not None:
+        return None
+    return (
+        f"model '{raw}' has no entry in ${_MODEL_PATHS_ENV} "
+        f"(NPU runs resolve models from {_MODEL_PATHS_ENV} only)"
+    )
 
 
 def _build_generic_http_cmd(case: dict, fw_cfg: dict, port: int) -> list[str]:
@@ -3852,6 +3913,21 @@ def run_comparison(
             print(f"\n{'='*60}")
             print(f"Case: {case['id']} | Model: {case['model']} | Framework: {fw_name}")
             print(f"{'='*60}")
+
+            missing = _npu_missing_model_reason(case, fw_cfg)
+            if missing:
+                print(f"  SKIP: {missing}")
+                case_for_fw = _case_for_framework(case, fw_cfg)
+                case_modes = _modes_for_case(case, modes)
+                if MODE_SINGLE_E2E in case_modes:
+                    result = _base_result(case_for_fw, fw_name, MODE_SINGLE_E2E)
+                    result["error"] = missing
+                    results.append(result)
+                if MODE_THROUGHPUT in case_modes:
+                    result = _base_result(case_for_fw, fw_name, MODE_THROUGHPUT)
+                    result["error"] = missing
+                    throughput_results.append(result)
+                continue
 
             if dry_run:
                 case_for_fw = _case_for_framework(case, fw_cfg)

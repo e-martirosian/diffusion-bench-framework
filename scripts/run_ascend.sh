@@ -24,11 +24,15 @@
 set -u
 
 export DBF_STATE_DIR="${DBF_STATE_DIR:-/workspace/npu}"
-export DBF_REPO_DIR="${DBF_REPO_DIR:?set DBF_REPO_DIR to this repo's checkout on the NPU box}"
+export DBF_REPO_DIR="${DBF_REPO_DIR:?set DBF_REPO_DIR to this repo\'s checkout on the NPU box}"
 export DBF_LOG_DIR="${DBF_LOG_DIR:-${DBF_STATE_DIR}/logs}"
 export DBF_VENV_ROOT="${DBF_VENV_ROOT:-${DBF_STATE_DIR}/fw-venvs}"
 export DBF_HF_HOME="${DBF_HF_HOME:-${DBF_STATE_DIR}/hf}"
 export HUGGINGFACE_HUB_CACHE="${HUGGINGFACE_HUB_CACHE:-${DBF_HF_HOME}}"
+# No HF access? Point DBF_MODEL_PATHS at a JSON file mapping repo id -> local
+# model dir (see configs/model_paths.example.json); the runner uses it verbatim
+# and skips HuggingFace entirely.
+export DBF_MODEL_PATHS="${DBF_MODEL_PATHS:-${DBF_STATE_DIR}/model_paths.json}"
 export DBF_FRAMEWORKS="${DBF_FRAMEWORKS:-sglang vllm-omni}"
 export DBF_HARDWARE_PROFILE="${DBF_HARDWARE_PROFILE:-a2}"
 export DBF_CASE_TIMEOUT="${DBF_CASE_TIMEOUT:-5400}"

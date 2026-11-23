@@ -24,3 +24,6 @@ tmp/
 
 # local run scratch (canonical results live under reports/<run>/raw/)
 runs/
+
+# machine-specific model paths (template is configs/model_paths.example.json)
+model_paths.json
