@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# rev: 2026-11-24-case-groups (verify on the box: `head -2 scripts/run_ascend.sh`
+# shows this line; `grep -c 'CASE_GROUPS="qwen' scripts/run_ascend.sh` prints 1;
+# dry-run: `DBF_DRY_RUN_GROUPS=1 bash scripts/run_ascend.sh` must print
+# "54 cases in 47 groups" and exit without launching anything)
 # Ascend A2/A3 (910B/910C) NPU cross-framework run (scaffold). Same harness and
 # report shape as the NVIDIA rounds, but on Huawei Ascend NPUs. One script serves
 # both NPUs — pick the chip with DBF_HARDWARE_PROFILE.
@@ -62,7 +66,7 @@ TAG="${TAG:-ascend${DBF_HARDWARE_PROFILE}}"
 # the box's python3 in both heredoc and file forms without success, so the
 # verified output is baked in. Regenerate after changing the case set:
 #   python3 scripts/group_cases.py <case ids in run order>
-GROUPS="qwen_image_21_t2i_1024 qwen_image_21_t2i_1024_2gpu qwen_image_21_edit_1024
+CASE_GROUPS="qwen_image_21_t2i_1024 qwen_image_21_t2i_1024_2gpu qwen_image_21_edit_1024
 zimage_turbo_t2i_1024
 ideogram4_t2i_1024_2gpu_tp
 wan22_t2v_a14b_720p
@@ -121,11 +125,18 @@ echo "=== repo=$DBF_REPO_DIR frameworks=[$DBF_FRAMEWORKS] hw=$DBF_HARDWARE_PROFI
 # case id and the groups must cover CASES exactly. Without the validation a
 # degraded grouping (python3 step failed, CASES never reached the script) once
 # ran a nonexistent "case 0" and completed rc=0 in two seconds.
-if [ -z "$GROUPS" ]; then
-    echo "ERROR: GROUPS is empty -- nothing to run" >&2
+if [ -z "$CASE_GROUPS" ]; then
+    echo "ERROR: CASE_GROUPS is empty -- nothing to run" >&2
     exit 1
 fi
-echo "=== $(echo $GROUPS | wc -w) cases in $(printf '%s\n' "$GROUPS" | grep -c .) groups ==="
+echo "=== $(echo $CASE_GROUPS | wc -w) cases in $(printf '%s\n' "$CASE_GROUPS" | grep -c .) groups ==="
+# Verify a freshly deployed copy without launching anything:
+#   DBF_DRY_RUN_GROUPS=1 bash scripts/run_ascend.sh
+if [ "${DBF_DRY_RUN_GROUPS:-0}" = "1" ]; then
+    echo "first groups:"
+    printf '%s\n' "$CASE_GROUPS" | head -3
+    exit 0
+fi
 port="${BASE_PORT:-45001}"
 gi=0
 while IFS= read -r group; do
@@ -137,5 +148,5 @@ while IFS= read -r group; do
         "$gtag" "$GPUS" "$port" "single_e2e throughput" $group
     grep -h "^RESULT" "${DBF_LOG_DIR}/run_${gtag}.log" 2>/dev/null
     port=$((port + 4))
-done <<< "$GROUPS"
+done <<< "$CASE_GROUPS"
 echo "=== Ascend NPU cross-framework run DONE $(date -Is) ==="
