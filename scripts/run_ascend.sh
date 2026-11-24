@@ -123,7 +123,9 @@ echo "=== repo=$DBF_REPO_DIR frameworks=[$DBF_FRAMEWORKS] hw=$DBF_HARDWARE_PROFI
 # case id and the groups must cover CASES exactly. Without the validation a
 # degraded grouping (python3 step failed, CASES never reached the script) once
 # ran a nonexistent "case 0" and completed rc=0 in two seconds.
-GROUPS="$(DBF_REPO_DIR="$DBF_REPO_DIR" DBF_CASES="$CASES" python3 - <<'PY'
+PY_ERR="${DBF_STATE_DIR}/group_stderr.log"
+mkdir -p "$DBF_STATE_DIR"
+GROUPS="$(DBF_REPO_DIR="$DBF_REPO_DIR" DBF_CASES="$CASES" python3 - 2>"$PY_ERR" <<'PY'
 import json, os
 cfg = json.load(open(os.path.join(os.environ["DBF_REPO_DIR"], "configs", "comparison_configs.json"), encoding="utf-8"))
 model_of = {c["id"]: c.get("model") for c in cfg["cases"]}
@@ -141,7 +143,12 @@ if cur:
     groups.append(" ".join(cur))
 print("\n".join(groups))
 PY
-)" || { echo "ERROR: case grouping failed (python3 step) -- aborting instead of running nothing" >&2; exit 1; }
+)" || {
+    echo "ERROR: case grouping failed (python3 step, exit $?) -- python said:" >&2
+    cat "$PY_ERR" >&2
+    exit 1
+}
+rm -f "$PY_ERR"
 if [ -z "$GROUPS" ] || [ "$(echo $GROUPS | wc -w)" -ne "$(echo $CASES | wc -w)" ]; then
     echo "ERROR: groups cover $(echo $GROUPS | wc -w) case(s) but CASES lists $(echo $CASES | wc -w) -- aborting" >&2
     exit 1
