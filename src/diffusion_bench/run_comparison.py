@@ -3645,6 +3645,30 @@ def run_case_framework(
     return single_result, throughput_result
 
 
+def _preserve_crash_logs(case: dict, framework: str, log_dir: Path, output: str) -> None:
+    """Copy a failed cell's logs next to its result JSON.
+
+    The server's stdout lives in comparison-logs/ inside the checkout while the
+    result JSON lands in the runner's log dir (often a different mount or box
+    the JSONs are pulled from alone). Without the copy, every crash is a
+    one-line error string with no evidence behind it. Called only when the
+    cell errored; run_case_framework always opened the server log, so a
+    missing file means the failure predates the server and there is nothing
+    to preserve."""
+    sources = [
+        log_dir / f"{case['id']}_{framework}.log",
+        log_dir / f"bench_serving_{case['id']}_{framework}.log",
+    ]
+    present = [src for src in sources if src.exists()]
+    if not present:
+        return
+    crash_dir = Path(f"{output}.crash")
+    crash_dir.mkdir(parents=True, exist_ok=True)
+    for src in present:
+        shutil.copy2(src, crash_dir / src.name)
+    print(f"  crash logs preserved in {crash_dir}/")
+
+
 def _install_framework(fw_name: str, dry_run: bool = False) -> bool:
     """Install a comparison framework via the install script. Returns True on success."""
     if fw_name not in INSTALLABLE_FRAMEWORKS:
@@ -3999,6 +4023,13 @@ def run_comparison(
                 results.append(single_result)
             if throughput_result is not None:
                 throughput_results.append(throughput_result)
+            if (single_result and single_result.get("error")) or (
+                throughput_result and throughput_result.get("error")
+            ):
+                # Same reasoning as the checkpoint below: whatever the next
+                # cases do to this process, the evidence for this failure
+                # should already be safe next to its result JSON.
+                _preserve_crash_logs(case, fw_name, log_dir, output)
 
             # Checkpoint after every framework. The artifact used to be written
             # only at the very end, so when the per-case `timeout` fired on

@@ -153,6 +153,21 @@ for case_id in "${CASES[@]}"; do
         > "${LOG_DIR}/run_${TAG}_${case_id}.runlog" 2>&1
     rc=$?
     kill_own_gpus
+    # A harness that died before writing its JSON (CASE_TIMEOUT kill, hard crash)
+    # leaves the server logs stranded in the checkout's comparison-logs/, far from
+    # every other artifact of this run. Bundle them here so the log dir stays the
+    # source of truth. A rc!=0 WITH a JSON is an ordinary cell error -- the
+    # harness already preserved those logs next to the JSON (<output>.crash/).
+    if [ "$rc" -ne 0 ] && [ ! -s "${LOG_DIR}/run_${TAG}_${case_id}.json" ]; then
+        crash_dir="${LOG_DIR}/crash_${TAG}_${case_id}"
+        if [ -d "$REPO_DIR/comparison-logs" ]; then
+            mkdir -p "$crash_dir"
+            cp -a "${REPO_DIR}/comparison-logs/${case_id}"_* \
+                "${REPO_DIR}/comparison-logs/bench_serving_${case_id}"_* \
+                "$crash_dir"/ 2>/dev/null
+        fi
+        echo "  crash logs bundled in $crash_dir (harness died before writing its result JSON)"
+    fi
     # The harness's own SUMMARY table, not a grep for 'req/s': that also matches a server's
     # warmup progress bar ("0/1 [00:00<?, ?req/s]"), so a finished case read as a log fragment.
     summary=$(sed -n '/^SUMMARY/,$p' "${LOG_DIR}/run_${TAG}_${case_id}.runlog" 2>/dev/null \
