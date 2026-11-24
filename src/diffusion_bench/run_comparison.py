@@ -716,6 +716,41 @@ def _model_scope_org_name(model_path: str) -> str:
     return "/".join(parts[-2:])
 
 
+def _remove_model_dir(model_path: str) -> None:
+    """Remove a downloaded model dir, symlink-aware and loud about failures.
+
+    shutil.rmtree refuses a symlink-to-dir, and with ignore_errors=True the
+    refusal is SILENT -- a linked model_path would survive every cleanup and
+    then read as a pre-existing cache on the next run. A link is therefore
+    unlinked itself; the real files at its target belong to the store they
+    live in (modelscope's or the user's) and are never deleted blind. A real
+    dir is rmtree'd. Whatever survives either path is reported, never assumed
+    gone.
+    """
+    path = Path(model_path)
+    if path.is_symlink():
+        target = os.path.realpath(model_path)
+        path.unlink()
+        print(f"  Removed link {model_path} -> {target} (target files left in place)")
+    else:
+        shutil.rmtree(model_path, ignore_errors=True)
+    if path.exists() or path.is_symlink():
+        print(f"  WARNING: {model_path} still exists after removal -- clean it by hand")
+
+
+def _modelscope_default_cache_path(org_name: str) -> str:
+    """Where ``modelscope download <org_name>`` writes by default.
+
+    The CLI is called without a target-dir flag, so it lands in the modelscope
+    cache root -- which coincides with the case's model_path only when the
+    model_paths.json mapping points at the default layout. The Eco-Tech Wan2.2
+    repack does not, so every download for such a mapping errored with "did
+    not populate" while the real bytes stayed stranded in the cache root.
+    """
+    root = os.environ.get("MODELSCOPE_CACHE") or os.path.expanduser("~/.cache/modelscope")
+    return os.path.join(root, "hub", "models", *org_name.split("/"))
+
+
 def _ensure_model_local(model_path: str) -> bool:
     """Download a missing local model via ModelScope. Returns True if downloaded.
 
@@ -727,6 +762,10 @@ def _ensure_model_local(model_path: str) -> bool:
     if os.path.isdir(model_path):
         return False
     org_name = _model_scope_org_name(model_path)
+    cache_path = _modelscope_default_cache_path(org_name)
+    # Snapshot what exists BEFORE the download: on failure only what this call
+    # created may be removed -- a pre-existing cache-root copy is the user's.
+    existed = {p for p in (model_path, cache_path) if os.path.isdir(p)}
     print(f"  Model not found at {model_path}; running: modelscope download {org_name}")
     try:
         ret = subprocess.run(["modelscope", "download", org_name])
@@ -735,15 +774,20 @@ def _ensure_model_local(model_path: str) -> bool:
         if not os.path.isdir(model_path):
             raise RuntimeError(f"modelscope download {org_name} did not populate {model_path}")
     except Exception:
-        # Don't leave a partial download on a disk-constrained box.
-        shutil.rmtree(model_path, ignore_errors=True)
+        # Don't leave a partial download on a disk-constrained box. When the
+        # mapping does not point at the default layout, the cache-root copy is
+        # where the bytes actually are -- removing only model_path there is why
+        # a failed case kept its downloaded model.
+        for path in (model_path, cache_path):
+            if path not in existed:
+                _remove_model_dir(path)
         raise
     return True
 
 
 def _remove_downloaded_model(model_path: str) -> None:
     print(f"  Removing downloaded model {model_path}")
-    shutil.rmtree(model_path, ignore_errors=True)
+    _remove_model_dir(model_path)
 
 
 def _build_generic_http_cmd(case: dict, fw_cfg: dict, port: int) -> list[str]:

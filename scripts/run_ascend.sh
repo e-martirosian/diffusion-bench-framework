@@ -45,15 +45,17 @@ GPUS="${GPUS:-0}"
 TAG="${TAG:-ascend${DBF_HARDWARE_PROFILE}}"
 
 # Every case whose model has a model_paths.json entry AND whose sglang cell is
-# `supported` in its case file (55 of 64, ordered by cases/_order.json).
+# `supported` in its case file (54 of 64, ordered by cases/_order.json).
 # Excluded -- sglang `unsupported` there, so no sglang round can ever run them:
 # qwen_image_2512_1024 ("MUSA-only checkpoint"), qwen_image_edit_1024,
 # flux2_dev_nvfp4_t2i_1024, wan22_t2v_a14b_nvfp4, comfy_ideogram4_t2i,
 # kandinsky6_vsr, hunyuan3d2, pi05_base, flux3_action_droid.
+# Also excluded: flux3_klein_base_t2i_1024 -- its model
+# (black-forest-labs/flux-3-image-klein-base) has no model_paths.json entry;
+# only flux-3-image-klein is mapped, and runs as flux3_image_klein_t2i_1024.
 # Multi-GPU cases (num_gpus 2/4) need GPUS to cover them; on a smaller GPUS
 # they fail fast with a recorded device-count error, not silently.
 CASES="${CASES:-
-flux3_klein_base_t2i_1024
 qwen_image_21_t2i_1024
 qwen_image_21_t2i_1024_2gpu
 qwen_image_21_edit_1024
