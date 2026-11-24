@@ -323,8 +323,10 @@ def _build_sglang_cmd(case: dict, fw_cfg: dict, port: int) -> list[str]:
         "--backend",
         "sglang",
     ]
-    if _is_npu():
-        cmd += ["--device", "npu"]
+    # No --device flag: sglang detects npu/gpu itself, and its parser rejects
+    # the flag outright -- "unrecognized arguments: --device npu" killed every
+    # server start on the first Ascend round (2026-11-24). Device targeting
+    # still works through ASCEND_RT_VISIBLE_DEVICES.
     if num_gpus > 1:
         cmd += ["--num-gpus", str(num_gpus)]
     if fw_cfg.get("serve_args", "").strip():
@@ -3845,6 +3847,15 @@ def _collect_model_revisions(results: list[dict], throughput_results: list[dict]
     return revisions
 
 
+def _unknown_case_ids(case_ids: list[str], config: dict) -> list[str]:
+    """--case-ids entries matching no case id. The per-case filter in
+    run_comparison just `continue`s on an unknown id, so a typo produces an
+    empty, exit-0 run that reads as success: the first NPU round's qwen case
+    "ran" in two seconds that way (2026-11-24)."""
+    known = {c["id"] for c in config["cases"]}
+    return [cid for cid in (case_ids or []) if cid not in known]
+
+
 def run_comparison(
     config: dict,
     case_ids: list[str] | None = None,
@@ -3912,6 +3923,14 @@ def run_comparison(
             )
 
     fw_cases: dict[str, list[tuple[dict, dict]]] = {fw: [] for fw in FRAMEWORK_ORDER}
+
+    if case_ids:
+        unknown = _unknown_case_ids(case_ids, config)
+        if unknown:
+            print(
+                f"  WARNING: --case-ids {unknown} match no case in the config; "
+                "they will silently run nothing"
+            )
 
     for case in config["cases"]:
         if case_ids and case["id"] not in case_ids:

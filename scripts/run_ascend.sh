@@ -4,8 +4,9 @@
 # both NPUs — pick the chip with DBF_HARDWARE_PROFILE.
 #
 # The runner auto-detects Ascend via `npu-smi info`, records device=npu, and
-# appends `--device npu` to the SGLang-Diffusion and vLLM-Omni serve commands
-# (and sets ASCEND_RT_VISIBLE_DEVICES instead of CUDA_VISIBLE_DEVICES). No code
+# appends `--device npu` to the vLLM-Omni serve command only (sglang detects
+# npu/gpu itself; its parser rejects --device), plus ASCEND_RT_VISIBLE_DEVICES
+# instead of CUDA_VISIBLE_DEVICES. No code
 # change is needed for a first run; set the values below to the box.
 #
 # Prerequisites (mirror scripts/run_b200_cross_framework_20260912.sh):
@@ -43,10 +44,70 @@ GPUS="${GPUS:-0}"
 # Tag defaults to the chip (ascenda2 / ascenda3) so one script serves both.
 TAG="${TAG:-ascend${DBF_HARDWARE_PROFILE}}"
 
-# A small image-only starter set; extend to the cases your NPU can serve.
+# Every case whose model has a model_paths.json entry AND whose sglang cell is
+# `supported` in its case file (55 of 64, ordered by cases/_order.json).
+# Excluded -- sglang `unsupported` there, so no sglang round can ever run them:
+# qwen_image_2512_1024 ("MUSA-only checkpoint"), qwen_image_edit_1024,
+# flux2_dev_nvfp4_t2i_1024, wan22_t2v_a14b_nvfp4, comfy_ideogram4_t2i,
+# kandinsky6_vsr, hunyuan3d2, pi05_base, flux3_action_droid.
+# Multi-GPU cases (num_gpus 2/4) need GPUS to cover them; on a smaller GPUS
+# they fail fast with a recorded device-count error, not silently.
 CASES="${CASES:-
+flux3_klein_base_t2i_1024
+qwen_image_21_t2i_1024
+qwen_image_21_t2i_1024_2gpu
+qwen_image_21_edit_1024
 zimage_turbo_t2i_1024
-qwen_image_2512_t2i_1024
+ideogram4_t2i_1024_2gpu_tp
+wan22_t2v_a14b_720p
+ltx2.5_twostage_t2v_2gpus
+cosmos3_nano_t2i_720p
+cosmos3_nano_t2v_720p_189f
+cosmos3_nano_i2v_720p_189f
+minimax_h3_t2va_5s
+minimax_h3_t2va_5s_4gpu
+minimax_h3_t2va_480p_1gpu
+minimax_h3_ref2va_5s
+minimax_h3_fasth3_v2_t2va_5s
+flux1_dev_t2i_1024
+flux2_dev_t2i_1024
+flux2_klein_4b_t2i_1024
+flux3_image_klein_t2i_1024
+qwen_image_t2i_1024
+qwen_image_edit_2509_1024
+qwen_image_edit_2511_1024
+qwen_image_layered_1024
+glm_image_t2i_1024
+zimage_t2i_1024
+ernie_image_t2i_1024
+hunyuan_image_30_t2i_1024
+hunyuan_image_30_instruct_t2i_1024
+joyai_image_edit_1024
+joyai_echo_1024
+llada_image_t2i_1024
+hidream_o1_image_t2i_1024
+anima_base_t2i_1024
+ltx2_t2v_720p
+ltx23_t2v_720p
+vdn_minimax_h3_t2v
+helios_base_t2v
+helios_distilled_t2v
+helios_mid_t2v
+pika_h3_flex_t2v
+fasth3_omni_t2v
+wan21_t2v_13b_720p
+wan21_t2v_14b_720p
+wan21_i2v_14b_480p
+wan22_i2v_a14b_720p
+wan22_ti2v_5b_720p
+wan22_ti2v_5b_fullattn
+turbowan21_t2v_13b
+hunyuanvideo_t2v_720p
+fasthunyuan_t2v
+longlive2_t2v
+mova_360p_t2v
+lingbot_video_moe_t2v
+lingbot_world_t2v
 }"
 
 echo "=== Ascend NPU cross-framework run START $(date -Is) ==="
