@@ -717,25 +717,51 @@ def _model_scope_org_name(model_path: str) -> str:
 
 
 def _remove_model_dir(model_path: str) -> None:
-    """Remove a downloaded model dir, symlink-aware and loud about failures.
+    """Remove a downloaded model -- through soft links, down to the real files.
 
-    shutil.rmtree refuses a symlink-to-dir, and with ignore_errors=True the
-    refusal is SILENT -- a linked model_path would survive every cleanup and
-    then read as a pre-existing cache on the next run. A link is therefore
-    unlinked itself; the real files at its target belong to the store they
-    live in (modelscope's or the user's) and are never deleted blind. A real
-    dir is rmtree'd. Whatever survives either path is reported, never assumed
-    gone.
+    On storage-tight boxes the model dir is a soft link into the volume that
+    holds the bytes: removing only the link frees nothing, which is why a
+    failed case kept its downloaded model. shutil.rmtree additionally refuses
+    a symlink-to-dir outright, and with ignore_errors=True that refusal is
+    SILENT. Callers invoke this only for paths THIS benchmark created
+    (`_ensure_model_local` returns early for anything that already existed),
+    so the link's target is ours to remove too -- with one guard: a
+    misconfigured link that would take a filesystem root or the shared
+    modelscope cache tree down with it is left in place and reported.
     """
     path = Path(model_path)
     if path.is_symlink():
-        target = os.path.realpath(model_path)
+        target = Path(os.path.realpath(model_path))
         path.unlink()
-        print(f"  Removed link {model_path} -> {target} (target files left in place)")
+        if _symlink_target_removable(target):
+            shutil.rmtree(target, ignore_errors=True)
+            print(f"  Removed link {model_path} -> {target} (target removed)")
+        else:
+            print(
+                f"  Removed link {model_path} -> {target} "
+                "(target kept: missing, a root, or contains the shared modelscope cache)"
+            )
     else:
         shutil.rmtree(model_path, ignore_errors=True)
     if path.exists() or path.is_symlink():
         print(f"  WARNING: {model_path} still exists after removal -- clean it by hand")
+
+
+def _symlink_target_removable(target: Path) -> bool:
+    """True when a downloaded link's target is model storage we may delete.
+
+    Refuses missing targets and filesystem roots, and refuses any target that
+    contains the shared modelscope cache tree -- a link aimed at the cache
+    root itself would otherwise delete every model on the box, not just ours.
+    """
+    if not target.is_dir() or target.parent == target:
+        return False
+    hub_models = (Path(_modelscope_cache_root()) / "hub" / "models").resolve()
+    return not hub_models.is_relative_to(target.resolve())
+
+
+def _modelscope_cache_root() -> str:
+    return os.environ.get("MODELSCOPE_CACHE") or os.path.expanduser("~/.cache/modelscope")
 
 
 def _modelscope_default_cache_path(org_name: str) -> str:
@@ -747,7 +773,7 @@ def _modelscope_default_cache_path(org_name: str) -> str:
     repack does not, so every download for such a mapping errored with "did
     not populate" while the real bytes stayed stranded in the cache root.
     """
-    root = os.environ.get("MODELSCOPE_CACHE") or os.path.expanduser("~/.cache/modelscope")
+    root = _modelscope_cache_root()
     return os.path.join(root, "hub", "models", *org_name.split("/"))
 
 
