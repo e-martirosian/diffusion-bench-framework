@@ -123,33 +123,15 @@ echo "=== repo=$DBF_REPO_DIR frameworks=[$DBF_FRAMEWORKS] hw=$DBF_HARDWARE_PROFI
 # case id and the groups must cover CASES exactly. Without the validation a
 # degraded grouping (python3 step failed, CASES never reached the script) once
 # ran a nonexistent "case 0" and completed rc=0 in two seconds.
-PY_ERR="${DBF_STATE_DIR}/group_stderr.log"
-mkdir -p "$DBF_STATE_DIR"
-GROUPS="$(DBF_REPO_DIR="$DBF_REPO_DIR" DBF_CASES="$CASES" python3 - 2>"$PY_ERR" <<'PY'
-import json, os
-cfg = json.load(open(os.path.join(os.environ["DBF_REPO_DIR"], "configs", "comparison_configs.json"), encoding="utf-8"))
-model_of = {c["id"]: c.get("model") for c in cfg["cases"]}
-groups, cur, cur_model = [], [], object()
-for cid in os.environ["DBF_CASES"].split():
-    if cid not in model_of:
-        raise SystemExit("'%s' is not a case id in comparison_configs.json" % cid)
-    m = model_of[cid]
-    if cur and m != cur_model:
-        groups.append(" ".join(cur))
-        cur = []
-    cur.append(cid)
-    cur_model = m
-if cur:
-    groups.append(" ".join(cur))
-print("\n".join(groups))
-PY
-)" || {
-    echo "ERROR: case grouping failed (python3 step, exit $?) -- python said:" >&2
-    cat "$PY_ERR" >&2
-    exit 1
-}
-rm -f "$PY_ERR"
-if [ -z "$GROUPS" ] || [ "$(echo $GROUPS | wc -w)" -ne "$(echo $CASES | wc -w)" ]; then
+# File-based grouping helper (python3 - with a heredoc proved fragile on some
+# boxes: exit 1 with no stderr at all). If grouping is unavailable the round
+# still runs -- one process per case, same-model cases just re-download -- and
+# says so loudly instead of running nothing.
+GROUPS="$(python3 "$DBF_REPO_DIR/scripts/group_cases.py" $CASES)" || GROUPS=""
+if [ -z "$GROUPS" ]; then
+    echo "WARNING: model grouping unavailable -- falling back to one process per case (same-model cases will re-download)" >&2
+    GROUPS="$CASES"
+elif [ "$(echo $GROUPS | wc -w)" -ne "$(echo $CASES | wc -w)" ]; then
     echo "ERROR: groups cover $(echo $GROUPS | wc -w) case(s) but CASES lists $(echo $CASES | wc -w) -- aborting" >&2
     exit 1
 fi
