@@ -119,13 +119,19 @@ export DBF_ONE_PROCESS=1
 
 echo "=== Ascend NPU cross-framework run START $(date -Is) ==="
 echo "=== repo=$DBF_REPO_DIR frameworks=[$DBF_FRAMEWORKS] hw=$DBF_HARDWARE_PROFILE npu=$GPUS ==="
-GROUPS="$(DBF_REPO_DIR="$DBF_REPO_DIR" python3 - "$CASES" <<'PY'
-import json, os, sys
+# Groups are computed by python and validated: every token must be a known
+# case id and the groups must cover CASES exactly. Without the validation a
+# degraded grouping (python3 step failed, CASES never reached the script) once
+# ran a nonexistent "case 0" and completed rc=0 in two seconds.
+GROUPS="$(DBF_REPO_DIR="$DBF_REPO_DIR" DBF_CASES="$CASES" python3 - <<'PY'
+import json, os
 cfg = json.load(open(os.path.join(os.environ["DBF_REPO_DIR"], "configs", "comparison_configs.json"), encoding="utf-8"))
 model_of = {c["id"]: c.get("model") for c in cfg["cases"]}
 groups, cur, cur_model = [], [], object()
-for cid in sys.argv[1].split():
-    m = model_of.get(cid)
+for cid in os.environ["DBF_CASES"].split():
+    if cid not in model_of:
+        raise SystemExit("'%s' is not a case id in comparison_configs.json" % cid)
+    m = model_of[cid]
     if cur and m != cur_model:
         groups.append(" ".join(cur))
         cur = []
@@ -135,7 +141,12 @@ if cur:
     groups.append(" ".join(cur))
 print("\n".join(groups))
 PY
-)"
+)" || { echo "ERROR: case grouping failed (python3 step) -- aborting instead of running nothing" >&2; exit 1; }
+if [ -z "$GROUPS" ] || [ "$(echo $GROUPS | wc -w)" -ne "$(echo $CASES | wc -w)" ]; then
+    echo "ERROR: groups cover $(echo $GROUPS | wc -w) case(s) but CASES lists $(echo $CASES | wc -w) -- aborting" >&2
+    exit 1
+fi
+echo "=== $(echo $CASES | wc -w) cases in $(printf '%s\n' "$GROUPS" | grep -c .) groups ==="
 port="${BASE_PORT:-45001}"
 gi=0
 while IFS= read -r group; do
