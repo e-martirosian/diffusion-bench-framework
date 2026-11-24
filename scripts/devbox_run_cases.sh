@@ -137,6 +137,43 @@ wait_gpus_free() {
 echo "=== RUN $TAG START $(date -u) cases=[${CASES[*]}] modes=[$MODES] gpus=$GPU_IDS ==="
 echo "=== repo=$REPO_DIR config=$CONFIG hw=$HW_PROFILE frameworks=$FRAMEWORKS venvs=$SGLANG_DIFFUSION_FRAMEWORK_VENV_ROOT hf=$HF_HOME sglang=${DBF_SGLANG_PYTHONPATH:-installed} ==="
 port="$BASE_PORT"
+ONE_PROCESS="${DBF_ONE_PROCESS:-0}"
+if [ "$ONE_PROCESS" = "1" ]; then
+    # One harness process for every case passed in: same-model cases share one
+    # download (the harness keeps it while the NEXT case needs the same model
+    # and removes it after the last one). CASE_TIMEOUT covers the GROUP, not
+    # each case -- the caller groups consecutive same-model cases so the
+    # budget still matches the work.
+    kill_own_gpus
+    if ! wait_gpus_free; then
+        echo "RESULT ${CASES[*]} rc=CONTAMINATED: GPUs $GPU_IDS not free at batch start, batch not run"
+        exit 1
+    fi
+    CUDA_VISIBLE_DEVICES="$GPU_IDS" PYTHONPATH="$HARNESS_PYTHONPATH" timeout "$CASE_TIMEOUT" \
+        python3 -m diffusion_bench.run_comparison \
+        --config "$CONFIG" \
+        --frameworks $FRAMEWORKS --case-ids "${CASES[@]}" --modes $MODES \
+        --hardware-profile "$HW_PROFILE" --port "$port" \
+        --output "${LOG_DIR}/run_${TAG}_${CASES[0]}.json" \
+        > "${LOG_DIR}/run_${TAG}.runlog" 2>&1
+    rc=$?
+    kill_own_gpus
+    if [ "$rc" -ne 0 ] && [ ! -s "${LOG_DIR}/run_${TAG}_${CASES[0]}.json" ]; then
+        crash_dir="${LOG_DIR}/crash_${TAG}"
+        if [ -d "$REPO_DIR/comparison-logs" ]; then
+            mkdir -p "$crash_dir"
+            for cid in "${CASES[@]}"; do
+                cp -a "${REPO_DIR}/comparison-logs/${cid}"_* \
+                    "${REPO_DIR}/comparison-logs/bench_serving_${cid}"_* \
+                    "$crash_dir"/ 2>/dev/null
+            done
+        fi
+        echo "  crash logs bundled in $crash_dir (harness died before writing its result JSON)"
+    fi
+    summary=$(sed -n '/^SUMMARY/,$p' "${LOG_DIR}/run_${TAG}.runlog" 2>/dev/null \
+        | grep -E '^  [A-Za-z0-9_.]+ +\| ' | tr -s ' ' | tr '\n' ';')
+    echo "RESULT ${CASES[*]} rc=$rc $summary"
+else
 for case_id in "${CASES[@]}"; do
     kill_own_gpus
     if ! wait_gpus_free; then
@@ -175,5 +212,6 @@ for case_id in "${CASES[@]}"; do
     echo "RESULT $case_id rc=$rc $summary"
     port=$((port + 1))
 done
+fi
 echo "=== RUN $TAG DONE $(date -u) ==="
 grep "^RESULT" "$LOG"

@@ -777,6 +777,13 @@ def _modelscope_default_cache_path(org_name: str) -> str:
     return os.path.join(root, "hub", "models", *org_name.split("/"))
 
 
+# Models THIS harness process downloaded and has not removed yet -- the saved
+# "needs deletion" info. If the NEXT case needs the same path, the cleanup
+# leaves the dir for it; the case whose next case differs removes it. The set
+# is process-local by design: no on-disk state.
+_RUN_DOWNLOADED_MODELS: set[str] = set()
+
+
 def _ensure_model_local(model_path: str) -> bool:
     """Download a missing local model via ModelScope. Returns True if downloaded.
 
@@ -808,6 +815,7 @@ def _ensure_model_local(model_path: str) -> bool:
             if path not in existed:
                 _remove_model_dir(path)
         raise
+    _RUN_DOWNLOADED_MODELS.add(model_path)
     return True
 
 
@@ -3538,6 +3546,7 @@ def run_case_framework(
     port: int,
     log_dir: Path,
     config: dict | None = None,
+    keep_model: bool = False,
 ) -> tuple[dict | None, dict | None]:
     """Run one server lifecycle and collect requested benchmark modes."""
     case = _case_for_framework(case, fw_cfg)
@@ -3686,8 +3695,9 @@ def run_case_framework(
     finally:
         if proc:
             kill_server(proc)
-        if downloaded_model:
+        if model_path in _RUN_DOWNLOADED_MODELS and not keep_model:
             _remove_downloaded_model(model_path)
+            _RUN_DOWNLOADED_MODELS.discard(model_path)
         if log_thread:
             log_thread.join(timeout=5)
         log_fh.close()
@@ -3917,6 +3927,25 @@ def _collect_model_revisions(results: list[dict], throughput_results: list[dict]
     return revisions
 
 
+def _keep_model_flags(fw_cases: dict[str, list[tuple[dict, dict]]]) -> dict[tuple[str, str], bool]:
+    """True per (framework, case) whose NEXT case in this invocation uses the
+    same model, so its cleanup leaves the dir for that case. The next case
+    repeats the check; the one whose next case differs (or has none) removes
+    it. Mirrors the execution order: fw_cases iterates in FRAMEWORK_ORDER."""
+    order: list[tuple[tuple[str, str], str]] = []
+    for fw_name, pairs in fw_cases.items():
+        for case, fw_cfg in pairs:
+            try:
+                path = _server_model_path(case, fw_cfg)
+            except Exception:
+                path = ""
+            order.append(((fw_name, case["id"]), path))
+    return {
+        order[i][0]: i + 1 < len(order) and order[i][1] != "" and order[i + 1][1] == order[i][1]
+        for i in range(len(order))
+    }
+
+
 def _unknown_case_ids(case_ids: list[str], config: dict) -> list[str]:
     """--case-ids entries matching no case id. The per-case filter in
     run_comparison just `continue`s on an unknown id, so a typo produces an
@@ -4017,6 +4046,13 @@ def run_comparison(
                 (_case_with_profile_request_extra(case, fw_name, resolved_fw_cfg), resolved_fw_cfg)
             )
 
+    # Some cases share one model (the qwen21 trio, the cosmos3 trio, the
+    # minimax quartet); re-downloading per case is pure transfer time on a
+    # storage-tight box. If the NEXT case needs the same path, leave the dir
+    # for it -- that case repeats the check, and the one whose next case
+    # differs removes it.
+    keep_model = _keep_model_flags(fw_cases)
+
     results = []
     throughput_results = []
     installed_fws: set[str] = set()
@@ -4106,7 +4142,8 @@ def run_comparison(
                 continue
 
             single_result, throughput_result = run_case_framework(
-                case, fw_name, fw_cfg, _modes_for_case(case, modes), port, log_dir, config
+                case, fw_name, fw_cfg, _modes_for_case(case, modes), port, log_dir, config,
+                keep_model=keep_model.get((fw_name, case["id"]), False),
             )
             if single_result is not None:
                 results.append(single_result)

@@ -112,14 +112,40 @@ lingbot_video_moe_t2v
 lingbot_world_t2v
 }"
 
+# Consecutive cases sharing one model (the qwen21 trio, the cosmos3 trio, the
+# minimax quartet) run as ONE harness process each: the model downloads once
+# and is removed after the group's last case. CASE_TIMEOUT applies per GROUP.
+export DBF_ONE_PROCESS=1
+
 echo "=== Ascend NPU cross-framework run START $(date -Is) ==="
 echo "=== repo=$DBF_REPO_DIR frameworks=[$DBF_FRAMEWORKS] hw=$DBF_HARDWARE_PROFILE npu=$GPUS ==="
+GROUPS="$(DBF_REPO_DIR="$DBF_REPO_DIR" python3 - "$CASES" <<'PY'
+import json, os, sys
+cfg = json.load(open(os.path.join(os.environ["DBF_REPO_DIR"], "configs", "comparison_configs.json"), encoding="utf-8"))
+model_of = {c["id"]: c.get("model") for c in cfg["cases"]}
+groups, cur, cur_model = [], [], object()
+for cid in sys.argv[1].split():
+    m = model_of.get(cid)
+    if cur and m != cur_model:
+        groups.append(" ".join(cur))
+        cur = []
+    cur.append(cid)
+    cur_model = m
+if cur:
+    groups.append(" ".join(cur))
+print("\n".join(groups))
+PY
+)"
 port="${BASE_PORT:-45001}"
-for case_id in $CASES; do
-    echo "=== $(date -Is) case $case_id ==="
+gi=0
+while IFS= read -r group; do
+    [ -z "$group" ] && continue
+    gi=$((gi + 1))
+    gtag="${TAG}_g${gi}"
+    echo "=== $(date -Is) group $gi: $group ==="
     bash "${DBF_REPO_DIR}/scripts/devbox_run_cases.sh" \
-        "${TAG}_${case_id}" "$GPUS" "$port" "single_e2e throughput" "$case_id"
-    grep -h "^RESULT" "${DBF_LOG_DIR}/run_${TAG}_${case_id}.log" 2>/dev/null
+        "$gtag" "$GPUS" "$port" "single_e2e throughput" $group
+    grep -h "^RESULT" "${DBF_LOG_DIR}/run_${gtag}.log" 2>/dev/null
     port=$((port + 4))
-done
+done <<< "$GROUPS"
 echo "=== Ascend NPU cross-framework run DONE $(date -Is) ==="
