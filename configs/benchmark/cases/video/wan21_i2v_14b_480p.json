@@ -1,0 +1,41 @@
+{
+  "id": "wan21_i2v_14b_480p",
+  "model": "Wan-AI/Wan2.1-I2V-14B-480P-Diffusers",
+  "task": "image-to-video",
+  "label": "Wan2.1-I2V-14B-480P-Diffusers",
+  "prompt": "A slow camera pan across a futuristic city at dusk, neon lights reflecting on wet streets",
+  "width": 832,
+  "height": 480,
+  "seed": 42,
+  "num_gpus": 1,
+  "num_inference_steps": 30,
+  "guidance_scale": 5.0,
+  "num_frames": 81,
+  "fps": 16,
+  "frameworks": {
+    "sglang": {
+      "status": "supported",
+      "serve_args": ""
+    },
+    "vllm-omni": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "lightx2v": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "trtllm-visual": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "comfyui": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "fastvideo": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    }
+  }
+}

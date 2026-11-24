@@ -1,0 +1,41 @@
+{
+  "id": "vdn_minimax_h3_t2v",
+  "model": "OpenVDN/vdn-minimax-h3",
+  "task": "text-to-video",
+  "label": "vdn-minimax-h3",
+  "prompt": "A slow camera pan across a futuristic city at dusk, neon lights reflecting on wet streets",
+  "width": 1280,
+  "height": 720,
+  "seed": 42,
+  "num_gpus": 1,
+  "num_inference_steps": 30,
+  "guidance_scale": 1.0,
+  "num_frames": 121,
+  "fps": 24,
+  "frameworks": {
+    "sglang": {
+      "status": "supported",
+      "serve_args": ""
+    },
+    "vllm-omni": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "lightx2v": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "trtllm-visual": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "comfyui": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "fastvideo": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    }
+  }
+}

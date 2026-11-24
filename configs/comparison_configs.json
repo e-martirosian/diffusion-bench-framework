@@ -8802,6 +8802,1570 @@
                 "diffusers": "MiniMax-H3 is integrated as Modular Diffusers blocks only (no DiffusionPipeline), and only via an unmerged PR (huggingface/diffusers#14355 -- pip install git+.../diffusers.git@refs/pull/14355/head). Not a servable baseline path today.",
                 "comfyui": "Comfy-Org/workflow_templates templates/video_fastvideo_fasth3_t2v.json exists (since 2026-09-22), but it runs int8 dense attention and VSA keeping 10% of tiles from step 0.2 -- a different numeric class and a different sparsity from the case's BF16 VSA at the trained 80% (64-token tiles). Re-checked 2026-10-22."
             }
+        },
+        {
+            "id": "flux1_dev_t2i_1024",
+            "model": "black-forest-labs/FLUX.1-dev",
+            "task": "text-to-image",
+            "label": "FLUX.1-dev",
+            "prompt": "A cinematic shot of a futuristic city at dusk, neon lights reflecting on wet streets",
+            "width": 1024,
+            "height": 1024,
+            "seed": 42,
+            "num_gpus": 1,
+            "num_inference_steps": 30,
+            "guidance_scale": 3.5,
+            "frameworks": {
+                "sglang": {
+                    "serve_args": ""
+                }
+            },
+            "report_framework_statuses": {
+                "vllm-omni": "not_run",
+                "lightx2v": "not_run",
+                "trtllm-visual": "not_run",
+                "comfyui": "not_run",
+                "fastvideo": "not_run"
+            },
+            "report_framework_reasons": {
+                "vllm-omni": "not yet validated",
+                "lightx2v": "not yet validated",
+                "trtllm-visual": "not yet validated",
+                "comfyui": "not yet validated",
+                "fastvideo": "not yet validated"
+            }
+        },
+        {
+            "id": "flux2_dev_t2i_1024",
+            "model": "black-forest-labs/FLUX.2-dev",
+            "task": "text-to-image",
+            "label": "FLUX.2-dev",
+            "prompt": "A cinematic shot of a futuristic city at dusk, neon lights reflecting on wet streets",
+            "width": 1024,
+            "height": 1024,
+            "seed": 42,
+            "num_gpus": 1,
+            "num_inference_steps": 50,
+            "guidance_scale": 1.0,
+            "frameworks": {
+                "sglang": {
+                    "serve_args": ""
+                }
+            },
+            "report_framework_statuses": {
+                "vllm-omni": "not_run",
+                "lightx2v": "not_run",
+                "trtllm-visual": "not_run",
+                "comfyui": "not_run",
+                "fastvideo": "not_run"
+            },
+            "report_framework_reasons": {
+                "vllm-omni": "not yet validated",
+                "lightx2v": "not yet validated",
+                "trtllm-visual": "not yet validated",
+                "comfyui": "not yet validated",
+                "fastvideo": "not yet validated"
+            }
+        },
+        {
+            "id": "flux2_klein_4b_t2i_1024",
+            "model": "black-forest-labs/FLUX.2-klein-4B",
+            "task": "text-to-image",
+            "label": "FLUX.2-klein-4B",
+            "prompt": "A cinematic shot of a futuristic city at dusk, neon lights reflecting on wet streets",
+            "width": 1024,
+            "height": 1024,
+            "seed": 42,
+            "num_gpus": 1,
+            "num_inference_steps": 12,
+            "guidance_scale": 1.0,
+            "frameworks": {
+                "sglang": {
+                    "serve_args": ""
+                }
+            },
+            "report_framework_statuses": {
+                "vllm-omni": "not_run",
+                "lightx2v": "not_run",
+                "trtllm-visual": "not_run",
+                "comfyui": "not_run",
+                "fastvideo": "not_run"
+            },
+            "report_framework_reasons": {
+                "vllm-omni": "not yet validated",
+                "lightx2v": "not yet validated",
+                "trtllm-visual": "not yet validated",
+                "comfyui": "not yet validated",
+                "fastvideo": "not yet validated"
+            }
+        },
+        {
+            "id": "flux3_image_klein_t2i_1024",
+            "model": "black-forest-labs/flux-3-image-klein",
+            "task": "text-to-image",
+            "label": "flux-3-image-klein",
+            "prompt": "A cinematic shot of a futuristic city at dusk, neon lights reflecting on wet streets",
+            "width": 1024,
+            "height": 1024,
+            "seed": 42,
+            "num_gpus": 1,
+            "num_inference_steps": 12,
+            "guidance_scale": 1.0,
+            "frameworks": {
+                "sglang": {
+                    "serve_args": ""
+                }
+            },
+            "report_framework_statuses": {
+                "vllm-omni": "not_run",
+                "lightx2v": "not_run",
+                "trtllm-visual": "not_run",
+                "comfyui": "not_run",
+                "fastvideo": "not_run"
+            },
+            "report_framework_reasons": {
+                "vllm-omni": "not yet validated",
+                "lightx2v": "not yet validated",
+                "trtllm-visual": "not yet validated",
+                "comfyui": "not yet validated",
+                "fastvideo": "not yet validated"
+            }
+        },
+        {
+            "id": "qwen_image_t2i_1024",
+            "model": "Qwen/Qwen-Image",
+            "task": "text-to-image",
+            "label": "Qwen-Image",
+            "prompt": "A cinematic shot of a futuristic city at dusk, neon lights reflecting on wet streets",
+            "width": 1024,
+            "height": 1024,
+            "seed": 42,
+            "num_gpus": 1,
+            "num_inference_steps": 30,
+            "guidance_scale": 1.0,
+            "frameworks": {
+                "sglang": {
+                    "serve_args": ""
+                }
+            },
+            "report_framework_statuses": {
+                "vllm-omni": "not_run",
+                "lightx2v": "not_run",
+                "trtllm-visual": "not_run",
+                "comfyui": "not_run",
+                "fastvideo": "not_run"
+            },
+            "report_framework_reasons": {
+                "vllm-omni": "not yet validated",
+                "lightx2v": "not yet validated",
+                "trtllm-visual": "not yet validated",
+                "comfyui": "not yet validated",
+                "fastvideo": "not yet validated"
+            }
+        },
+        {
+            "id": "qwen_image_edit_2509_1024",
+            "model": "Qwen/Qwen-Image-Edit-2509",
+            "task": "image-edit",
+            "label": "Qwen-Image-Edit-2509",
+            "prompt": "A cinematic shot of a futuristic city at dusk, neon lights reflecting on wet streets",
+            "width": 1024,
+            "height": 1024,
+            "seed": 42,
+            "num_gpus": 1,
+            "num_inference_steps": 30,
+            "guidance_scale": 1.0,
+            "frameworks": {
+                "sglang": {
+                    "serve_args": ""
+                }
+            },
+            "report_framework_statuses": {
+                "vllm-omni": "not_run",
+                "lightx2v": "not_run",
+                "trtllm-visual": "not_run",
+                "comfyui": "not_run",
+                "fastvideo": "not_run"
+            },
+            "report_framework_reasons": {
+                "vllm-omni": "not yet validated",
+                "lightx2v": "not yet validated",
+                "trtllm-visual": "not yet validated",
+                "comfyui": "not yet validated",
+                "fastvideo": "not yet validated"
+            }
+        },
+        {
+            "id": "qwen_image_edit_2511_1024",
+            "model": "Qwen/Qwen-Image-Edit-2511",
+            "task": "image-edit",
+            "label": "Qwen-Image-Edit-2511",
+            "prompt": "A cinematic shot of a futuristic city at dusk, neon lights reflecting on wet streets",
+            "width": 1024,
+            "height": 1024,
+            "seed": 42,
+            "num_gpus": 1,
+            "num_inference_steps": 30,
+            "guidance_scale": 1.0,
+            "frameworks": {
+                "sglang": {
+                    "serve_args": ""
+                }
+            },
+            "report_framework_statuses": {
+                "vllm-omni": "not_run",
+                "lightx2v": "not_run",
+                "trtllm-visual": "not_run",
+                "comfyui": "not_run",
+                "fastvideo": "not_run"
+            },
+            "report_framework_reasons": {
+                "vllm-omni": "not yet validated",
+                "lightx2v": "not yet validated",
+                "trtllm-visual": "not yet validated",
+                "comfyui": "not yet validated",
+                "fastvideo": "not yet validated"
+            }
+        },
+        {
+            "id": "qwen_image_layered_1024",
+            "model": "Qwen/Qwen-Image-Layered",
+            "task": "image-edit",
+            "label": "Qwen-Image-Layered",
+            "prompt": "A cinematic shot of a futuristic city at dusk, neon lights reflecting on wet streets",
+            "width": 1024,
+            "height": 1024,
+            "seed": 42,
+            "num_gpus": 1,
+            "num_inference_steps": 30,
+            "guidance_scale": 1.0,
+            "frameworks": {
+                "sglang": {
+                    "serve_args": ""
+                }
+            },
+            "report_framework_statuses": {
+                "vllm-omni": "not_run",
+                "lightx2v": "not_run",
+                "trtllm-visual": "not_run",
+                "comfyui": "not_run",
+                "fastvideo": "not_run"
+            },
+            "report_framework_reasons": {
+                "vllm-omni": "not yet validated",
+                "lightx2v": "not yet validated",
+                "trtllm-visual": "not yet validated",
+                "comfyui": "not yet validated",
+                "fastvideo": "not yet validated"
+            }
+        },
+        {
+            "id": "glm_image_t2i_1024",
+            "model": "zai-org/GLM-Image",
+            "task": "text-to-image",
+            "label": "GLM-Image",
+            "prompt": "A cinematic shot of a futuristic city at dusk, neon lights reflecting on wet streets",
+            "width": 1024,
+            "height": 1024,
+            "seed": 42,
+            "num_gpus": 1,
+            "num_inference_steps": 30,
+            "guidance_scale": 1.0,
+            "frameworks": {
+                "sglang": {
+                    "serve_args": ""
+                }
+            },
+            "report_framework_statuses": {
+                "vllm-omni": "not_run",
+                "lightx2v": "not_run",
+                "trtllm-visual": "not_run",
+                "comfyui": "not_run",
+                "fastvideo": "not_run"
+            },
+            "report_framework_reasons": {
+                "vllm-omni": "not yet validated",
+                "lightx2v": "not yet validated",
+                "trtllm-visual": "not yet validated",
+                "comfyui": "not yet validated",
+                "fastvideo": "not yet validated"
+            }
+        },
+        {
+            "id": "zimage_t2i_1024",
+            "model": "Tongyi-MAI/Z-Image",
+            "task": "text-to-image",
+            "label": "Z-Image",
+            "prompt": "A cinematic shot of a futuristic city at dusk, neon lights reflecting on wet streets",
+            "width": 1024,
+            "height": 1024,
+            "seed": 42,
+            "num_gpus": 1,
+            "num_inference_steps": 30,
+            "guidance_scale": 0.0,
+            "frameworks": {
+                "sglang": {
+                    "serve_args": ""
+                }
+            },
+            "report_framework_statuses": {
+                "vllm-omni": "not_run",
+                "lightx2v": "not_run",
+                "trtllm-visual": "not_run",
+                "comfyui": "not_run",
+                "fastvideo": "not_run"
+            },
+            "report_framework_reasons": {
+                "vllm-omni": "not yet validated",
+                "lightx2v": "not yet validated",
+                "trtllm-visual": "not yet validated",
+                "comfyui": "not yet validated",
+                "fastvideo": "not yet validated"
+            }
+        },
+        {
+            "id": "ernie_image_t2i_1024",
+            "model": "baidu/ERNIE-Image",
+            "task": "text-to-image",
+            "label": "ERNIE-Image",
+            "prompt": "A cinematic shot of a futuristic city at dusk, neon lights reflecting on wet streets",
+            "width": 1024,
+            "height": 1024,
+            "seed": 42,
+            "num_gpus": 1,
+            "num_inference_steps": 30,
+            "guidance_scale": 1.0,
+            "frameworks": {
+                "sglang": {
+                    "serve_args": ""
+                }
+            },
+            "report_framework_statuses": {
+                "vllm-omni": "not_run",
+                "lightx2v": "not_run",
+                "trtllm-visual": "not_run",
+                "comfyui": "not_run",
+                "fastvideo": "not_run"
+            },
+            "report_framework_reasons": {
+                "vllm-omni": "not yet validated",
+                "lightx2v": "not yet validated",
+                "trtllm-visual": "not yet validated",
+                "comfyui": "not yet validated",
+                "fastvideo": "not yet validated"
+            }
+        },
+        {
+            "id": "hunyuan_image_30_t2i_1024",
+            "model": "tencent/HunyuanImage-3.0",
+            "task": "text-to-image",
+            "label": "HunyuanImage-3.0",
+            "prompt": "A cinematic shot of a futuristic city at dusk, neon lights reflecting on wet streets",
+            "width": 1024,
+            "height": 1024,
+            "seed": 42,
+            "num_gpus": 1,
+            "num_inference_steps": 30,
+            "guidance_scale": 1.0,
+            "frameworks": {
+                "sglang": {
+                    "serve_args": ""
+                }
+            },
+            "report_framework_statuses": {
+                "vllm-omni": "not_run",
+                "lightx2v": "not_run",
+                "trtllm-visual": "not_run",
+                "comfyui": "not_run",
+                "fastvideo": "not_run"
+            },
+            "report_framework_reasons": {
+                "vllm-omni": "not yet validated",
+                "lightx2v": "not yet validated",
+                "trtllm-visual": "not yet validated",
+                "comfyui": "not yet validated",
+                "fastvideo": "not yet validated"
+            }
+        },
+        {
+            "id": "hunyuan_image_30_instruct_t2i_1024",
+            "model": "tencent/HunyuanImage-3.0-Instruct",
+            "task": "text-to-image",
+            "label": "HunyuanImage-3.0-Instruct",
+            "prompt": "A cinematic shot of a futuristic city at dusk, neon lights reflecting on wet streets",
+            "width": 1024,
+            "height": 1024,
+            "seed": 42,
+            "num_gpus": 1,
+            "num_inference_steps": 30,
+            "guidance_scale": 1.0,
+            "frameworks": {
+                "sglang": {
+                    "serve_args": ""
+                }
+            },
+            "report_framework_statuses": {
+                "vllm-omni": "not_run",
+                "lightx2v": "not_run",
+                "trtllm-visual": "not_run",
+                "comfyui": "not_run",
+                "fastvideo": "not_run"
+            },
+            "report_framework_reasons": {
+                "vllm-omni": "not yet validated",
+                "lightx2v": "not yet validated",
+                "trtllm-visual": "not yet validated",
+                "comfyui": "not yet validated",
+                "fastvideo": "not yet validated"
+            }
+        },
+        {
+            "id": "joyai_image_edit_1024",
+            "model": "jdopensource/JoyAI-Image-Edit-Diffusers",
+            "task": "image-edit",
+            "label": "JoyAI-Image-Edit-Diffusers",
+            "prompt": "A cinematic shot of a futuristic city at dusk, neon lights reflecting on wet streets",
+            "width": 1024,
+            "height": 1024,
+            "seed": 42,
+            "num_gpus": 1,
+            "num_inference_steps": 30,
+            "guidance_scale": 1.0,
+            "frameworks": {
+                "sglang": {
+                    "serve_args": ""
+                }
+            },
+            "report_framework_statuses": {
+                "vllm-omni": "not_run",
+                "lightx2v": "not_run",
+                "trtllm-visual": "not_run",
+                "comfyui": "not_run",
+                "fastvideo": "not_run"
+            },
+            "report_framework_reasons": {
+                "vllm-omni": "not yet validated",
+                "lightx2v": "not yet validated",
+                "trtllm-visual": "not yet validated",
+                "comfyui": "not yet validated",
+                "fastvideo": "not yet validated"
+            }
+        },
+        {
+            "id": "joyai_echo_1024",
+            "model": "jdopensource/JoyAI-Echo",
+            "task": "image-edit",
+            "label": "JoyAI-Echo",
+            "prompt": "A cinematic shot of a futuristic city at dusk, neon lights reflecting on wet streets",
+            "width": 1024,
+            "height": 1024,
+            "seed": 42,
+            "num_gpus": 1,
+            "num_inference_steps": 30,
+            "guidance_scale": 1.0,
+            "frameworks": {
+                "sglang": {
+                    "serve_args": ""
+                }
+            },
+            "report_framework_statuses": {
+                "vllm-omni": "not_run",
+                "lightx2v": "not_run",
+                "trtllm-visual": "not_run",
+                "comfyui": "not_run",
+                "fastvideo": "not_run"
+            },
+            "report_framework_reasons": {
+                "vllm-omni": "not yet validated",
+                "lightx2v": "not yet validated",
+                "trtllm-visual": "not yet validated",
+                "comfyui": "not yet validated",
+                "fastvideo": "not yet validated"
+            }
+        },
+        {
+            "id": "llada_image_t2i_1024",
+            "model": "inclusionAI/LLaDA-Image",
+            "task": "text-to-image",
+            "label": "LLaDA-Image",
+            "prompt": "A cinematic shot of a futuristic city at dusk, neon lights reflecting on wet streets",
+            "width": 1024,
+            "height": 1024,
+            "seed": 42,
+            "num_gpus": 1,
+            "num_inference_steps": 30,
+            "guidance_scale": 1.0,
+            "frameworks": {
+                "sglang": {
+                    "serve_args": ""
+                }
+            },
+            "report_framework_statuses": {
+                "vllm-omni": "not_run",
+                "lightx2v": "not_run",
+                "trtllm-visual": "not_run",
+                "comfyui": "not_run",
+                "fastvideo": "not_run"
+            },
+            "report_framework_reasons": {
+                "vllm-omni": "not yet validated",
+                "lightx2v": "not yet validated",
+                "trtllm-visual": "not yet validated",
+                "comfyui": "not yet validated",
+                "fastvideo": "not yet validated"
+            }
+        },
+        {
+            "id": "hidream_o1_image_t2i_1024",
+            "model": "HiDream-ai/HiDream-O1-Image",
+            "task": "text-to-image",
+            "label": "HiDream-O1-Image",
+            "prompt": "A cinematic shot of a futuristic city at dusk, neon lights reflecting on wet streets",
+            "width": 1024,
+            "height": 1024,
+            "seed": 42,
+            "num_gpus": 1,
+            "num_inference_steps": 30,
+            "guidance_scale": 1.0,
+            "frameworks": {
+                "sglang": {
+                    "serve_args": ""
+                }
+            },
+            "report_framework_statuses": {
+                "vllm-omni": "not_run",
+                "lightx2v": "not_run",
+                "trtllm-visual": "not_run",
+                "comfyui": "not_run",
+                "fastvideo": "not_run"
+            },
+            "report_framework_reasons": {
+                "vllm-omni": "not yet validated",
+                "lightx2v": "not yet validated",
+                "trtllm-visual": "not yet validated",
+                "comfyui": "not yet validated",
+                "fastvideo": "not yet validated"
+            }
+        },
+        {
+            "id": "anima_base_t2i_1024",
+            "model": "circlestone-labs/Anima-Base-v1.0-Diffusers",
+            "task": "text-to-image",
+            "label": "Anima-Base-v1.0-Diffusers",
+            "prompt": "A cinematic shot of a futuristic city at dusk, neon lights reflecting on wet streets",
+            "width": 1024,
+            "height": 1024,
+            "seed": 42,
+            "num_gpus": 1,
+            "num_inference_steps": 30,
+            "guidance_scale": 1.0,
+            "frameworks": {
+                "sglang": {
+                    "serve_args": ""
+                }
+            },
+            "report_framework_statuses": {
+                "vllm-omni": "not_run",
+                "lightx2v": "not_run",
+                "trtllm-visual": "not_run",
+                "comfyui": "not_run",
+                "fastvideo": "not_run"
+            },
+            "report_framework_reasons": {
+                "vllm-omni": "not yet validated",
+                "lightx2v": "not yet validated",
+                "trtllm-visual": "not yet validated",
+                "comfyui": "not yet validated",
+                "fastvideo": "not yet validated"
+            }
+        },
+        {
+            "id": "qwen_image_edit_1024",
+            "model": "Qwen/Qwen-Image-Edit",
+            "task": "image-edit",
+            "label": "Qwen-Image-Edit",
+            "prompt": "A cinematic shot of a futuristic city at dusk, neon lights reflecting on wet streets",
+            "width": 1024,
+            "height": 1024,
+            "seed": 42,
+            "num_gpus": 1,
+            "num_inference_steps": 30,
+            "guidance_scale": 1.0,
+            "frameworks": {},
+            "report_framework_statuses": {
+                "sglang": "unsupported",
+                "vllm-omni": "not_run",
+                "lightx2v": "not_run",
+                "trtllm-visual": "not_run",
+                "comfyui": "not_run",
+                "fastvideo": "not_run"
+            },
+            "report_framework_reasons": {
+                "sglang": "MUSA-only checkpoint",
+                "vllm-omni": "not yet validated",
+                "lightx2v": "not yet validated",
+                "trtllm-visual": "not yet validated",
+                "comfyui": "not yet validated",
+                "fastvideo": "not yet validated"
+            }
+        },
+        {
+            "id": "qwen_image_2512_1024",
+            "model": "Qwen/Qwen-Image-2512",
+            "task": "text-to-image",
+            "label": "Qwen-Image-2512",
+            "prompt": "A cinematic shot of a futuristic city at dusk, neon lights reflecting on wet streets",
+            "width": 1024,
+            "height": 1024,
+            "seed": 42,
+            "num_gpus": 1,
+            "num_inference_steps": 30,
+            "guidance_scale": 1.0,
+            "frameworks": {},
+            "report_framework_statuses": {
+                "sglang": "unsupported",
+                "vllm-omni": "not_run",
+                "lightx2v": "not_run",
+                "trtllm-visual": "not_run",
+                "comfyui": "not_run",
+                "fastvideo": "not_run"
+            },
+            "report_framework_reasons": {
+                "sglang": "MUSA-only checkpoint",
+                "vllm-omni": "not yet validated",
+                "lightx2v": "not yet validated",
+                "trtllm-visual": "not yet validated",
+                "comfyui": "not yet validated",
+                "fastvideo": "not yet validated"
+            }
+        },
+        {
+            "id": "flux2_dev_nvfp4_t2i_1024",
+            "model": "black-forest-labs/FLUX.2-dev-NVFP4",
+            "task": "text-to-image",
+            "label": "FLUX.2-dev-NVFP4",
+            "prompt": "A cinematic shot of a futuristic city at dusk, neon lights reflecting on wet streets",
+            "width": 1024,
+            "height": 1024,
+            "seed": 42,
+            "num_gpus": 1,
+            "num_inference_steps": 50,
+            "guidance_scale": 1.0,
+            "frameworks": {},
+            "report_framework_statuses": {
+                "sglang": "unsupported",
+                "vllm-omni": "not_run",
+                "lightx2v": "not_run",
+                "trtllm-visual": "not_run",
+                "comfyui": "not_run",
+                "fastvideo": "not_run"
+            },
+            "report_framework_reasons": {
+                "sglang": "NVFP4-quantized checkpoint (different numeric class)",
+                "vllm-omni": "not yet validated",
+                "lightx2v": "not yet validated",
+                "trtllm-visual": "not yet validated",
+                "comfyui": "not yet validated",
+                "fastvideo": "not yet validated"
+            }
+        },
+        {
+            "id": "comfy_ideogram4_t2i",
+            "model": "Comfy-Org/Ideogram-4",
+            "task": "text-to-image",
+            "label": "Ideogram-4",
+            "prompt": "A cinematic shot of a futuristic city at dusk, neon lights reflecting on wet streets",
+            "width": 1024,
+            "height": 1024,
+            "seed": 42,
+            "num_gpus": 1,
+            "num_inference_steps": 30,
+            "guidance_scale": 1.0,
+            "frameworks": {},
+            "report_framework_statuses": {
+                "sglang": "unsupported",
+                "vllm-omni": "not_run",
+                "lightx2v": "not_run",
+                "trtllm-visual": "not_run",
+                "comfyui": "not_run",
+                "fastvideo": "not_run"
+            },
+            "report_framework_reasons": {
+                "sglang": "ComfyUI repackaging of ideogram-4-fp8 (already a case)",
+                "vllm-omni": "not yet validated",
+                "lightx2v": "not yet validated",
+                "trtllm-visual": "not yet validated",
+                "comfyui": "not yet validated",
+                "fastvideo": "not yet validated"
+            }
+        },
+        {
+            "id": "ltx2_t2v_720p",
+            "model": "Lightricks/LTX-2",
+            "task": "text-to-video",
+            "label": "LTX-2",
+            "prompt": "A slow camera pan across a futuristic city at dusk, neon lights reflecting on wet streets",
+            "width": 1280,
+            "height": 720,
+            "seed": 42,
+            "num_gpus": 1,
+            "num_inference_steps": 30,
+            "guidance_scale": 1.0,
+            "num_frames": 121,
+            "fps": 24,
+            "frameworks": {
+                "sglang": {
+                    "serve_args": ""
+                }
+            },
+            "report_framework_statuses": {
+                "vllm-omni": "not_run",
+                "lightx2v": "not_run",
+                "trtllm-visual": "not_run",
+                "comfyui": "not_run",
+                "fastvideo": "not_run"
+            },
+            "report_framework_reasons": {
+                "vllm-omni": "not yet validated",
+                "lightx2v": "not yet validated",
+                "trtllm-visual": "not yet validated",
+                "comfyui": "not yet validated",
+                "fastvideo": "not yet validated"
+            }
+        },
+        {
+            "id": "ltx23_t2v_720p",
+            "model": "Lightricks/LTX-2.3",
+            "task": "text-to-video",
+            "label": "LTX-2.3",
+            "prompt": "A slow camera pan across a futuristic city at dusk, neon lights reflecting on wet streets",
+            "width": 1280,
+            "height": 720,
+            "seed": 42,
+            "num_gpus": 1,
+            "num_inference_steps": 30,
+            "guidance_scale": 1.0,
+            "num_frames": 121,
+            "fps": 24,
+            "frameworks": {
+                "sglang": {
+                    "serve_args": ""
+                }
+            },
+            "report_framework_statuses": {
+                "vllm-omni": "not_run",
+                "lightx2v": "not_run",
+                "trtllm-visual": "not_run",
+                "comfyui": "not_run",
+                "fastvideo": "not_run"
+            },
+            "report_framework_reasons": {
+                "vllm-omni": "not yet validated",
+                "lightx2v": "not yet validated",
+                "trtllm-visual": "not yet validated",
+                "comfyui": "not yet validated",
+                "fastvideo": "not yet validated"
+            }
+        },
+        {
+            "id": "vdn_minimax_h3_t2v",
+            "model": "OpenVDN/vdn-minimax-h3",
+            "task": "text-to-video",
+            "label": "vdn-minimax-h3",
+            "prompt": "A slow camera pan across a futuristic city at dusk, neon lights reflecting on wet streets",
+            "width": 1280,
+            "height": 720,
+            "seed": 42,
+            "num_gpus": 1,
+            "num_inference_steps": 30,
+            "guidance_scale": 1.0,
+            "num_frames": 121,
+            "fps": 24,
+            "frameworks": {
+                "sglang": {
+                    "serve_args": ""
+                }
+            },
+            "report_framework_statuses": {
+                "vllm-omni": "not_run",
+                "lightx2v": "not_run",
+                "trtllm-visual": "not_run",
+                "comfyui": "not_run",
+                "fastvideo": "not_run"
+            },
+            "report_framework_reasons": {
+                "vllm-omni": "not yet validated",
+                "lightx2v": "not yet validated",
+                "trtllm-visual": "not yet validated",
+                "comfyui": "not yet validated",
+                "fastvideo": "not yet validated"
+            }
+        },
+        {
+            "id": "helios_base_t2v",
+            "model": "BestWishYsh/Helios-Base",
+            "task": "text-to-video",
+            "label": "Helios-Base",
+            "prompt": "A slow camera pan across a futuristic city at dusk, neon lights reflecting on wet streets",
+            "width": 1280,
+            "height": 720,
+            "seed": 42,
+            "num_gpus": 1,
+            "num_inference_steps": 30,
+            "guidance_scale": 1.0,
+            "num_frames": 121,
+            "fps": 24,
+            "frameworks": {
+                "sglang": {
+                    "serve_args": ""
+                }
+            },
+            "report_framework_statuses": {
+                "vllm-omni": "not_run",
+                "lightx2v": "not_run",
+                "trtllm-visual": "not_run",
+                "comfyui": "not_run",
+                "fastvideo": "not_run"
+            },
+            "report_framework_reasons": {
+                "vllm-omni": "not yet validated",
+                "lightx2v": "not yet validated",
+                "trtllm-visual": "not yet validated",
+                "comfyui": "not yet validated",
+                "fastvideo": "not yet validated"
+            }
+        },
+        {
+            "id": "helios_distilled_t2v",
+            "model": "BestWishYsh/Helios-Distilled",
+            "task": "text-to-video",
+            "label": "Helios-Distilled",
+            "prompt": "A slow camera pan across a futuristic city at dusk, neon lights reflecting on wet streets",
+            "width": 1280,
+            "height": 720,
+            "seed": 42,
+            "num_gpus": 1,
+            "num_inference_steps": 30,
+            "guidance_scale": 1.0,
+            "num_frames": 121,
+            "fps": 24,
+            "frameworks": {
+                "sglang": {
+                    "serve_args": ""
+                }
+            },
+            "report_framework_statuses": {
+                "vllm-omni": "not_run",
+                "lightx2v": "not_run",
+                "trtllm-visual": "not_run",
+                "comfyui": "not_run",
+                "fastvideo": "not_run"
+            },
+            "report_framework_reasons": {
+                "vllm-omni": "not yet validated",
+                "lightx2v": "not yet validated",
+                "trtllm-visual": "not yet validated",
+                "comfyui": "not yet validated",
+                "fastvideo": "not yet validated"
+            }
+        },
+        {
+            "id": "helios_mid_t2v",
+            "model": "BestWishYsh/Helios-Mid",
+            "task": "text-to-video",
+            "label": "Helios-Mid",
+            "prompt": "A slow camera pan across a futuristic city at dusk, neon lights reflecting on wet streets",
+            "width": 1280,
+            "height": 720,
+            "seed": 42,
+            "num_gpus": 1,
+            "num_inference_steps": 30,
+            "guidance_scale": 1.0,
+            "num_frames": 121,
+            "fps": 24,
+            "frameworks": {
+                "sglang": {
+                    "serve_args": ""
+                }
+            },
+            "report_framework_statuses": {
+                "vllm-omni": "not_run",
+                "lightx2v": "not_run",
+                "trtllm-visual": "not_run",
+                "comfyui": "not_run",
+                "fastvideo": "not_run"
+            },
+            "report_framework_reasons": {
+                "vllm-omni": "not yet validated",
+                "lightx2v": "not yet validated",
+                "trtllm-visual": "not yet validated",
+                "comfyui": "not yet validated",
+                "fastvideo": "not yet validated"
+            }
+        },
+        {
+            "id": "pika_h3_flex_t2v",
+            "model": "Pika-Labs/Pika-H3-Flex",
+            "task": "text-to-video",
+            "label": "Pika-H3-Flex",
+            "prompt": "A slow camera pan across a futuristic city at dusk, neon lights reflecting on wet streets",
+            "width": 1280,
+            "height": 720,
+            "seed": 42,
+            "num_gpus": 1,
+            "num_inference_steps": 30,
+            "guidance_scale": 1.0,
+            "num_frames": 121,
+            "fps": 24,
+            "frameworks": {
+                "sglang": {
+                    "serve_args": ""
+                }
+            },
+            "report_framework_statuses": {
+                "vllm-omni": "not_run",
+                "lightx2v": "not_run",
+                "trtllm-visual": "not_run",
+                "comfyui": "not_run",
+                "fastvideo": "not_run"
+            },
+            "report_framework_reasons": {
+                "vllm-omni": "not yet validated",
+                "lightx2v": "not yet validated",
+                "trtllm-visual": "not yet validated",
+                "comfyui": "not yet validated",
+                "fastvideo": "not yet validated"
+            }
+        },
+        {
+            "id": "fasth3_omni_t2v",
+            "model": "FastVideo/FastVideo-FastH3-Omni-8-Step-V1",
+            "task": "text-to-video",
+            "label": "FastVideo-FastH3-Omni-8-Step-V1",
+            "prompt": "A slow camera pan across a futuristic city at dusk, neon lights reflecting on wet streets",
+            "width": 1280,
+            "height": 720,
+            "seed": 42,
+            "num_gpus": 1,
+            "num_inference_steps": 30,
+            "guidance_scale": 1.0,
+            "num_frames": 121,
+            "fps": 24,
+            "frameworks": {
+                "sglang": {
+                    "serve_args": ""
+                }
+            },
+            "report_framework_statuses": {
+                "vllm-omni": "not_run",
+                "lightx2v": "not_run",
+                "trtllm-visual": "not_run",
+                "comfyui": "not_run",
+                "fastvideo": "not_run"
+            },
+            "report_framework_reasons": {
+                "vllm-omni": "not yet validated",
+                "lightx2v": "not yet validated",
+                "trtllm-visual": "not yet validated",
+                "comfyui": "not yet validated",
+                "fastvideo": "not yet validated"
+            }
+        },
+        {
+            "id": "wan21_t2v_13b_720p",
+            "model": "Wan-AI/Wan2.1-T2V-1.3B-Diffusers",
+            "task": "text-to-video",
+            "label": "Wan2.1-T2V-1.3B-Diffusers",
+            "prompt": "A slow camera pan across a futuristic city at dusk, neon lights reflecting on wet streets",
+            "width": 1280,
+            "height": 720,
+            "seed": 42,
+            "num_gpus": 1,
+            "num_inference_steps": 30,
+            "guidance_scale": 5.0,
+            "num_frames": 81,
+            "fps": 16,
+            "frameworks": {
+                "sglang": {
+                    "serve_args": ""
+                }
+            },
+            "report_framework_statuses": {
+                "vllm-omni": "not_run",
+                "lightx2v": "not_run",
+                "trtllm-visual": "not_run",
+                "comfyui": "not_run",
+                "fastvideo": "not_run"
+            },
+            "report_framework_reasons": {
+                "vllm-omni": "not yet validated",
+                "lightx2v": "not yet validated",
+                "trtllm-visual": "not yet validated",
+                "comfyui": "not yet validated",
+                "fastvideo": "not yet validated"
+            }
+        },
+        {
+            "id": "wan21_t2v_14b_720p",
+            "model": "Wan-AI/Wan2.1-T2V-14B-Diffusers",
+            "task": "text-to-video",
+            "label": "Wan2.1-T2V-14B-Diffusers",
+            "prompt": "A slow camera pan across a futuristic city at dusk, neon lights reflecting on wet streets",
+            "width": 1280,
+            "height": 720,
+            "seed": 42,
+            "num_gpus": 1,
+            "num_inference_steps": 30,
+            "guidance_scale": 5.0,
+            "num_frames": 81,
+            "fps": 16,
+            "frameworks": {
+                "sglang": {
+                    "serve_args": ""
+                }
+            },
+            "report_framework_statuses": {
+                "vllm-omni": "not_run",
+                "lightx2v": "not_run",
+                "trtllm-visual": "not_run",
+                "comfyui": "not_run",
+                "fastvideo": "not_run"
+            },
+            "report_framework_reasons": {
+                "vllm-omni": "not yet validated",
+                "lightx2v": "not yet validated",
+                "trtllm-visual": "not yet validated",
+                "comfyui": "not yet validated",
+                "fastvideo": "not yet validated"
+            }
+        },
+        {
+            "id": "wan21_i2v_14b_480p",
+            "model": "Wan-AI/Wan2.1-I2V-14B-480P-Diffusers",
+            "task": "image-to-video",
+            "label": "Wan2.1-I2V-14B-480P-Diffusers",
+            "prompt": "A slow camera pan across a futuristic city at dusk, neon lights reflecting on wet streets",
+            "width": 832,
+            "height": 480,
+            "seed": 42,
+            "num_gpus": 1,
+            "num_inference_steps": 30,
+            "guidance_scale": 5.0,
+            "num_frames": 81,
+            "fps": 16,
+            "frameworks": {
+                "sglang": {
+                    "serve_args": ""
+                }
+            },
+            "report_framework_statuses": {
+                "vllm-omni": "not_run",
+                "lightx2v": "not_run",
+                "trtllm-visual": "not_run",
+                "comfyui": "not_run",
+                "fastvideo": "not_run"
+            },
+            "report_framework_reasons": {
+                "vllm-omni": "not yet validated",
+                "lightx2v": "not yet validated",
+                "trtllm-visual": "not yet validated",
+                "comfyui": "not yet validated",
+                "fastvideo": "not yet validated"
+            }
+        },
+        {
+            "id": "wan22_i2v_a14b_720p",
+            "model": "Wan-AI/Wan2.2-I2V-A14B-Diffusers",
+            "task": "image-to-video",
+            "label": "Wan2.2-I2V-A14B-Diffusers",
+            "prompt": "A slow camera pan across a futuristic city at dusk, neon lights reflecting on wet streets",
+            "width": 1280,
+            "height": 720,
+            "seed": 42,
+            "num_gpus": 1,
+            "num_inference_steps": 30,
+            "guidance_scale": 1.0,
+            "num_frames": 121,
+            "fps": 24,
+            "frameworks": {
+                "sglang": {
+                    "serve_args": ""
+                }
+            },
+            "report_framework_statuses": {
+                "vllm-omni": "not_run",
+                "lightx2v": "not_run",
+                "trtllm-visual": "not_run",
+                "comfyui": "not_run",
+                "fastvideo": "not_run"
+            },
+            "report_framework_reasons": {
+                "vllm-omni": "not yet validated",
+                "lightx2v": "not yet validated",
+                "trtllm-visual": "not yet validated",
+                "comfyui": "not yet validated",
+                "fastvideo": "not yet validated"
+            }
+        },
+        {
+            "id": "wan22_ti2v_5b_720p",
+            "model": "Wan-AI/Wan2.2-TI2V-5B-Diffusers",
+            "task": "text-to-video",
+            "label": "Wan2.2-TI2V-5B-Diffusers",
+            "prompt": "A slow camera pan across a futuristic city at dusk, neon lights reflecting on wet streets",
+            "width": 1280,
+            "height": 720,
+            "seed": 42,
+            "num_gpus": 1,
+            "num_inference_steps": 30,
+            "guidance_scale": 1.0,
+            "num_frames": 121,
+            "fps": 24,
+            "frameworks": {
+                "sglang": {
+                    "serve_args": ""
+                }
+            },
+            "report_framework_statuses": {
+                "vllm-omni": "not_run",
+                "lightx2v": "not_run",
+                "trtllm-visual": "not_run",
+                "comfyui": "not_run",
+                "fastvideo": "not_run"
+            },
+            "report_framework_reasons": {
+                "vllm-omni": "not yet validated",
+                "lightx2v": "not yet validated",
+                "trtllm-visual": "not yet validated",
+                "comfyui": "not yet validated",
+                "fastvideo": "not yet validated"
+            }
+        },
+        {
+            "id": "wan22_ti2v_5b_fullattn",
+            "model": "FastVideo/FastWan2.2-TI2V-5B-FullAttn-Diffusers",
+            "task": "text-to-video",
+            "label": "FastWan2.2-TI2V-5B-FullAttn-Diffusers",
+            "prompt": "A slow camera pan across a futuristic city at dusk, neon lights reflecting on wet streets",
+            "width": 1280,
+            "height": 720,
+            "seed": 42,
+            "num_gpus": 1,
+            "num_inference_steps": 30,
+            "guidance_scale": 1.0,
+            "num_frames": 121,
+            "fps": 24,
+            "frameworks": {
+                "sglang": {
+                    "serve_args": ""
+                }
+            },
+            "report_framework_statuses": {
+                "vllm-omni": "not_run",
+                "lightx2v": "not_run",
+                "trtllm-visual": "not_run",
+                "comfyui": "not_run",
+                "fastvideo": "not_run"
+            },
+            "report_framework_reasons": {
+                "vllm-omni": "not yet validated",
+                "lightx2v": "not yet validated",
+                "trtllm-visual": "not yet validated",
+                "comfyui": "not yet validated",
+                "fastvideo": "not yet validated"
+            }
+        },
+        {
+            "id": "turbowan21_t2v_13b",
+            "model": "IPostYellow/TurboWan2.1-T2V-1.3B-Diffusers",
+            "task": "text-to-video",
+            "label": "TurboWan2.1-T2V-1.3B-Diffusers",
+            "prompt": "A slow camera pan across a futuristic city at dusk, neon lights reflecting on wet streets",
+            "width": 1280,
+            "height": 720,
+            "seed": 42,
+            "num_gpus": 1,
+            "num_inference_steps": 30,
+            "guidance_scale": 5.0,
+            "num_frames": 81,
+            "fps": 16,
+            "frameworks": {
+                "sglang": {
+                    "serve_args": ""
+                }
+            },
+            "report_framework_statuses": {
+                "vllm-omni": "not_run",
+                "lightx2v": "not_run",
+                "trtllm-visual": "not_run",
+                "comfyui": "not_run",
+                "fastvideo": "not_run"
+            },
+            "report_framework_reasons": {
+                "vllm-omni": "not yet validated",
+                "lightx2v": "not yet validated",
+                "trtllm-visual": "not yet validated",
+                "comfyui": "not yet validated",
+                "fastvideo": "not yet validated"
+            }
+        },
+        {
+            "id": "hunyuanvideo_t2v_720p",
+            "model": "hunyuanvideo-community/HunyuanVideo",
+            "task": "text-to-video",
+            "label": "HunyuanVideo",
+            "prompt": "A slow camera pan across a futuristic city at dusk, neon lights reflecting on wet streets",
+            "width": 1280,
+            "height": 720,
+            "seed": 42,
+            "num_gpus": 1,
+            "num_inference_steps": 30,
+            "guidance_scale": 1.0,
+            "num_frames": 129,
+            "fps": 24,
+            "frameworks": {
+                "sglang": {
+                    "serve_args": ""
+                }
+            },
+            "report_framework_statuses": {
+                "vllm-omni": "not_run",
+                "lightx2v": "not_run",
+                "trtllm-visual": "not_run",
+                "comfyui": "not_run",
+                "fastvideo": "not_run"
+            },
+            "report_framework_reasons": {
+                "vllm-omni": "not yet validated",
+                "lightx2v": "not yet validated",
+                "trtllm-visual": "not yet validated",
+                "comfyui": "not yet validated",
+                "fastvideo": "not yet validated"
+            }
+        },
+        {
+            "id": "fasthunyuan_t2v",
+            "model": "FastVideo/FastHunyuan-diffusers",
+            "task": "text-to-video",
+            "label": "FastHunyuan-diffusers",
+            "prompt": "A slow camera pan across a futuristic city at dusk, neon lights reflecting on wet streets",
+            "width": 1280,
+            "height": 720,
+            "seed": 42,
+            "num_gpus": 1,
+            "num_inference_steps": 30,
+            "guidance_scale": 1.0,
+            "num_frames": 129,
+            "fps": 24,
+            "frameworks": {
+                "sglang": {
+                    "serve_args": ""
+                }
+            },
+            "report_framework_statuses": {
+                "vllm-omni": "not_run",
+                "lightx2v": "not_run",
+                "trtllm-visual": "not_run",
+                "comfyui": "not_run",
+                "fastvideo": "not_run"
+            },
+            "report_framework_reasons": {
+                "vllm-omni": "not yet validated",
+                "lightx2v": "not yet validated",
+                "trtllm-visual": "not yet validated",
+                "comfyui": "not yet validated",
+                "fastvideo": "not yet validated"
+            }
+        },
+        {
+            "id": "longlive2_t2v",
+            "model": "Rabinovich/LongLive-2.0-5B-Diffusers",
+            "task": "text-to-video",
+            "label": "LongLive-2.0-5B-Diffusers",
+            "prompt": "A slow camera pan across a futuristic city at dusk, neon lights reflecting on wet streets",
+            "width": 1280,
+            "height": 720,
+            "seed": 42,
+            "num_gpus": 1,
+            "num_inference_steps": 30,
+            "guidance_scale": 1.0,
+            "num_frames": 121,
+            "fps": 24,
+            "frameworks": {
+                "sglang": {
+                    "serve_args": ""
+                }
+            },
+            "report_framework_statuses": {
+                "vllm-omni": "not_run",
+                "lightx2v": "not_run",
+                "trtllm-visual": "not_run",
+                "comfyui": "not_run",
+                "fastvideo": "not_run"
+            },
+            "report_framework_reasons": {
+                "vllm-omni": "not yet validated",
+                "lightx2v": "not yet validated",
+                "trtllm-visual": "not yet validated",
+                "comfyui": "not yet validated",
+                "fastvideo": "not yet validated"
+            }
+        },
+        {
+            "id": "mova_360p_t2v",
+            "model": "OpenMOSS-Team/MOVA-360p",
+            "task": "text-to-video",
+            "label": "MOVA-360p",
+            "prompt": "A slow camera pan across a futuristic city at dusk, neon lights reflecting on wet streets",
+            "width": 640,
+            "height": 360,
+            "seed": 42,
+            "num_gpus": 1,
+            "num_inference_steps": 30,
+            "guidance_scale": 1.0,
+            "num_frames": 121,
+            "fps": 24,
+            "frameworks": {
+                "sglang": {
+                    "serve_args": ""
+                }
+            },
+            "report_framework_statuses": {
+                "vllm-omni": "not_run",
+                "lightx2v": "not_run",
+                "trtllm-visual": "not_run",
+                "comfyui": "not_run",
+                "fastvideo": "not_run"
+            },
+            "report_framework_reasons": {
+                "vllm-omni": "not yet validated",
+                "lightx2v": "not yet validated",
+                "trtllm-visual": "not yet validated",
+                "comfyui": "not yet validated",
+                "fastvideo": "not yet validated"
+            }
+        },
+        {
+            "id": "lingbot_video_moe_t2v",
+            "model": "robbyant/lingbot-video-moe-30b-a3b",
+            "task": "text-to-video",
+            "label": "lingbot-video-moe-30b-a3b",
+            "prompt": "A slow camera pan across a futuristic city at dusk, neon lights reflecting on wet streets",
+            "width": 1280,
+            "height": 720,
+            "seed": 42,
+            "num_gpus": 1,
+            "num_inference_steps": 30,
+            "guidance_scale": 1.0,
+            "num_frames": 121,
+            "fps": 24,
+            "frameworks": {
+                "sglang": {
+                    "serve_args": ""
+                }
+            },
+            "report_framework_statuses": {
+                "vllm-omni": "not_run",
+                "lightx2v": "not_run",
+                "trtllm-visual": "not_run",
+                "comfyui": "not_run",
+                "fastvideo": "not_run"
+            },
+            "report_framework_reasons": {
+                "vllm-omni": "not yet validated",
+                "lightx2v": "not yet validated",
+                "trtllm-visual": "not yet validated",
+                "comfyui": "not yet validated",
+                "fastvideo": "not yet validated"
+            }
+        },
+        {
+            "id": "lingbot_world_t2v",
+            "model": "robbyant/lingbot-world-fast-diffusers",
+            "task": "text-to-video",
+            "label": "lingbot-world-fast-diffusers",
+            "prompt": "A slow camera pan across a futuristic city at dusk, neon lights reflecting on wet streets",
+            "width": 1280,
+            "height": 720,
+            "seed": 42,
+            "num_gpus": 1,
+            "num_inference_steps": 30,
+            "guidance_scale": 1.0,
+            "num_frames": 121,
+            "fps": 24,
+            "frameworks": {
+                "sglang": {
+                    "serve_args": ""
+                }
+            },
+            "report_framework_statuses": {
+                "vllm-omni": "not_run",
+                "lightx2v": "not_run",
+                "trtllm-visual": "not_run",
+                "comfyui": "not_run",
+                "fastvideo": "not_run"
+            },
+            "report_framework_reasons": {
+                "vllm-omni": "not yet validated",
+                "lightx2v": "not yet validated",
+                "trtllm-visual": "not yet validated",
+                "comfyui": "not yet validated",
+                "fastvideo": "not yet validated"
+            }
+        },
+        {
+            "id": "wan22_t2v_a14b_nvfp4",
+            "model": "nvidia/Wan2.2-T2V-A14B-Diffusers-NVFP4",
+            "task": "text-to-video",
+            "label": "Wan2.2-T2V-A14B-Diffusers-NVFP4",
+            "prompt": "A slow camera pan across a futuristic city at dusk, neon lights reflecting on wet streets",
+            "width": 1280,
+            "height": 720,
+            "seed": 42,
+            "num_gpus": 1,
+            "num_inference_steps": 30,
+            "guidance_scale": 1.0,
+            "num_frames": 121,
+            "fps": 24,
+            "frameworks": {},
+            "report_framework_statuses": {
+                "sglang": "unsupported",
+                "vllm-omni": "not_run",
+                "lightx2v": "not_run",
+                "trtllm-visual": "not_run",
+                "comfyui": "not_run",
+                "fastvideo": "not_run"
+            },
+            "report_framework_reasons": {
+                "sglang": "NVFP4-quantized checkpoint (different numeric class)",
+                "vllm-omni": "not yet validated",
+                "lightx2v": "not yet validated",
+                "trtllm-visual": "not yet validated",
+                "comfyui": "not yet validated",
+                "fastvideo": "not yet validated"
+            }
+        },
+        {
+            "id": "kandinsky6_vsr",
+            "model": "kandinskylab/Kandinsky-6.0-VSR-distilled2steps-5s-Diffusers",
+            "task": "video-super-resolution",
+            "label": "Kandinsky-6.0-VSR-distilled2steps-5s-Diffusers",
+            "prompt": "A slow camera pan across a futuristic city at dusk, neon lights reflecting on wet streets",
+            "width": 1280,
+            "height": 720,
+            "seed": 42,
+            "num_gpus": 1,
+            "num_inference_steps": 2,
+            "guidance_scale": 1.0,
+            "num_frames": 121,
+            "fps": 24,
+            "frameworks": {},
+            "report_framework_statuses": {
+                "sglang": "unsupported",
+                "vllm-omni": "not_run",
+                "lightx2v": "not_run",
+                "trtllm-visual": "not_run",
+                "comfyui": "not_run",
+                "fastvideo": "not_run"
+            },
+            "report_framework_reasons": {
+                "sglang": "VSR, not a generative T2V/I2V model",
+                "vllm-omni": "not yet validated",
+                "lightx2v": "not yet validated",
+                "trtllm-visual": "not yet validated",
+                "comfyui": "not yet validated",
+                "fastvideo": "not yet validated"
+            }
+        },
+        {
+            "id": "hunyuan3d2",
+            "model": "tencent/Hunyuan3D-2",
+            "task": "text-to-3d",
+            "label": "Hunyuan3D-2",
+            "prompt": "A cinematic shot of a futuristic city at dusk, neon lights reflecting on wet streets",
+            "width": 1024,
+            "height": 1024,
+            "seed": 42,
+            "num_gpus": 1,
+            "num_inference_steps": 30,
+            "guidance_scale": 1.0,
+            "frameworks": {},
+            "report_framework_statuses": {
+                "sglang": "unsupported",
+                "vllm-omni": "not_run",
+                "lightx2v": "not_run",
+                "trtllm-visual": "not_run",
+                "comfyui": "not_run",
+                "fastvideo": "not_run"
+            },
+            "report_framework_reasons": {
+                "sglang": "3D generation, not image/video diffusion",
+                "vllm-omni": "not yet validated",
+                "lightx2v": "not yet validated",
+                "trtllm-visual": "not yet validated",
+                "comfyui": "not yet validated",
+                "fastvideo": "not yet validated"
+            }
+        },
+        {
+            "id": "pi05_base",
+            "model": "lerobot/pi05_base",
+            "task": "action",
+            "label": "pi05_base",
+            "prompt": "A cinematic shot of a futuristic city at dusk, neon lights reflecting on wet streets",
+            "width": 224,
+            "height": 224,
+            "seed": 42,
+            "num_gpus": 1,
+            "num_inference_steps": 1,
+            "guidance_scale": 1.0,
+            "frameworks": {},
+            "report_framework_statuses": {
+                "sglang": "unsupported",
+                "vllm-omni": "not_run",
+                "lightx2v": "not_run",
+                "trtllm-visual": "not_run",
+                "comfyui": "not_run",
+                "fastvideo": "not_run"
+            },
+            "report_framework_reasons": {
+                "sglang": "robotics policy, not diffusion",
+                "vllm-omni": "not yet validated",
+                "lightx2v": "not yet validated",
+                "trtllm-visual": "not yet validated",
+                "comfyui": "not yet validated",
+                "fastvideo": "not yet validated"
+            }
+        },
+        {
+            "id": "flux3_action_droid",
+            "model": "black-forest-labs/flux-3-action-droid",
+            "task": "action",
+            "label": "flux-3-action-droid",
+            "prompt": "A cinematic shot of a futuristic city at dusk, neon lights reflecting on wet streets",
+            "width": 224,
+            "height": 224,
+            "seed": 42,
+            "num_gpus": 1,
+            "num_inference_steps": 1,
+            "guidance_scale": 1.0,
+            "frameworks": {},
+            "report_framework_statuses": {
+                "sglang": "unsupported",
+                "vllm-omni": "not_run",
+                "lightx2v": "not_run",
+                "trtllm-visual": "not_run",
+                "comfyui": "not_run",
+                "fastvideo": "not_run"
+            },
+            "report_framework_reasons": {
+                "sglang": "robotics policy, not diffusion",
+                "vllm-omni": "not yet validated",
+                "lightx2v": "not yet validated",
+                "trtllm-visual": "not yet validated",
+                "comfyui": "not yet validated",
+                "fastvideo": "not yet validated"
+            }
         }
     ]
 }

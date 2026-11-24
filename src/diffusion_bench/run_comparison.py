@@ -706,6 +706,44 @@ def _npu_missing_model_reason(case: dict, fw_cfg: dict) -> str | None:
     )
 
 
+def _model_scope_org_name(model_path: str) -> str:
+    """ModelScope ``org/name`` for ``modelscope download`` from a cache path."""
+    parts = Path(model_path).parts
+    if len(parts) < 2:
+        raise ValueError(f"cannot derive modelscope org/name from path {model_path!r}")
+    return "/".join(parts[-2:])
+
+
+def _ensure_model_local(model_path: str) -> bool:
+    """Download a missing local model via ModelScope. Returns True if downloaded.
+
+    Callers remove the path afterwards. No-op for non-local refs (``hf://``) and
+    for models already on disk.
+    """
+    if not model_path or model_path.startswith(("hf://", "http://", "https://")):
+        return False
+    if os.path.isdir(model_path):
+        return False
+    org_name = _model_scope_org_name(model_path)
+    print(f"  Model not found at {model_path}; running: modelscope download {org_name}")
+    try:
+        ret = subprocess.run(["modelscope", "download", org_name])
+        if ret.returncode != 0:
+            raise RuntimeError(f"modelscope download {org_name} failed (exit {ret.returncode})")
+        if not os.path.isdir(model_path):
+            raise RuntimeError(f"modelscope download {org_name} did not populate {model_path}")
+    except Exception:
+        # Don't leave a partial download on a disk-constrained box.
+        shutil.rmtree(model_path, ignore_errors=True)
+        raise
+    return True
+
+
+def _remove_downloaded_model(model_path: str) -> None:
+    print(f"  Removing downloaded model {model_path}")
+    shutil.rmtree(model_path, ignore_errors=True)
+
+
 def _build_generic_http_cmd(case: dict, fw_cfg: dict, port: int) -> list[str]:
     """Build the launch command for a generic config-driven HTTP framework.
 
@@ -3440,6 +3478,8 @@ def run_case_framework(
     cmd = build_server_cmd(framework, case, fw_cfg, port)
     case["_server_command"] = shlex.join(cmd)
     print(f"\n  Command: {shlex.join(cmd)}")
+    model_path = _server_model_path(case, fw_cfg)
+    downloaded_model = False
 
     env = os.environ.copy()
     env.update(fw_cfg.get("extra_env", {}))
@@ -3468,6 +3508,7 @@ def run_case_framework(
         env = _visible_gpus_env(env, int(fw_cfg.get("num_gpus") or case.get("num_gpus") or 1))
         if framework == "comfyui":
             _prepare_comfyui_workspace(case, fw_cfg)
+        downloaded_model = _ensure_model_local(model_path)
         proc = subprocess.Popen(
             cmd,
             stdout=subprocess.PIPE,
@@ -3573,6 +3614,8 @@ def run_case_framework(
     finally:
         if proc:
             kill_server(proc)
+        if downloaded_model:
+            _remove_downloaded_model(model_path)
         if log_thread:
             log_thread.join(timeout=5)
         log_fh.close()

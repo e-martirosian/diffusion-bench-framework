@@ -1,0 +1,39 @@
+{
+  "id": "flux1_dev_t2i_1024",
+  "model": "black-forest-labs/FLUX.1-dev",
+  "task": "text-to-image",
+  "label": "FLUX.1-dev",
+  "prompt": "A cinematic shot of a futuristic city at dusk, neon lights reflecting on wet streets",
+  "width": 1024,
+  "height": 1024,
+  "seed": 42,
+  "num_gpus": 1,
+  "num_inference_steps": 30,
+  "guidance_scale": 3.5,
+  "frameworks": {
+    "sglang": {
+      "status": "supported",
+      "serve_args": ""
+    },
+    "vllm-omni": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "lightx2v": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "trtllm-visual": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "comfyui": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "fastvideo": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "_comment": "Template. Copy to model_paths.json and replace each value with the model's local directory. Keys are the repo id used in comparison_configs.json; on NPU a missing key skips the case with a message.",
+  "Comfy-Org/Ideogram-4": "/path/to/models/Comfy-Org/Ideogram-4",
+  "Comfy-Org/MiniMax-H3": "/path/to/models/Comfy-Org/MiniMax-H3",
+  "Comfy-Org/Qwen-Image-2.1": "/path/to/models/Comfy-Org/Qwen-Image-2.1",
+  "Comfy-Org/Qwen3-VL": "/path/to/models/Comfy-Org/Qwen3-VL",
+  "Comfy-Org/Wan_2.2_ComfyUI_Repackaged": "/path/to/models/Comfy-Org/Wan_2.2_ComfyUI_Repackaged",
+  "Comfy-Org/z_image_turbo": "/path/to/models/Comfy-Org/z_image_turbo",
+  "FastVideo/FastVideo-FastH3-8-Step-V2": "/path/to/models/FastVideo/FastVideo-FastH3-8-Step-V2",
+  "Lightricks/LTX-2.5-Diffusers": "/path/to/models/Lightricks/LTX-2.5-Diffusers",
+  "MiniMaxAI/MiniMax-H3": "/path/to/models/MiniMaxAI/MiniMax-H3",
+  "Qwen/Qwen-Image-2.1": "/path/to/models/Qwen/Qwen-Image-2.1",
+  "Tongyi-MAI/Z-Image-Turbo": "/path/to/models/Tongyi-MAI/Z-Image-Turbo",
+  "Wan-AI/Wan2.2-T2V-A14B": "/path/to/models/Wan-AI/Wan2.2-T2V-A14B",
+  "Wan-AI/Wan2.2-T2V-A14B-Diffusers": "/path/to/models/Wan-AI/Wan2.2-T2V-A14B-Diffusers",
+  "black-forest-labs/flux-3-image-klein-base": "/path/to/models/black-forest-labs/flux-3-image-klein-base",
+  "ideogram-ai/ideogram-4-fp8": "/path/to/models/ideogram-ai/ideogram-4-fp8",
+  "nvidia/Cosmos3-Nano": "/path/to/models/nvidia/Cosmos3-Nano"
+}

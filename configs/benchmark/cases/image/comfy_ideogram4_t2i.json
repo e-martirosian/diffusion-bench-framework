@@ -1,0 +1,39 @@
+{
+  "id": "comfy_ideogram4_t2i",
+  "model": "Comfy-Org/Ideogram-4",
+  "task": "text-to-image",
+  "label": "Ideogram-4",
+  "prompt": "A cinematic shot of a futuristic city at dusk, neon lights reflecting on wet streets",
+  "width": 1024,
+  "height": 1024,
+  "seed": 42,
+  "num_gpus": 1,
+  "num_inference_steps": 30,
+  "guidance_scale": 1.0,
+  "frameworks": {
+    "sglang": {
+      "status": "unsupported",
+      "reason": "ComfyUI repackaging of ideogram-4-fp8 (already a case)"
+    },
+    "vllm-omni": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "lightx2v": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "trtllm-visual": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "comfyui": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "fastvideo": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    }
+  }
+}

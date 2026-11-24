@@ -1,0 +1,39 @@
+{
+  "id": "pi05_base",
+  "model": "lerobot/pi05_base",
+  "task": "action",
+  "label": "pi05_base",
+  "prompt": "A cinematic shot of a futuristic city at dusk, neon lights reflecting on wet streets",
+  "width": 224,
+  "height": 224,
+  "seed": 42,
+  "num_gpus": 1,
+  "num_inference_steps": 1,
+  "guidance_scale": 1.0,
+  "frameworks": {
+    "sglang": {
+      "status": "unsupported",
+      "reason": "robotics policy, not diffusion"
+    },
+    "vllm-omni": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "lightx2v": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "trtllm-visual": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "comfyui": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "fastvideo": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    }
+  }
+}
