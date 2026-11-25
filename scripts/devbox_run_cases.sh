@@ -84,6 +84,18 @@ own_gpu_pids() {
         nvidia-smi --query-compute-apps=pid --format=csv,noheader -i "$GPU_IDS" 2>/dev/null
         return
     fi
+    if command -v npu-smi >/dev/null 2>&1; then
+        # Ascend: no compute-apps query like nvidia-smi. Take every process
+        # launched with exactly our device list -- the env every server this
+        # runner starts inherits -- whether or not it still holds a
+        # /dev/davinci* fd: a leaked HTTP parent may hold only its port, which
+        # is what collides with the next case ("could not bind port ...").
+        local p
+        for p in $(ls -d /proc/[0-9]* 2>/dev/null | cut -d/ -f3); do
+            tr '\0' '\n' < "/proc/$p/environ" 2>/dev/null | grep -qx "ASCEND_RT_VISIBLE_DEVICES=$GPU_IDS" && echo "$p"
+        done
+        return
+    fi
     # ROCm: amd-smi reports HOST pids, which name nothing (or the wrong process) inside
     # a container. Take the container's own processes holding /dev/kfd and keep those
     # launched with exactly our device list, which every server this runner starts inherits.
@@ -108,6 +120,21 @@ kill_own_gpus() {
 gpu_used_mib() {
     if command -v nvidia-smi >/dev/null 2>&1; then
         nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits -i "$GPU_IDS" 2>/dev/null | sort -n | tail -1
+        return
+    fi
+    if command -v npu-smi >/dev/null 2>&1; then
+        # Ascend: the used side of npu-smi info's "N / M" Memory-Usage(MB)
+        # pairs on our chips. Version-fragile by nature -- an unparsable table
+        # degrades to 0 ("assume free"), which the process reaping above still
+        # backstops.
+        npu-smi info 2>/dev/null | awk -v ids=",$GPU_IDS," '
+            /^\|/ {
+                if ($2 ~ /^[0-9]+$/) chip = $2
+                for (i = 1; i < NF; i++)
+                    if ($i ~ /^[0-9]+$/ && $(i+1) == "/" && index(ids, "," chip ",") && $i + 0 > max)
+                        max = $i + 0
+            }
+            END { print max + 0 }'
         return
     fi
     rocm-smi --showmeminfo vram --csv 2>/dev/null | awk -F, -v ids=",$GPU_IDS," '
