@@ -149,16 +149,22 @@ gpu_used_mib() {
 # A case starts on empty cards. Killing is not enough: after a GPU memory fault the
 # dying workers held ~250 GB per MI355X for over an hour (2026-10-10), and the cases
 # that ran on top of them crawled at 100 s/step or OOMed.
+# Free-card threshold (MiB). 2048 suits NVIDIA/ROCm idle; Ascend chips can
+# idle ABOVE it (driver/firmware HBM reserve), which read as a permanently
+# contaminated card and refused every batch. Tune per box from the idle
+# `npu-smi info` usage plus a margin: DBF_GPU_FREE_MIB=<idle+margin>.
+GPU_FREE_MIB="${DBF_GPU_FREE_MIB:-2048}"
+
 wait_gpus_free() {
     local waited=0 used
     while :; do
         used=$(gpu_used_mib)
-        (( ${used:-0} < 2048 )) && return 0
+        (( ${used:-0} < GPU_FREE_MIB )) && return 0
         if (( waited >= 600 )); then
-            echo "GPUs $GPU_IDS still hold ${used} MiB after ${waited}s"
+            echo "GPUs $GPU_IDS still hold ${used} MiB after ${waited}s (threshold ${GPU_FREE_MIB} MiB)"
             return 1
         fi
-        (( waited == 0 )) && echo "waiting for GPUs $GPU_IDS to free (${used} MiB in use)"
+        (( waited == 0 )) && echo "waiting for GPUs $GPU_IDS to free (${used} MiB in use, threshold ${GPU_FREE_MIB} MiB)"
         kill_own_gpus
         sleep 15
         waited=$((waited + 15))
