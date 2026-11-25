@@ -2621,7 +2621,15 @@ def send_request(
         )
     # SGLang — use OpenAI-compatible endpoints with optional perf log
     task = case["task"]
-    if case.get("reference_image"):
+    if (
+        task in ("image-edit", "image-to-image", "image-to-video", "text-image-to-video")
+        or case.get("reference_image")
+    ):
+        # Image-conditioned BY TASK, not by a flag: every edit/I2V case needs a
+        # reference image attached (the shared test_image_url unless the case
+        # carries its own). The older reference_image-only routing dropped every
+        # newly-added image-edit case into "Unknown task type" (joyai_image_edit,
+        # qwen_image_edit_2509/2511, 2026-11-25).
         return send_image_conditioned_request_sglang(
             base_url, case, config, perf_dump_path
         )

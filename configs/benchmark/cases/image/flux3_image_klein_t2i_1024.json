@@ -10,6 +10,7 @@
   "num_gpus": 1,
   "num_inference_steps": 12,
   "guidance_scale": 1.0,
+  "_note": "GATED DOWNLOAD: black-forest-labs/flux-3-image-klein cannot be fetched without login -- `modelscope download` fails with an auth error until the box is logged in (modelscope login with a token, or HF login when fetching via the HF endpoint). Until then every round fails this cell at the download step; the mapped cache dir (model_paths.json) stays absent. Not a model-format issue -- once the snapshot is placed (complete diffusers layout with model_index.json), the case runs as configured.",
   "frameworks": {
     "sglang": {
       "status": "supported",

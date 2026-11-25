@@ -13,7 +13,19 @@
   "frameworks": {
     "sglang": {
       "status": "supported",
-      "serve_args": ""
+      "serve_args": "",
+      "command_profiles": {
+        "cand-a3-tp2": {
+          "description": "First Ascend (a3) draft: 2 cards, tensor-parallel 2 (weights ~64 GB bf16 exceed one 64 GB card).",
+          "sglang_ref": "current-main",
+          "num_gpus": 2,
+          "serve_args": "--model-type diffusion --warmup-mode server --tp-size 2 --enable-torch-compile false",
+          "hardware": [
+            "a3"
+          ],
+          "notes": "Draft for the first Ascend round (2026-11-25): FLUX.2-dev is ~32B bf16 (~64 GB weights) -- a single 64 GB 910C cannot hold it (OOM at load), and Ulysses shards activations, not weights, so tensor parallel is the memory fix. VALIDATION PENDING with a known risk: if sglang falls back to the native diffusers transformer on torch_npu (the wan22 finding), the fallback cannot honor tp_size=2 either and this cell errors -- then FLUX.2-dev is honestly unservable on torch_npu with this sglang build and gets recorded as such. The local snapshot must also be a complete diffusers layout (model_index.json present) -- same incomplete-download check as zimage."
+        }
+      }
     },
     "vllm-omni": {
       "status": "not_run",

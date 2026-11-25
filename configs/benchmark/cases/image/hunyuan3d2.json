@@ -1,6 +1,6 @@
 {
   "id": "hunyuan3d2",
-  "model": "tencent/Hunyuan3D-2",
+  "model": "Tencent-Hunyuan/Hunyuan3D-2",
   "task": "text-to-3d",
   "label": "Hunyuan3D-2",
   "prompt": "A cinematic shot of a futuristic city at dusk, neon lights reflecting on wet streets",

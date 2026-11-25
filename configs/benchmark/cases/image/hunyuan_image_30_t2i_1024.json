@@ -1,6 +1,6 @@
 {
   "id": "hunyuan_image_30_t2i_1024",
-  "model": "tencent/HunyuanImage-3.0",
+  "model": "Tencent-Hunyuan/HunyuanImage-3.0",
   "task": "text-to-image",
   "label": "HunyuanImage-3.0",
   "prompt": "A cinematic shot of a futuristic city at dusk, neon lights reflecting on wet streets",
