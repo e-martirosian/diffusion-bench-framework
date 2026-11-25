@@ -74,6 +74,10 @@ cd "$REPO_DIR"
 export HF_HOME="${DBF_HF_HOME:-${STATE_DIR}/hf-cache}"
 export HF_HUB_CACHE="${HF_HOME}/hub"
 export HUGGINGFACE_HUB_CACHE="${HF_HUB_CACHE}"
+# An HF mirror for boxes that cannot reach huggingface.co directly:
+# huggingface_hub honors HF_ENDPOINT natively, and the harness rewrites the
+# config's hardcoded huggingface.co reference-image URLs through it too.
+[ -n "${DBF_HF_ENDPOINT:-}" ] && export HF_ENDPOINT="$DBF_HF_ENDPOINT"
 export SGLANG_DIFFUSION_SKIP_FRAMEWORK_INSTALL=1
 export SGLANG_DIFFUSION_FRAMEWORK_VENV_ROOT="${DBF_VENV_ROOT:-${STATE_DIR}/fw-venvs}"
 export DIFFUSION_BENCH_DISABLE_TORCH_COMPILE=0

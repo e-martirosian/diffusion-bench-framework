@@ -1581,6 +1581,25 @@ def _reference_image_url(config: dict, case: dict | None = None) -> str:
     return str(config.get("test_image_url", ""))
 
 
+def _hf_endpoint_url(url: str) -> str:
+    """Route a hardcoded huggingface.co URL through $HF_ENDPOINT when set.
+
+    huggingface_hub honors HF_ENDPOINT natively, but the config's reference
+    images (meta.json test_image_url, a case's reference_image_url) are plain
+    https://huggingface.co URLs fetched with requests -- on a box that only
+    reaches HF through a mirror, every image-conditioned case failed at the
+    download while the library paths worked. Rewriting the origin keeps the
+    canonical URL in the config and lets one env var route everything.
+    """
+    endpoint = os.environ.get("HF_ENDPOINT", "").rstrip("/")
+    if not endpoint:
+        return url
+    for origin in ("https://huggingface.co", "http://huggingface.co"):
+        if url.startswith(origin):
+            return endpoint + url[len(origin) :]
+    return url
+
+
 def _download_ref_image(config: dict, case: dict) -> bytes:
     """Download and cache a case-specific or shared test reference image."""
     url = _reference_image_url(config, case)
@@ -1588,8 +1607,9 @@ def _download_ref_image(config: dict, case: dict) -> bytes:
         raise RuntimeError("No test_image_url in config for image-conditioned case")
     if url in _cached_ref_images:
         return _cached_ref_images[url]
-    print(f"  Downloading reference image from {url} ...")
-    resp = requests.get(url, timeout=60)
+    fetch_url = _hf_endpoint_url(url)
+    print(f"  Downloading reference image from {fetch_url} ...")
+    resp = requests.get(fetch_url, timeout=60)
     _raise_for_status(resp)
     _cached_ref_images[url] = resp.content
     return _cached_ref_images[url]

@@ -36,7 +36,9 @@ export DBF_HF_HOME="${DBF_HF_HOME:-${DBF_STATE_DIR}/hf}"
 export HUGGINGFACE_HUB_CACHE="${HUGGINGFACE_HUB_CACHE:-${DBF_HF_HOME}}"
 # No HF access? Point DBF_MODEL_PATHS at a JSON file mapping repo id -> local
 # model dir (see configs/model_paths.example.json); the runner uses it verbatim
-# and skips HuggingFace entirely.
+# and skips HuggingFace for models. Reference images (image-edit / i2v cases)
+# still fetch huggingface.co URLs unless DBF_HF_ENDPOINT (or HF_ENDPOINT)
+# points at a mirror.
 export DBF_MODEL_PATHS="${DBF_MODEL_PATHS:-${DBF_STATE_DIR}/model_paths.json}"
 export DBF_FRAMEWORKS="${DBF_FRAMEWORKS:-sglang vllm-omni}"
 export DBF_HARDWARE_PROFILE="${DBF_HARDWARE_PROFILE:-a2}"
