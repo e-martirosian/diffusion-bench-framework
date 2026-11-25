@@ -44,7 +44,7 @@ CASE_TIMEOUT="${DBF_CASE_TIMEOUT:-3000}"
 TOKEN_FILE="${DBF_HF_TOKEN_FILE:-${STATE_DIR}/.hftoken}"
 # A variant config (e.g. an old competitor profile) A/Bs a command on the same box.
 CONFIG="${DBF_CONFIG:-configs/comparison_configs.json}"
-HARNESS_PYTHONPATH="${DBF_SGLANG_PYTHONPATH:+${DBF_SGLANG_PYTHONPATH}:}src"
+HARNESS_PYTHONPATH="${DBF_SGLANG_PYTHONPATH:+${DBF_SGLANG_PYTHONPATH}:}${PYTHONPATH:+${PYTHONPATH}:}src"
 if [ -n "${DBF_SGLANG_PYTHONPATH:-}" ]; then
     # A missing tree does not fail the import: Python falls back to the installed
     # sglang, and every result records that sha instead (2026-10-11).
@@ -90,13 +90,23 @@ own_gpu_pids() {
     fi
     if command -v npu-smi >/dev/null 2>&1; then
         # Ascend: no compute-apps query like nvidia-smi. Take every process
-        # launched with exactly our device list -- the env every server this
-        # runner starts inherits -- whether or not it still holds a
-        # /dev/davinci* fd: a leaked HTTP parent may hold only its port, which
-        # is what collides with the next case ("could not bind port ...").
-        local p
+        # whose ASCEND_RT_VISIBLE_DEVICES is a non-empty SUBSET of our card
+        # list: the harness narrows a server's device list to the case's
+        # num_gpus (a prefix of the runner's slice), so an exact match misses
+        # every leaked server from a multi-card case -- e.g. a wan22 server
+        # ("0,1,2,3") survives a reaper told GPU_IDS=0 and keeps holding the
+        # port range the next case wants ("could not bind port 45013"). Run
+        # with GPUS covering ALL cards so every leak is in scope; cards in
+        # GPU_IDS are exclusively ours for this run, so no cross-killing.
+        local p v c ok
         for p in $(ls -d /proc/[0-9]* 2>/dev/null | cut -d/ -f3); do
-            tr '\0' '\n' < "/proc/$p/environ" 2>/dev/null | grep -qx "ASCEND_RT_VISIBLE_DEVICES=$GPU_IDS" && echo "$p"
+            v="$(tr '\0' '\n' < "/proc/$p/environ" 2>/dev/null | sed -n 's/^ASCEND_RT_VISIBLE_DEVICES=//p')"
+            [ -n "$v" ] || continue
+            ok=1
+            for c in ${v//,/ }; do
+                case ",$GPU_IDS," in *",$c,"*) ;; *) ok=0; break ;; esac
+            done
+            [ "$ok" = 1 ] && echo "$p"
         done
         return
     fi

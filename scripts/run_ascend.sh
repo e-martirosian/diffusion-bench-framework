@@ -139,6 +139,12 @@ if [ "${DBF_DRY_RUN_GROUPS:-0}" = "1" ]; then
     printf '%s\n' "$CASE_GROUPS" | head -3
     exit 0
 fi
+# Port stride between groups. A sglang server binds its HTTP port plus
+# derived ports next to it (the ZMQ broker sits at port+1, others nearby), so
+# a leaked server covers a RANGE; the stride must exceed that range or the
+# next group's HTTP port lands inside it ("could not bind port 45013",
+# 2026-11-24: a leaked 4-card wan22 server from an earlier run held the range).
+PORT_SPACING="${DBF_PORT_SPACING:-32}"
 port="${BASE_PORT:-45001}"
 gi=0
 while IFS= read -r group; do
@@ -149,6 +155,6 @@ while IFS= read -r group; do
     bash "${DBF_REPO_DIR}/scripts/devbox_run_cases.sh" \
         "$gtag" "$GPUS" "$port" "single_e2e throughput" $group
     grep -h "^RESULT" "${DBF_LOG_DIR}/run_${gtag}.log" 2>/dev/null
-    port=$((port + 4))
+    port=$((port + PORT_SPACING))
 done <<< "$CASE_GROUPS"
 echo "=== Ascend NPU cross-framework run DONE $(date -Is) ==="
