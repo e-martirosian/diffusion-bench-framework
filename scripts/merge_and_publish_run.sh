@@ -63,6 +63,16 @@ DIFFUSION_BENCH_STRICT_COMMANDS=1 PYTHONPATH=src "${PY_BIN}" \
   --issue-md "${OUT}/issue.md" \
   --run-id "${RUN_ID}" || exit 1
 
+echo "=== diffusion cross-platform dashboard ==="
+# Our dashboard view (merged same-model rows, abbreviated tasks, Risk,
+# per-case Supported, and the sglang-supported models this run never tested)
+# alongside generate_dashboard's own dashboard.md.
+PYTHONPATH=src "${PY_BIN}" \
+  scripts/diffusion_cross_platform_performance_dashboard.py \
+  --merged "${OUT}/merged.json" \
+  --config configs/comparison_configs.json \
+  --output-md "${OUT}/diffusion_cross_platform_performance_dashboard.md" || exit 1
+
 echo "=== gates ==="
 "${PY_BIN}" - "${OUT}/merged.json" <<'PY' || { echo "REFUSING to publish"; exit 1; }
 import json, sys

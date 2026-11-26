@@ -1,0 +1,52 @@
+{
+  "id": "cosmos3_super_t2v_720p",
+  "model": "nvidia/Cosmos3-Super",
+  "task": "text-to-video",
+  "label": "Cosmos3-Super T2V 720p",
+  "prompt": "A small warehouse robot moves a blue box across a clean floor.",
+  "negative_prompt": "blurry, distorted, low quality",
+  "width": 1280,
+  "height": 720,
+  "num_frames": 189,
+  "fps": 24,
+  "seed": 123,
+  "num_gpus": 1,
+  "num_inference_steps": 35,
+  "guidance_scale": 6.0,
+  "request_extra": {
+    "flow_shift": 10.0,
+    "extra_params": {
+      "max_sequence_length": 4096,
+      "use_resolution_template": false,
+      "use_duration_template": false,
+      "guardrails": false
+    }
+  },
+  "notes": "2026-11-26 sglang support-table scaffold (coverage: Yes (unit)). Params mirror cosmos3_nano_t2v_720p_189f (189f @ 24fps, 720p); the nano case serves Cosmos3 4-GPU (cfg-parallel 2 + ulysses 2) — add tuned command_profiles after the first single-card run, and expect the a3 constraints recorded for the nano cases. VALIDATION PENDING.",
+  "frameworks": {
+    "sglang": {
+      "status": "supported",
+      "serve_args": ""
+    },
+    "vllm-omni": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "lightx2v": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "trtllm-visual": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "comfyui": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "fastvideo": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    }
+  }
+}

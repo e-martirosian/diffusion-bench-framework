@@ -1,0 +1,42 @@
+{
+  "id": "cosmos3_nano_transfer_auto_t2v",
+  "model": "nvidia/Cosmos3-Nano-Transfer-Auto",
+  "task": "text-to-video",
+  "label": "Cosmos3-Nano-Transfer-Auto (Multiview)",
+  "prompt": "A slow camera pan across a futuristic city at dusk, neon lights reflecting on wet streets",
+  "width": 1280,
+  "height": 720,
+  "num_frames": 189,
+  "fps": 24,
+  "seed": 123,
+  "num_gpus": 1,
+  "num_inference_steps": 35,
+  "guidance_scale": 6.0,
+  "notes": "2026-11-26 sglang support-table catalog stub (coverage: Yes (unit) upstream): conditioned multi-view transfer model — needs structured condition inputs (HDMap/liDAR/multi-camera) the request harness does not send. Re-classify if a condition-file request path lands.",
+  "frameworks": {
+    "sglang": {
+      "status": "unsupported",
+      "reason": "conditioned multi-view transfer model; needs structured condition inputs the request harness does not send"
+    },
+    "vllm-omni": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "lightx2v": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "trtllm-visual": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "comfyui": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "fastvideo": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    }
+  }
+}

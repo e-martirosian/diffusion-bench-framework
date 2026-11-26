@@ -169,25 +169,6 @@ def _short_sha(sha: str) -> str:
     return sha[:7] if sha and sha != "unknown" else "?"
 
 
-_TASK_ABBREV = {
-    "text-to-image": "T2I",
-    "image-edit": "IE",
-    "image-to-image": "I2I",
-    "text-to-video": "T2V",
-    "image-to-video": "I2V",
-    "text-image-to-video": "TI2V",
-    "video-super-resolution": "VSR",
-    "text-to-3d": "T2-3D",
-}
-
-
-def _task_abbrev(task: str | None) -> str:
-    """Short task label for the dashboard tables (T2I / T2V / I2V / ...)."""
-    if not task:
-        return "-"
-    return _TASK_ABBREV.get(task, task)
-
-
 def _assess_risk(
     cid: str,
     current_cases: dict[str, dict[str, float | None]],
@@ -370,25 +351,19 @@ def generate_dashboard(
         risk_map[cid] = _assess_risk(cid, current_cases, history, other_frameworks)
 
     # Dynamic header
-    header = "| Model | Task | Risk |"
-    sep = "|-------|------|------|"
+    header = "| Model | Risk |"
+    sep = "|-------|------|"
     for fw in all_frameworks:
         header += f" {fw} (s) |"
         sep += "---------|"
     for ofw in other_frameworks:
         header += f" vs {ofw} |"
         sep += "---------|"
-    header += " Supported |"
-    sep += "-----------|"
     lines.append(header)
     lines.append(sep)
 
-    # One row per case (deduplicated by case_id). Consecutive rows sharing a
-    # model show the name once: markdown has no rowspan, so the repeats leave
-    # the Model cell empty and read as one merged block. Supported answers
-    # "did sglang produce a measurement for this case in this run".
+    # One row per case (deduplicated by case_id)
     seen_cases = set()
-    prev_model = None
     for r in current.get("results", []):
         cid = r["case_id"]
         if cid in seen_cases:
@@ -399,11 +374,7 @@ def generate_dashboard(
         sg_lat = case_fws.get("sglang")
 
         risk_emoji, _ = risk_map.get(cid, ("✅", ""))
-        model_name = r["model"].split("/")[-1]
-        model_cell = "" if model_name == prev_model else model_name
-        prev_model = model_name
-        supported = "✅" if sg_lat is not None else "❌"
-        row = f"| {model_cell} | {_task_abbrev(r.get('task'))} | {risk_emoji} |"
+        row = f"| {r['model'].split('/')[-1]} | {risk_emoji} |"
         # Latency columns -- bold the fastest
         lats = {fw: case_fws.get(fw) for fw in all_frameworks}
         valid_lats = [v for v in lats.values() if v is not None]
@@ -418,7 +389,6 @@ def generate_dashboard(
         # Speedup columns
         for ofw in other_frameworks:
             row += f" {_fmt_speedup(sg_lat, case_fws.get(ofw))} |"
-        row += f" {supported} |"
         lines.append(row)
         for fw in all_frameworks:
             samples = dispersed.get((cid, fw))
@@ -434,76 +404,32 @@ def generate_dashboard(
         lines.append("\n`~` = the repeats behind this median spread 25% or more:\n")
         lines.extend(dispersed_notes)
         lines.append("")
-    
-    # ---- Section 1b: sglang-supported models this run never tested ----
-    # Every model the benchmark catalog classifies for sglang, minus the models
-    # this artifact actually attempted (an errored attempt counts as tested --
-    # it shows as ❌ above). These never ran at all: pay attention.
-    untested_notes: list[str] = []
-    catalog = current.get("case_catalog") or []
-    if catalog:
-        tested_models = {
-            r.get("model") for r in current.get("results", []) if r.get("model")
-        }
-        untested: list[dict] = []
-        seen_untested: set[str] = set()
-        for c in catalog:
-            model = c.get("model")
-            if not model or model in tested_models or model in seen_untested:
-                continue
-            seen_untested.add(model)
-            untested.append(c)
-        if untested:
-            lines.append("\n## SGLang-Supported Models Not Tested In This Run\n")
-            lines.append(
-                "> [!IMPORTANT]\n> These sglang-supported models have no case in "
-                "this run's results at all — not tested, not errored.\n"
-            )
-            lines.append("")
-            lines.append("| Model | Task | sglang |")
-            lines.append("|-------|------|--------|")
-            for c in untested:
-                status = str(c.get("sglang_status") or "not_run")
-                note = c.get("sglang_note")
-                cell = (
-                    "supported — not run"
-                    if status == "supported"
-                    else _md_cell(f"{status}: {note}" if note else status)
-                )
-                lines.append(
-                    f"| {str(c.get('model')).split('/')[-1]} "
-                    f"| {_task_abbrev(c.get('task'))} | {cell} |"
-                )
-                untested_notes.append(
-                    f"{c.get('model')}: sglang {status}, not tested in this run"
-                )
-            lines.append("")
-    
-    throughput_cases = _extract_throughput_results(current)
-    # if throughput_cases:
-    #     lines.append("\n## High-Pressure Throughput\n")
-    #     header = "| Model |"
-    #     sep = "|-------|"
-    #     for fw in all_frameworks:
-    #         header += f" {fw} (req/s) | {fw} p95 (s) |"
-    #         sep += "---------|---------|"
-    #     lines.append(header)
-    #     lines.append(sep)
 
-    #     seen_cases = set()
-    #     for r in current.get("throughput_results", []):
-    #         cid = r["case_id"]
-    #         if cid in seen_cases:
-    #             continue
-    #         seen_cases.add(cid)
-    #         row = f"| {r['model'].split('/')[-1]} |"
-    #         case_fws = throughput_cases.get(cid, {})
-    #         for fw in all_frameworks:
-    #             metrics = case_fws.get(fw, {})
-    #             throughput = metrics.get("throughput_rps")
-    #             p95 = metrics.get("latency_p95_s")
-    #             row += f" {_fmt_latency(throughput)} | {_fmt_latency(p95)} |"
-    #         lines.append(row)
+    throughput_cases = _extract_throughput_results(current)
+    if throughput_cases:
+        lines.append("\n## High-Pressure Throughput\n")
+        header = "| Model |"
+        sep = "|-------|"
+        for fw in all_frameworks:
+            header += f" {fw} (req/s) | {fw} p95 (s) |"
+            sep += "---------|---------|"
+        lines.append(header)
+        lines.append(sep)
+
+        seen_cases = set()
+        for r in current.get("throughput_results", []):
+            cid = r["case_id"]
+            if cid in seen_cases:
+                continue
+            seen_cases.add(cid)
+            row = f"| {r['model'].split('/')[-1]} |"
+            case_fws = throughput_cases.get(cid, {})
+            for fw in all_frameworks:
+                metrics = case_fws.get(fw, {})
+                throughput = metrics.get("throughput_rps")
+                p95 = metrics.get("latency_p95_s")
+                row += f" {_fmt_latency(throughput)} | {_fmt_latency(p95)} |"
+            lines.append(row)
 
     # ---- Section 2: Cross-Framework Speedup Trend (only if multiple frameworks) ----
     if history and other_frameworks:
@@ -737,8 +663,14 @@ def generate_dashboard(
             lines.append(f"> - {reason}")
         lines.append("")
 
+    # Footer
+    lines.append("\n---")
+    lines.append(
+        "*Generated by `generate_diffusion_dashboard.py` in SGLang nightly CI.*"
+    )
+
     alert_reasons = [reason for _, _, reason in alert_cases]
-    return "\n".join(lines) + "\n", alert_reasons + untested_notes
+    return "\n".join(lines) + "\n", alert_reasons
 
 
 def _md_cell(value: object) -> str:

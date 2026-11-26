@@ -1,0 +1,48 @@
+{
+  "id": "cosmos3_super_t2i_720p",
+  "model": "nvidia/Cosmos3-Super-Text2Image",
+  "task": "text-to-image",
+  "label": "Cosmos3-Super-Text2Image T2I 720p",
+  "prompt": "A warehouse robot folds a blue cloth on a clean workbench.",
+  "width": 1280,
+  "height": 720,
+  "seed": 0,
+  "num_gpus": 1,
+  "num_inference_steps": 35,
+  "guidance_scale": 6.0,
+  "request_extra": {
+    "flow_shift": 10.0,
+    "extra_params": {
+      "max_sequence_length": 4096,
+      "use_resolution_template": false,
+      "guardrails": false
+    }
+  },
+  "notes": "2026-11-26 sglang support-table scaffold (coverage: Yes (unit)). Params mirror cosmos3_nano_t2i_720p; the nano case serves Cosmos3 multi-GPU (cfg-parallel 2) — add tuned command_profiles after the first single-card run. VALIDATION PENDING.",
+  "frameworks": {
+    "sglang": {
+      "status": "supported",
+      "serve_args": ""
+    },
+    "vllm-omni": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "lightx2v": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "trtllm-visual": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "comfyui": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "fastvideo": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    }
+  }
+}

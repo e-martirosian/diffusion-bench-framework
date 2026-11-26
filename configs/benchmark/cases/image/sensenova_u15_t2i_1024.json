@@ -1,0 +1,40 @@
+{
+  "id": "sensenova_u15_t2i_1024",
+  "model": "sensenova/SenseNova-U1.5-8B-MoT",
+  "task": "text-to-image",
+  "label": "SenseNova-U1.5-8B-MoT",
+  "prompt": "A cinematic shot of a futuristic city at dusk, neon lights reflecting on wet streets",
+  "width": 1024,
+  "height": 1024,
+  "seed": 42,
+  "num_gpus": 1,
+  "num_inference_steps": 30,
+  "guidance_scale": 1.0,
+  "notes": "2026-11-26 sglang support-table scaffold (coverage: Yes (unit)). MoT (Mixture-of-Transformers) image model; serve_args carries --trust-remote-code like the other custom-architecture image models (LLaDA-Image). The ModelScope org differs from the HF id (SenseNova/...), so the model_paths.json entry maps the HF id to the SenseNova cache dir. Steps/guidance are placeholders. VALIDATION PENDING.",
+  "frameworks": {
+    "sglang": {
+      "status": "supported",
+      "serve_args": "--trust-remote-code"
+    },
+    "vllm-omni": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "lightx2v": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "trtllm-visual": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "comfyui": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "fastvideo": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    }
+  }
+}

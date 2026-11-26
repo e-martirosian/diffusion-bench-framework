@@ -1,0 +1,42 @@
+{
+  "id": "wan21_fun_13b_inp_t2v_480p",
+  "model": "weizhou03/Wan2.1-Fun-1.3B-InP-Diffusers",
+  "task": "image-to-video",
+  "label": "Wan2.1-Fun-1.3B-InP",
+  "prompt": "A slow camera pan across a futuristic city at dusk, neon lights reflecting on wet streets",
+  "width": 832,
+  "height": 480,
+  "num_frames": 81,
+  "fps": 16,
+  "seed": 42,
+  "num_gpus": 1,
+  "num_inference_steps": 30,
+  "guidance_scale": 5.0,
+  "notes": "2026-11-26: supported in current sglang; scaffold runs on model defaults. Fun-InP is control-conditioned (start-frame + control image); the harness sends the reference image. VALIDATION PENDING.",
+  "frameworks": {
+    "sglang": {
+      "status": "supported",
+      "serve_args": ""
+    },
+    "vllm-omni": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "lightx2v": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "trtllm-visual": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "comfyui": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "fastvideo": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    }
+  }
+}

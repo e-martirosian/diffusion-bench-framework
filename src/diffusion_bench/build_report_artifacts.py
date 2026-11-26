@@ -124,28 +124,6 @@ def merge_results(paths: list[Path], output_json: Path, config_path: Path, run_i
     import os as _os
 
     config_data = _load(config_path)
-    # Registry for the dashboard's coverage section: every catalog case's model
-    # with its sglang classification, so models this run never attempted can be
-    # flagged next to the results. The built config publishes command bodies
-    # only for supported frameworks, so an unsupported status lives in
-    # report_framework_statuses with its reason.
-    merged["case_catalog"] = [
-        {
-            "id": case.get("id"),
-            "model": case.get("model"),
-            "task": case.get("task"),
-            "sglang_status": (
-                "supported"
-                if "sglang" in (case.get("frameworks") or {})
-                else str(
-                    (case.get("report_framework_statuses") or {}).get("sglang")
-                    or "not_run"
-                )
-            ),
-            "sglang_note": (case.get("report_framework_reasons") or {}).get("sglang"),
-        }
-        for case in config_data.get("cases", [])
-    ]
     # Check against the hardware the run actually used. The verifier defaults to
     # h100, and nothing passed anything else, so every row of a Blackwell run
     # was compared with the profile h100 selects and reported as drift —

@@ -1,0 +1,39 @@
+{
+  "id": "ideogram4_nf4_t2i_1024",
+  "model": "ideogram-ai/ideogram-4-nf4",
+  "task": "text-to-image",
+  "label": "Ideogram-4 (NF4) T2I",
+  "prompt": "A futuristic cyberpunk city at night, neon lights reflecting on wet streets",
+  "width": 1024,
+  "height": 1024,
+  "seed": 42,
+  "num_gpus": 1,
+  "num_inference_steps": 20,
+  "_note": "2026-11-26 sglang support-table scaffold (coverage: Yes (unit)). NF4-quantized checkpoint (the fp8 sibling runs as ideogram4_t2i_1024_2gpu_tp); a different numeric class, so keep its rows separate. Ideogram-4 derives steps and guidance from its sampling preset; guidance_scale is intentionally omitted because the model rejects an explicit value. VALIDATION PENDING.",
+  "frameworks": {
+    "sglang": {
+      "status": "supported",
+      "serve_args": ""
+    },
+    "vllm-omni": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "lightx2v": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "trtllm-visual": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "comfyui": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "fastvideo": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    }
+  }
+}

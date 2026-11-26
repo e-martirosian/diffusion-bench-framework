@@ -1,0 +1,42 @@
+{
+  "id": "wan22_animate_14b_distilled",
+  "model": "Wan-AI/Wan2.2-Animate-2-14B-Distilled-Diffusers",
+  "task": "image-to-video",
+  "label": "Wan2.2-Animate-2-14B (Distilled)",
+  "prompt": "A slow camera pan across a futuristic city at dusk, neon lights reflecting on wet streets",
+  "width": 1280,
+  "height": 720,
+  "num_frames": 81,
+  "fps": 16,
+  "seed": 42,
+  "num_gpus": 1,
+  "num_inference_steps": 30,
+  "guidance_scale": 5.0,
+  "notes": "2026-11-26 sglang support-table catalog stub (coverage: Yes (CI) upstream): distilled sibling of wan22_animate_14b; same driving-reference-video constraint.",
+  "frameworks": {
+    "sglang": {
+      "status": "unsupported",
+      "reason": "character animation needs a driving reference video; the request harness sends an image and prompt only"
+    },
+    "vllm-omni": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "lightx2v": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "trtllm-visual": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "comfyui": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "fastvideo": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    }
+  }
+}

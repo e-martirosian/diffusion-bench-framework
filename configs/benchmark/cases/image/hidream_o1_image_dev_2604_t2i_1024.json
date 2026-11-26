@@ -1,0 +1,40 @@
+{
+  "id": "hidream_o1_image_dev_2604_t2i_1024",
+  "model": "HiDream-ai/HiDream-O1-Image-Dev-2604",
+  "task": "text-to-image",
+  "label": "HiDream-O1-Image-Dev-2604",
+  "prompt": "A cinematic shot of a futuristic city at dusk, neon lights reflecting on wet streets",
+  "width": 1024,
+  "height": 1024,
+  "seed": 42,
+  "num_gpus": 1,
+  "num_inference_steps": 30,
+  "guidance_scale": 1.0,
+  "notes": "2026-11-26 sglang support-table scaffold (coverage: Yes (unit)). Dated-revision checkpoint of HiDream-O1-Image — the base runs as hidream_o1_image_t2i_1024; keep the two rows separate so a revision bump never silently swaps weights. Steps/guidance are placeholders. VALIDATION PENDING.",
+  "frameworks": {
+    "sglang": {
+      "status": "supported",
+      "serve_args": ""
+    },
+    "vllm-omni": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "lightx2v": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "trtllm-visual": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "comfyui": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "fastvideo": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    }
+  }
+}

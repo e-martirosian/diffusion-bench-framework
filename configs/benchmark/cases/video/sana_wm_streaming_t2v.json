@@ -1,0 +1,42 @@
+{
+  "id": "sana_wm_streaming_t2v",
+  "model": "Efficient-Large-Model/SANA-WM_streaming",
+  "task": "text-to-video",
+  "label": "SANA-WM streaming",
+  "prompt": "A slow camera pan across a futuristic city at dusk, neon lights reflecting on wet streets",
+  "width": 1280,
+  "height": 720,
+  "num_frames": 81,
+  "fps": 16,
+  "seed": 42,
+  "num_gpus": 1,
+  "num_inference_steps": 30,
+  "guidance_scale": 5.0,
+  "notes": "2026-11-26 sglang support-table catalog stub (coverage: Yes (CI) upstream): streaming world model — the sglang_probe tools exercise it directly (SANA-WM_streaming), but the request harness has no streaming session client yet.",
+  "frameworks": {
+    "sglang": {
+      "status": "unsupported",
+      "reason": "world model served over streaming sessions, not the request harness"
+    },
+    "vllm-omni": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "lightx2v": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "trtllm-visual": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "comfyui": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "fastvideo": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    }
+  }
+}

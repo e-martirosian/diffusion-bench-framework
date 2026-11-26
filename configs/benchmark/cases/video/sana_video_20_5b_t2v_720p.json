@@ -1,0 +1,42 @@
+{
+  "id": "sana_video_20_5b_t2v_720p",
+  "model": "Efficient-Large-Model/SANA-Video_2.0_5B_720p",
+  "task": "text-to-video",
+  "label": "SANA-Video 2.0 5B 720p",
+  "prompt": "A slow camera pan across a futuristic city at dusk, neon lights reflecting on wet streets",
+  "width": 1280,
+  "height": 720,
+  "num_frames": 121,
+  "fps": 24,
+  "seed": 42,
+  "num_gpus": 1,
+  "num_inference_steps": 30,
+  "guidance_scale": 1.0,
+  "notes": "2026-11-26 sglang support-table scaffold (coverage: Yes (e2e)). 5s @ 24fps per the SANA-Video 2.0 model card; steps/guidance are placeholders pending validated defaults. VALIDATION PENDING.",
+  "frameworks": {
+    "sglang": {
+      "status": "supported",
+      "serve_args": ""
+    },
+    "vllm-omni": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "lightx2v": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "trtllm-visual": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "comfyui": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    },
+    "fastvideo": {
+      "status": "not_run",
+      "reason": "not yet validated"
+    }
+  }
+}
