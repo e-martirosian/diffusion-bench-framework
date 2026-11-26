@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
-# rev: 2026-11-26-case-groups2 (verify on the box: `head -2 scripts/run_ascend.sh`
-# shows this line; `grep -c 'CASE_GROUPS="wan22' scripts/run_ascend.sh` prints 1
-# and `grep -c 'CASE_GROUPS2="qwen' scripts/run_ascend.sh` prints 1;
+# rev: 2026-11-24-case-groups (verify on the box: `head -2 scripts/run_ascend.sh`
+# shows this line; `grep -c 'CASE_GROUPS="qwen' scripts/run_ascend.sh` prints 1;
 # dry-run: `DBF_DRY_RUN_GROUPS=1 bash scripts/run_ascend.sh` must print
-# "38 cases in 32 groups" and exit without launching anything)
+# "54 cases in 47 groups" and exit without launching anything)
 # Ascend A2/A3 (910B/910C) NPU cross-framework run (scaffold). Same harness and
 # report shape as the NVIDIA rounds, but on Huawei Ascend NPUs. One script serves
 # both NPUs — pick the chip with DBF_HARDWARE_PROFILE.
@@ -70,28 +69,6 @@ TAG="${TAG:-ascend${DBF_HARDWARE_PROFILE}}"
 # verified output is baked in. Regenerate after changing the case set:
 #   python3 scripts/group_cases.py <case ids in run order>
 
-#ideogram4_t2i_1024_2gpu_tp unsupported
-#qwen_image_21_t2i_1024 qwen_image_21_t2i_1024_2gpu qwen_image_21_edit_1024
-#zimage_turbo_t2i_1024
-#cosmos3_nano_t2i_720p cosmos3_nano_t2v_720p_189f cosmos3_nano_i2v_720p_189f
-#ltx2.5_twostage_t2v_2gpus
-#flux1_dev_t2i_1024
-#flux2_klein_4b_t2i_1024
-#flux3_image_klein_t2i_1024 - can't repair, because we can't run it
-#qwen_image_t2i_1024
-#qwen_image_edit_2511_1024
-#qwen_image_layered_1024
-#glm_image_t2i_1024
-#zimage_t2i_1024
-#ernie_image_t2i_1024
-#joyai_image_edit_1024
-#hidream_o1_image_t2i_1024
-#anima_base_t2i_1024
-#ltx2_t2v_720p
-#wan21_t2v_13b_720p
-#wan21_i2v_14b_480p
-#wan22_ti2v_5b_720p
-#wan22_ti2v_5b_fullattn
 
 CASE_GROUPS="wan22_t2v_a14b_720p
 minimax_h3_t2va_5s minimax_h3_t2va_5s_4gpu minimax_h3_t2va_480p_1gpu minimax_h3_ref2va_5s minimax_h3_fasth3_v2_t2va_5s
@@ -116,44 +93,78 @@ fasthunyuan_t2v
 longlive2_t2v
 mova_360p_t2v
 lingbot_video_moe_t2v
-lingbot_world_t2v"
-
-# CASE_GROUPS2 -- the sglang diffusion support table (2026-11-26), mapped onto
-# case ids that exist here and can actually run on the box. CASE_GROUPS is
-# left untouched; these groups run after it, sharing the g<N> tags and the
-# port stride. Skipped as DUPLICATES of what CASE_GROUPS already runs:
-#   LLaDA-Image (llada_image_t2i_1024), LingBot-World V2 (lingbot_world_t2v),
-#   LongLive-2 (longlive2_t2v), MOVA (mova_360p_t2v), TurboWan2.1
-#   (turbowan21_t2v_13b), TurboWan2.2-I2V-A14B (wan22_i2v_a14b_720p).
-# Skipped as sglang-unsupported: ideogram4_t2i_1024_2gpu_tp ("unsupported"
-# above), comfy_ideogram4_t2i, kandinsky6_vsr (VSR, not generative),
-# pi05_base (robotics policy).
-# Skipped -- no case file yet for the table's checkpoint: Cosmos3
-# Super/Edge/Nano-Policy-DROID/Super-Image2Video/Super-Text2Image/Nano-Sim-*,
-# Kandinsky 6 Pro variants, Nomas (Hy-Nomas), SANA-Video/2.0, SANA-WM,
-# SANA 600M/1600M/1.5, Wan 2.2 Animate x2, SenseNova-U1.5, FireRed x2,
-# FLUX.2 Klein 9B x2, Krea 2, LongCat x3, Ming x2, MOSS x2, SD3 x6,
-# Wan2.1-Fun-InP. Qwen-Image-NVFP4 also has no case (the NVFP4 numeric class
-# is sglang-unsupported here), so the base-model qwen_image_t2i_1024 is NOT
-# standing in for that row.
-# Skipped -- FLUX.3 Image: flux3_klein_base_t2i_1024 is an exact checkpoint
-# match but its model has no model_paths.json entry and is gated (header
-# note above); flux3_image_klein_t2i_1024 is marked unrunnable above.
-# Checkpoint deltas vs the table rows, all same numeric class: the qwen21
-# trio serves Qwen/Qwen-Image-2.1 (row is the -Turbo distill),
-# wan21_t2v_13b_720p the Wan-AI 1.3B base (row is the FastVideo Fast
-# distill), wan21_i2v_14b_480p the 480P checkpoint (row is 720P),
-# wan22_ti2v_5b_720p the Wan-AI TI2V-5B base (row is the Fast distill).
-# Same-model cases share one line (one harness process, one download);
-# CASE_TIMEOUT covers a GROUP. The 2gpu cases need GPUS to cover 2 cards.
-CASE_GROUPS2="qwen_image_21_t2i_1024 qwen_image_21_t2i_1024_2gpu qwen_image_21_edit_1024
+lingbot_world_t2v
+ideogram4_t2i_1024_2gpu_tp unsupported
+qwen_image_21_t2i_1024 qwen_image_21_t2i_1024_2gpu qwen_image_21_edit_1024
+zimage_turbo_t2i_1024
+cosmos3_nano_t2i_720p cosmos3_nano_t2v_720p_189f cosmos3_nano_i2v_720p_189f
+ltx2.5_twostage_t2v_2gpus
+flux1_dev_t2i_1024
 flux2_klein_4b_t2i_1024
+flux3_image_klein_t2i_1024 - can't repair, because we can't run it
+qwen_image_t2i_1024
+qwen_image_edit_2511_1024
+qwen_image_layered_1024
+glm_image_t2i_1024
+zimage_t2i_1024
 ernie_image_t2i_1024
+joyai_image_edit_1024
 hidream_o1_image_t2i_1024
+anima_base_t2i_1024
+ltx2_t2v_720p
 wan21_t2v_13b_720p
 wan21_i2v_14b_480p
 wan22_ti2v_5b_720p
 wan22_ti2v_5b_fullattn"
+
+# 2026-11-26 support-table rows -- new case files below (models also added to
+# model_paths.json). The coverage-No rows were confirmed supported in current
+# sglang and are included; NOT listed: the streaming/policy/conditioned stubs
+# (SANA-WM x2, Hy-Nomas, Cosmos3 Nano-Sim x4, Nano-Transfer-Auto,
+# Nano-Policy-DROID, Wan2.2-Animate x2, Kandinsky6-VSR)
+CASE_GROUPS2="cosmos3_super_t2i_720p
+cosmos3_super_t2v_720p
+cosmos3_super_i2v_720p
+cosmos3_edge_t2v_720p
+kandinsky6_pro_t2v_5s
+kandinsky6_pro_distill_t2v_5s
+kandinsky6_pro_sft_t2v_5s
+sana_video_2b_t2v_480p
+sana_video_20_5b_t2v_720p
+wan21_i2v_14b_720p
+f3_image_small_t2i_1024
+ideogram4_fal_fast_t2i_1024
+ideogram4_fal_instant_t2i_1024
+ideogram4_nf4_t2i_1024
+sensenova_u15_t2i_1024
+hidream_o1_image_dev_2604_t2i_1024
+ming_image_design_t2i_1024
+ming_image_design_layer_t2i_1024
+sana_600m_512px_t2i_1024
+sana_600m_1024px_t2i_1024
+sana_1600m_512px_t2i_1024
+sana_1600m_1024px_t2i_1024
+sana15_1_6b_t2i_1024
+sana15_4_8b_t2i_1024
+sd3_medium_t2i_1024
+sd3_medium_diffusers_t2i_1024
+sd35_large_t2i_1024
+sd35_large_diffusers_t2i_1024
+sd35_medium_t2i_1024
+sd35_medium_diffusers_t2i_1024
+firered_image_edit_10_1024
+firered_image_edit_11_1024
+flux2_klein_9b_t2i_1024
+flux2_klein_base_9b_t2i_1024
+krea2_t2i_1024
+longcat_image_t2i_1024
+longcat_image_edit_turbo_1024
+longcat_image_edit_1024
+moss_image_base_t2i_1024
+moss_image_sft_t2i_1024
+pi05_libero_base
+qwen_image_nvfp4_t2i_1024
+wan21_fun_13b_inp_t2v_480p"
 
 # Consecutive cases sharing one model (the qwen21 trio, the cosmos3 trio, the
 # minimax quartet) run as ONE harness process each: the model downloads once
@@ -166,22 +177,16 @@ echo "=== repo=$DBF_REPO_DIR frameworks=[$DBF_FRAMEWORKS] hw=$DBF_HARDWARE_PROFI
 # case id and the groups must cover CASES exactly. Without the validation a
 # degraded grouping (python3 step failed, CASES never reached the script) once
 # ran a nonexistent "case 0" and completed rc=0 in two seconds.
-# CASE_GROUPS runs first, then CASE_GROUPS2 appends its groups; both share
-# the g<N> tags and the port stride. Blank lines are skipped by the loop.
-run_groups="${CASE_GROUPS}
-${CASE_GROUPS2}"
-if [ -z "${CASE_GROUPS}${CASE_GROUPS2}" ]; then
-    echo "ERROR: CASE_GROUPS and CASE_GROUPS2 are both empty -- nothing to run" >&2
+if [ -z "$CASE_GROUPS" ]; then
+    echo "ERROR: CASE_GROUPS is empty -- nothing to run" >&2
     exit 1
 fi
-echo "=== $(echo $run_groups | wc -w) cases in $(printf '%s\n' "$run_groups" | grep -c .) groups ==="
+echo "=== $(echo $CASE_GROUPS | wc -w) cases in $(printf '%s\n' "$CASE_GROUPS" | grep -c .) groups ==="
 # Verify a freshly deployed copy without launching anything:
 #   DBF_DRY_RUN_GROUPS=1 bash scripts/run_ascend.sh
 if [ "${DBF_DRY_RUN_GROUPS:-0}" = "1" ]; then
-    echo "first CASE_GROUPS groups:"
+    echo "first groups:"
     printf '%s\n' "$CASE_GROUPS" | head -3
-    echo "first CASE_GROUPS2 groups:"
-    printf '%s\n' "$CASE_GROUPS2" | head -3
     exit 0
 fi
 # Port stride between groups. A sglang server binds its HTTP port plus
@@ -201,5 +206,5 @@ while IFS= read -r group; do
         "$gtag" "$GPUS" "$port" "single_e2e throughput" $group
     grep -h "^RESULT" "${DBF_LOG_DIR}/run_${gtag}.log" 2>/dev/null
     port=$((port + PORT_SPACING))
-done <<< "$run_groups"
+done <<< "$CASE_GROUPS"
 echo "=== Ascend NPU cross-framework run DONE $(date -Is) ==="

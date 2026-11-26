@@ -351,19 +351,25 @@ def generate_dashboard(
         risk_map[cid] = _assess_risk(cid, current_cases, history, other_frameworks)
 
     # Dynamic header
-    header = "| Model | Risk |"
-    sep = "|-------|------|"
+    header = "| Model | Task | Risk |"
+    sep = "|-------|------|------|"
     for fw in all_frameworks:
         header += f" {fw} (s) |"
         sep += "---------|"
     for ofw in other_frameworks:
         header += f" vs {ofw} |"
         sep += "---------|"
+    header += " Supported |"
+    sep += "-----------|"
     lines.append(header)
     lines.append(sep)
 
-    # One row per case (deduplicated by case_id)
+    # One row per case (deduplicated by case_id). Consecutive rows sharing a
+    # model show the name once: markdown has no rowspan, so the repeats leave
+    # the Model cell empty and read as one merged block. Supported answers
+    # "did sglang produce a measurement for this case in this run".
     seen_cases = set()
+    prev_model = None
     for r in current.get("results", []):
         cid = r["case_id"]
         if cid in seen_cases:
@@ -374,7 +380,11 @@ def generate_dashboard(
         sg_lat = case_fws.get("sglang")
 
         risk_emoji, _ = risk_map.get(cid, ("✅", ""))
-        row = f"| {r['model'].split('/')[-1]} | {risk_emoji} |"
+        model_name = r["model"].split("/")[-1]
+        model_cell = "" if model_name == prev_model else model_name
+        prev_model = model_name
+        supported = "✅" if sg_lat is not None else "❌"
+        row = f"| {model_cell} | {r.get('task') or '-'} | {risk_emoji} |"
         # Latency columns -- bold the fastest
         lats = {fw: case_fws.get(fw) for fw in all_frameworks}
         valid_lats = [v for v in lats.values() if v is not None]
@@ -389,6 +399,7 @@ def generate_dashboard(
         # Speedup columns
         for ofw in other_frameworks:
             row += f" {_fmt_speedup(sg_lat, case_fws.get(ofw))} |"
+        row += f" {supported} |"
         lines.append(row)
         for fw in all_frameworks:
             samples = dispersed.get((cid, fw))
