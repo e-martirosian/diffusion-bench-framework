@@ -1,6 +1,6 @@
 {
   "id": "moss_image_base_t2i_1024",
-  "model": "OpenMOSS-Team/MOSS-Image-Base",
+  "model": "openmoss/MOSS-Image-Base",
   "task": "text-to-image",
   "label": "MOSS-Image-Base",
   "prompt": "A cinematic shot of a futuristic city at dusk, neon lights reflecting on wet streets",

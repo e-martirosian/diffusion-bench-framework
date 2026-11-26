@@ -10192,14 +10192,14 @@
             }
         },
         {
-            "id": "mova_360p_t2v",
-            "model": "OpenMOSS-Team/MOVA-360p",
-            "task": "text-to-video",
+            "id": "mova_360p_ti2va",
+            "model": "openmoss/MOVA-360p",
+            "task": "text-image-to-video",
             "label": "MOVA-360p",
             "prompt": "A slow camera pan across a futuristic city at dusk, neon lights reflecting on wet streets",
             "width": 640,
             "height": 352,
-            "_note": "MOVA-360p serves 352x640 / 640x352 only; the nominal 640x360 is rejected with 400 Bad Request on every /v1/videos (first Ascend round, 2026-11-25). The id keeps the 360p class name.",
+            "_note": "MOVA accepts image + text -> video + audio, so the task is text-image-to-video; the case was renamed from mova_360p_t2v (2026-11-26) because a text-to-video request 400s -- sglang registers the served checkpoint with task type I2V ('Served model with task type I2V requires an image_path input', Ascend round 2026-11-26). MOVA-360p serves 352x640 / 640x352 only; the nominal 640x360 is rejected with 400 Bad Request on every /v1/videos (first Ascend round, 2026-11-25). The reference image comes from the harness test image; audio rides in the returned MP4.",
             "seed": 42,
             "num_gpus": 1,
             "num_inference_steps": 30,
@@ -11307,7 +11307,7 @@
         },
         {
             "id": "moss_image_base_t2i_1024",
-            "model": "OpenMOSS-Team/MOSS-Image-Base",
+            "model": "openmoss/MOSS-Image-Base",
             "task": "text-to-image",
             "label": "MOSS-Image-Base",
             "prompt": "A cinematic shot of a futuristic city at dusk, neon lights reflecting on wet streets",
@@ -11340,7 +11340,7 @@
         },
         {
             "id": "moss_image_sft_t2i_1024",
-            "model": "OpenMOSS-Team/MOSS-Image-SFT",
+            "model": "openmoss/MOSS-Image-SFT",
             "task": "text-to-image",
             "label": "MOSS-Image-SFT",
             "prompt": "A cinematic shot of a futuristic city at dusk, neon lights reflecting on wet streets",

@@ -73,11 +73,9 @@ TAG="${TAG:-ascend${DBF_HARDWARE_PROFILE}}"
 CASE_GROUPS="wan22_t2v_a14b_720p
 minimax_h3_t2va_5s minimax_h3_t2va_5s_4gpu minimax_h3_t2va_480p_1gpu minimax_h3_ref2va_5s minimax_h3_fasth3_v2_t2va_5s
 flux2_dev_t2i_1024
-qwen_image_edit_2509_1024
 hunyuan_image_30_t2i_1024
 hunyuan_image_30_instruct_t2i_1024
 joyai_echo_1024
-llada_image_t2i_1024
 ltx23_t2v_720p
 vdn_minimax_h3_t2v
 helios_base_t2v
@@ -91,9 +89,10 @@ turbowan21_t2v_13b
 hunyuanvideo_t2v_720p
 fasthunyuan_t2v
 longlive2_t2v
-mova_360p_t2v
+mova_360p_ti2va
 lingbot_video_moe_t2v
 lingbot_world_t2v
+
 ideogram4_t2i_1024_2gpu_tp unsupported
 qwen_image_21_t2i_1024 qwen_image_21_t2i_1024_2gpu qwen_image_21_edit_1024
 zimage_turbo_t2i_1024
@@ -115,7 +114,11 @@ ltx2_t2v_720p
 wan21_t2v_13b_720p
 wan21_i2v_14b_480p
 wan22_ti2v_5b_720p
-wan22_ti2v_5b_fullattn"
+wan22_ti2v_5b_fullattn
+llada_image_t2i_1024
+qwen_image_edit_2509_1024"
+
+CASE_GROUPS="mova_360p_ti2va"
 
 # 2026-11-26 support-table rows -- new case files below (models also added to
 # model_paths.json). The coverage-No rows were confirmed supported in current

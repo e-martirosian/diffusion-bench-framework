@@ -96,6 +96,15 @@ def _is_npu(merged: dict) -> bool:
     return "npu" in devices
 
 
+def _hw_label(merged: dict) -> str:
+    """Platform + hardware for the sglang column header, e.g. "Ascend A3"."""
+    hardware = merged.get("hardware") or {}
+    device = str(hardware.get("device") or "gpu")
+    profile = str(hardware.get("hardware_profile_override") or "").strip()
+    platform = "Ascend" if device == "npu" else "GPU"
+    return f"{platform} {profile.upper()}" if profile else platform
+
+
 def build_dashboard(merged: dict, catalog: list[dict], history: list[dict]) -> str:
     lines = ["# Diffusion Cross-Platform Performance Dashboard", ""]
     ts = str(merged.get("timestamp", ""))[:10]
@@ -129,10 +138,14 @@ def build_dashboard(merged: dict, catalog: list[dict], history: list[dict]) -> s
         if cid not in risk_map:
             risk_map[cid] = _assess_risk(cid, current_cases, history, other_frameworks)
 
-    header = "| Model | Task | Risk |"
-    sep = "|-------|------|------|"
+    hw_label = _hw_label(merged)
+    header = "| Model | Task |"
+    sep = "|-------|------|"
     for fw in all_frameworks:
-        header += f" {fw} (s) |"
+        if fw == "sglang":
+            header += f" sglang {hw_label} (s) |"
+        else:
+            header += f" {fw} (s) |"
         sep += "---------|"
     for ofw in other_frameworks:
         header += f" vs {ofw} |"
@@ -156,12 +169,11 @@ def build_dashboard(merged: dict, catalog: list[dict], history: list[dict]) -> s
         case_fws = current_cases.get(cid, {})
         sg_lat = case_fws.get("sglang")
 
-        risk_emoji, _ = risk_map.get(cid, ("✅", ""))
         model_name = r["model"].split("/")[-1]
         model_cell = "" if model_name == prev_model else model_name
         prev_model = model_name
         supported = "✅" if sg_lat is not None else "❌"
-        row = f"| {model_cell} | {_task_abbrev(r.get('task'))} | {risk_emoji} |"
+        row = f"| {model_cell} | {_task_abbrev(r.get('task'))} |"
         lats = {fw: case_fws.get(fw) for fw in all_frameworks}
         valid_lats = [v for v in lats.values() if v is not None]
         min_lat = min(valid_lats) if valid_lats else None
@@ -265,7 +277,8 @@ def build_dashboard(merged: dict, catalog: list[dict], history: list[dict]) -> s
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Diffusion cross-platform performance dashboard: merged "
-        "same-model rows, abbreviated tasks, Risk, per-case Supported, and the "
+        "same-model rows, abbreviated tasks, the sglang column labeled with "
+        "the run's platform/hardware, per-case Supported, and the "
         "sglang-supported models this run never tested."
     )
     parser.add_argument("--merged", required=True, type=Path, help="merged.json from build_report_artifacts")

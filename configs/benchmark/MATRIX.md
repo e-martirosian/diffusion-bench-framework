@@ -62,7 +62,7 @@ A trailing `(h100: FAIL)` is a `status_by_hardware` override: the cell reads dif
 | hunyuanvideo_t2v_720p | text-to-video | profile | TODO | TODO | TODO | TODO | TODO |
 | fasthunyuan_t2v | text-to-video | profile | TODO | TODO | TODO | TODO | TODO |
 | longlive2_t2v | text-to-video | profile | TODO | TODO | TODO | TODO | TODO |
-| mova_360p_t2v | text-to-video | profile | TODO | TODO | TODO | TODO | TODO |
+| mova_360p_ti2va | text-image-to-video | profile | TODO | TODO | TODO | TODO | TODO |
 | lingbot_video_moe_t2v | text-to-video | profile | TODO | TODO | TODO | TODO | TODO |
 | lingbot_world_t2v | text-to-video | profile | TODO | TODO | TODO | TODO | TODO |
 | wan22_t2v_a14b_nvfp4 | text-to-video | n/a | TODO | TODO | TODO | TODO | TODO |
