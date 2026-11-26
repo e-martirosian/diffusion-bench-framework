@@ -1,6 +1,6 @@
 {
   "id": "hunyuanvideo_t2v_720p",
-  "model": "hunyuanvideo-community/HunyuanVideo",
+  "model": "Tencent-Hunyuan/HunyuanVideo",
   "task": "text-to-video",
   "label": "HunyuanVideo",
   "prompt": "A slow camera pan across a futuristic city at dusk, neon lights reflecting on wet streets",

@@ -1,6 +1,6 @@
 {
   "id": "joyai_echo_1024",
-  "model": "jdopensource/JoyAI-Echo",
+  "model": "jd-opensource/JoyAI-Echo",
   "task": "image-edit",
   "label": "JoyAI-Echo",
   "prompt": "A cinematic shot of a futuristic city at dusk, neon lights reflecting on wet streets",

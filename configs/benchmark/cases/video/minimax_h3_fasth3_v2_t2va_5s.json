@@ -65,6 +65,17 @@
           "num_gpus": 4,
           "serve_args": "--model-type diffusion --warmup-mode server --ulysses-degree 4 --component-attention-backends transformer=video_sparse_attn_h3 --performance-mode speed --enable-torch-compile false --revision 71a17d72c58ce3eeec418144de2a5a2090cb4c04",
           "notes": "Since sgl-project/sglang#37662 (merged 2026-10-08) VSA-H3 runs only when selected for the transformer, as the cookbook's 4xGB300 command does; without it the DiT resolves to dense FA and skips the trained to_gate_compress branch. #41839, which this profile was written against, selected VSA-H3 itself, so from 2026-10-08 the profile silently measured dense attention while vLLM-Omni ran VSA. 4xH200, main 6576e50cd5, two interleaved rounds: dense FA 12.64/12.65 s (denoise 10.85 s) -> VSA-H3 10.01/9.99 s (denoise 8.23 s); vLLM-Omni --enforce-eager 10.95/11.00 s. Bisected first: the 09-30 tree (bd66ce3 + #41839 at 8362359) runs denoise 8.74 s and #37662's merge commit 10.54 s, both eight DiT forwards per request. The case adds the benchmark's standing sglang flags (server warmup, speed residency, compile off -- VSA-H3 rejects torch.compile). `--model-variant` must not be passed: FastH3 rejects it. Earlier: 2026-09-30 4xH200 with #41839 11.28 s; 4xGB300 8.085/8.081 s, 6.97 s with #41819."
+        },
+        "cand-a3-tp4": {
+          "description": "First Ascend (a3) draft: 4 cards, tensor-parallel 4 (Ulysses disabled on NPU), VSA-H3 kept, resident (speed), eager.",
+          "sglang_ref": "origin/main 6576e50cd5 (FastH3 V2 support merged as sgl-project/sglang#37662)",
+          "num_gpus": 4,
+          "serve_args": "--model-type diffusion --warmup-mode server --tp-size 4 --sp-degree 1 --component-attention-backends transformer=video_sparse_attn_h3 --performance-mode speed --enable-torch-compile false --revision 71a17d72c58ce3eeec418144de2a5a2090cb4c04",
+          "hardware": [
+            "a3"
+          ],
+          "policy_exception": "Same correctness exception as the default profile (checked 2026-08-07): MiniMax-H3's torch.compile path changes numerical output per the sglang cookbook, so it is excluded regardless of hardware -- VSA-H3 rejects torch.compile on every hardware.",
+          "notes": "Draft for the Ascend rounds (2026-11-26): Ulysses disabled on NPU -- the Ulysses-4 shape did not leave enough memory on the 64 GB cards -- so the four ranks run tensor-parallel 4 with sp-degree pinned to 1 (leaving the degrees unpinned would let sglang auto-select sequence parallel again). The checkpoint's trained VSA sparsity stays selected (--component-attention-backends transformer=video_sparse_attn_h3, orthogonal to the parallel layout) and the pinned revision stays; --model-variant must not be passed (FastH3 rejects it). VALIDATION PENDING -- a3 selects this profile (default matches no hardware); TP-4 on torch_npu is unproven and the crash log guides the next knob."
         }
       }
     },

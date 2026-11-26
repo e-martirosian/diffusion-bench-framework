@@ -15,7 +15,19 @@
   "frameworks": {
     "sglang": {
       "status": "supported",
-      "serve_args": ""
+      "serve_args": "",
+      "command_profiles": {
+        "cand-a3-tp2": {
+          "description": "First Ascend (a3) draft: 2 cards, tensor-parallel 2 (30B MoE bf16 ~60 GB weights exceed one 64 GB card).",
+          "sglang_ref": "current-main",
+          "num_gpus": 2,
+          "serve_args": "--model-type diffusion --warmup-mode server --tp-size 2 --enable-torch-compile false",
+          "hardware": [
+            "a3"
+          ],
+          "notes": "Draft for the first Ascend round (2026-11-25): the run OOMed on one 910C ('Tried to allocate 2.56 GiB ... 57.61 GiB already allocated') -- 30B MoE bf16 ~60 GB weights on a 64 GB card leave no room for activations. num_gpus 2 + tp-size 2 shards the weights (~30 GB/card). VALIDATION PENDING -- a3 selects this profile (default matches no hardware). If the OOM persists past sharding, the crash log's allocation site guides the next knob (dit_cpu_offload). Derived from default plus tp-size."
+        }
+      }
     },
     "vllm-omni": {
       "status": "not_run",

@@ -61,7 +61,12 @@ DEFAULT_PORT = 30000
 HEALTH_TIMEOUT = (
     2400  # seconds (40 min — large checkpoints can need long download/load time)
 )
-REQUEST_TIMEOUT = 1200  # seconds
+# Per-request generation deadline (the poll loop on async video jobs). First-
+# generation NPU support runs some models many times slower than CUDA -- the
+# 1200 s default produced "did not succeed before the deadline" for helios_base,
+# wan21_14b and wan22_i2v on the first Ascend round (2026-11-25). Override with
+# DIFFUSION_BENCH_REQUEST_TIMEOUT.
+REQUEST_TIMEOUT = int(os.environ.get("DIFFUSION_BENCH_REQUEST_TIMEOUT") or 1200)
 KILL_REAP_TIMEOUT_S = 120
 
 # requests' non-streaming path reads a response body in 10 KiB pieces

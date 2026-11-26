@@ -1,6 +1,6 @@
 {
   "id": "lingbot_world_t2v",
-  "model": "robbyant/lingbot-world-fast-diffusers",
+  "model": "FastVideo/LingBot-World-Fast-Diffusers",
   "task": "text-to-video",
   "label": "lingbot-world-fast-diffusers",
   "prompt": "A slow camera pan across a futuristic city at dusk, neon lights reflecting on wet streets",

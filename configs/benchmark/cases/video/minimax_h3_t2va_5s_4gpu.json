@@ -76,6 +76,17 @@
           "notes": "docs/cookbook/diffusion/MiniMax/MiniMax-H3.mdx, '4xH200 resident' (checked 2026-10-08): pure Ulysses4 is the faster measured topology on H200, not just a capacity default.",
           "policy_exception": "Correctness exception, not a speed tradeoff: MiniMax-H3's torch.compile path changes numerical output per the sglang cookbook (docs/cookbook/diffusion/MiniMax/MiniMax-H3.mdx, checked 2026-08-07) -- compile is not enabled by any recommended lossless preset for this model and must not be used to generate consistency ground truth. --enable-torch-compile stays false in every profile for this case until upstream fixes the numerics."
         },
+        "cand-a3-tp4": {
+          "description": "First Ascend (a3) draft: 4 cards, tensor-parallel 4 (Ulysses disabled on NPU), encoder-parallel auto, resident (speed), eager.",
+          "sglang_ref": "origin/main",
+          "num_gpus": 4,
+          "serve_args": "--model-type diffusion --warmup-mode server --model-variant fl2va --tp-size 4 --sp-degree 1 --encoder-parallel auto --performance-mode speed --enable-torch-compile false",
+          "hardware": [
+            "a3"
+          ],
+          "policy_exception": "Same correctness exception as the default profile (checked 2026-08-07): MiniMax-H3's torch.compile path changes numerical output per the sglang cookbook, so it is excluded regardless of hardware.",
+          "notes": "Draft for the Ascend rounds (2026-11-26): Ulysses disabled on NPU -- the Ulysses-4 shape did not leave enough memory on the 64 GB cards -- so the four ranks run tensor-parallel 4 with sp-degree pinned to 1 (leaving the degrees unpinned would let sglang auto-select kv-gather sequence parallel again), mirroring the t2va case's cand-a3-tp2 scaled to four cards. --encoder-parallel auto kept from the default. VALIDATION PENDING -- a3 selects this profile (default matches no hardware); TP-4 on torch_npu is unproven and the crash log guides the next knob."
+        },
         "mi355x-4gpu": {
           "description": "AMD Instinct, Ulysses-4 resident with AITER attention (the cookbook's AMD backend policy).",
           "hardware": [

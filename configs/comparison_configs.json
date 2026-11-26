@@ -3348,7 +3348,8 @@
                             "hardware": [
                                 "a3"
                             ],
-                            "notes": "Draft for the first Ascend round (2026-11-25): the CUDA default (--dit-layerwise-offload false, both stages fully resident) is the B300 cookbook preset written for ~183 GB cards; a 910C has 64 GB HBM, so the resident configuration OOMs on 2 cards regardless of correct sharding. Memory-first here: layerwise offload ON (DiT layers streamed from host as needed), performance-mode left at auto (its offload-friendly default; speed mode keeps encoders resident), ulysses 2 kept (the cookbook 2-GPU shape; stage token counts 8,160/32,640 divide by 2). VALIDATION PENDING -- a3 selects this profile (default matches no hardware); expect slower per-step times than B300 numbers, that is the honest 64 GB-card trade. If it still OOMs, the crash log's failing stage guides the next knob (dit_cpu_offload, layerwise resident-layer count)."
+                            "policy_exception": "2026-11: layerwise offload is REQUIRED on 64 GB a3 cards -- the default profile (--dit-layerwise-offload false) is the B300 preset written for ~183 GB cards and OOMs at load on 910C; the offload form measured 46.39 s (rc=0) in the 2026-11-25 Ascend round.",
+                            "notes": "Draft for the first Ascend round (2026-11-25): the CUDA default (--dit-layerwise-offload false, both stages fully resident) is the B300 cookbook preset written for ~183 GB cards; a 910C has 64 GB HBM, so the resident configuration OOMs on 2 cards regardless of correct sharding. Memory-first here: layerwise offload ON (DiT layers streamed from host as needed), performance-mode left at auto (its offload-friendly default; speed mode keeps encoders resident), ulysses 2 kept (the cookbook 2-GPU shape; stage token counts 8,160/32,640 divide by 2). MEASURED 2026-11-25 on the first Ascend round: 46.39 s (rc=0) -- the offload form fits 64 GB HBM where the resident default OOMs. a3 selects this profile (default matches no hardware); per-step times are slower than B300 numbers, that is the honest 64 GB-card trade. If a future card OOMs anyway, the crash log's failing stage guides the next knob (dit_cpu_offload, layerwise resident-layer count)."
                         },
                         "cand-auto": {
                             "description": "The runtime's own sequence-parallel choice on two GPUs (no explicit parallel flag). Never selected on its own: A/B arm.",
@@ -5432,6 +5433,29 @@
                             "notes": "Mirrors the cookbook's 4x-class Ulysses4 resident recipe scaled to num_gpus; NOT validated at num_gpus=2 -- validate (incl. OOM risk) before publishing.",
                             "policy_exception": "Correctness exception, not a speed tradeoff: MiniMax-H3's torch.compile path changes numerical output per the sglang cookbook (docs/cookbook/diffusion/MiniMax/MiniMax-H3.mdx, checked 2026-08-07) -- compile is not enabled by any recommended lossless preset for this model and must not be used to generate consistency ground truth. --enable-torch-compile stays false in every profile for this case until upstream fixes the numerics."
                         },
+                        "cand-a3-tp2": {
+                            "description": "First Ascend (a3) draft: 2 cards, tensor-parallel 2, laser attention, encoder layerwise-offload, Cache-DiT TaylorSeer.",
+                            "sglang_ref": "current-main",
+                            "num_gpus": 2,
+                            "serve_args": "--model-type diffusion --warmup-mode server --model-variant fl2va --tp-size 2 --sp-degree 1 --dit-cpu-offload false --attention-backend laser_attn --component-residency text_encoder=layerwise-offload --enable-torch-compile false",
+                            "hardware": [
+                                "a3"
+                            ],
+                            "extra_env": {
+                                "SGLANG_CACHE_DIT_ENABLED": "true",
+                                "SGLANG_CACHE_DIT_FN": "2",
+                                "SGLANG_CACHE_DIT_BN": "1",
+                                "SGLANG_CACHE_DIT_WARMUP": "4",
+                                "SGLANG_CACHE_DIT_RDT": "0.4",
+                                "SGLANG_CACHE_DIT_MC": "4",
+                                "SGLANG_CACHE_DIT_TAYLORSEER": "true",
+                                "SGLANG_CACHE_DIT_TS_ORDER": "2",
+                                "HCCL_BUFFSIZE": "256",
+                                "SGLANG_DIFFUSION_TEST_FORCE_HOST_AVAILABLE_GIB": "64"
+                            },
+                            "policy_exception": "Capacity exception, not a tuning choice: a 910C card has 64 GB HBM and the resident two-card default assumes ~183 GB B200-class cards (62 GB DiT + 48 GB Qwen3-VL-32B encoder + VAEs do not fit resident on 2x64 GB); TP-2 shards the DiT weights and only the Qwen3-VL encoder streams from host, the DiT stays resident per rank (--dit-cpu-offload false). Derived 2026-11 from the validated sglang NPU serving config (DiffusionServerArgs minimax_h3_t2va_2npu). Same compile exception as every profile in this case (checked 2026-08-07): MiniMax-H3's torch.compile path changes numerical output per the sglang cookbook, so --enable-torch-compile stays false.",
+                            "notes": "Draft for the Ascend rounds (2026-11-26): derived from the validated sglang NPU serving config (DiffusionServerArgs minimax_h3_t2va_2npu). num_gpus 2 + tp-size 2 shards the ~62 GB DiT (~31 GB/card); sp-degree pinned to 1 -- the two ranks are used for tensor parallel, no sequence parallelism; laser_attn is the Ascend attention backend; the 48 GB Qwen3-VL-32B text encoder streams via layerwise-offload. Cache-DiT TaylorSeer (FN 2, BN 1, warmup 4, RDT 0.4, MC 4, order 2), HCCL_BUFFSIZE=256 and SGLANG_DIFFUSION_TEST_FORCE_HOST_AVAILABLE_GIB=64 (host memory the offload path may budget) come from the same config. VALIDATION PENDING -- a3 selects this profile (default matches no hardware); the Ulysses-2 default is the B200-class resident recipe and does not fit 64 GB cards."
+                        },
                         "rtx5090-2gpu": {
                             "description": "2x RTX 5090 (32 GB) layerwise-offload recipe -- the lightweight, broadly-runnable topology for this case.",
                             "hardware": [
@@ -6649,6 +6673,17 @@
                             "notes": "docs/cookbook/diffusion/MiniMax/MiniMax-H3.mdx, '4xH200 resident' (checked 2026-10-08): pure Ulysses4 is the faster measured topology on H200, not just a capacity default.",
                             "policy_exception": "Correctness exception, not a speed tradeoff: MiniMax-H3's torch.compile path changes numerical output per the sglang cookbook (docs/cookbook/diffusion/MiniMax/MiniMax-H3.mdx, checked 2026-08-07) -- compile is not enabled by any recommended lossless preset for this model and must not be used to generate consistency ground truth. --enable-torch-compile stays false in every profile for this case until upstream fixes the numerics."
                         },
+                        "cand-a3-tp4": {
+                            "description": "First Ascend (a3) draft: 4 cards, tensor-parallel 4 (Ulysses disabled on NPU), encoder-parallel auto, resident (speed), eager.",
+                            "sglang_ref": "origin/main",
+                            "num_gpus": 4,
+                            "serve_args": "--model-type diffusion --warmup-mode server --model-variant fl2va --tp-size 4 --sp-degree 1 --encoder-parallel auto --performance-mode speed --enable-torch-compile false",
+                            "hardware": [
+                                "a3"
+                            ],
+                            "policy_exception": "Same correctness exception as the default profile (checked 2026-08-07): MiniMax-H3's torch.compile path changes numerical output per the sglang cookbook, so it is excluded regardless of hardware.",
+                            "notes": "Draft for the Ascend rounds (2026-11-26): Ulysses disabled on NPU -- the Ulysses-4 shape did not leave enough memory on the 64 GB cards -- so the four ranks run tensor-parallel 4 with sp-degree pinned to 1 (leaving the degrees unpinned would let sglang auto-select kv-gather sequence parallel again), mirroring the t2va case's cand-a3-tp2 scaled to four cards. --encoder-parallel auto kept from the default. VALIDATION PENDING -- a3 selects this profile (default matches no hardware); TP-4 on torch_npu is unproven and the crash log guides the next knob."
+                        },
                         "mi355x-4gpu": {
                             "description": "AMD Instinct, Ulysses-4 resident with AITER attention (the cookbook's AMD backend policy).",
                             "hardware": [
@@ -7633,6 +7668,17 @@
                             "serve_args": "--model-type diffusion --warmup-mode server --model-variant ref2va --ulysses-degree 2 --performance-mode speed --enable-torch-compile false",
                             "notes": "Ref2VA partition: the reference image arrives as a conditions[] entry with role=reference (see configs/sample/minimax_h3.py), which is what selects the ref2va checkpoint. Same parallelism as the t2va profile; added 2026-08-26 to cover the second H3 serving mode for single-request latency.",
                             "policy_exception": "Correctness exception, not a speed tradeoff: MiniMax-H3's torch.compile path changes numerical output per the sglang cookbook (docs/cookbook/diffusion/MiniMax/MiniMax-H3.mdx, checked 2026-08-07) -- compile is not enabled by any recommended lossless preset for this model and must not be used to generate consistency ground truth. --enable-torch-compile stays false in every profile for this case until upstream fixes the numerics."
+                        },
+                        "cand-a3-tp2": {
+                            "description": "First Ascend (a3) draft: 2 cards, tensor-parallel 2 (Ulysses disabled on NPU), resident (speed), eager.",
+                            "sglang_ref": "current-main",
+                            "num_gpus": 2,
+                            "serve_args": "--model-type diffusion --warmup-mode server --model-variant ref2va --tp-size 2 --sp-degree 1 --performance-mode speed --enable-torch-compile false",
+                            "hardware": [
+                                "a3"
+                            ],
+                            "policy_exception": "Same correctness exception as the default profile (checked 2026-08-07): MiniMax-H3's torch.compile path changes numerical output per the sglang cookbook, so it is excluded regardless of hardware.",
+                            "notes": "Draft for the Ascend rounds (2026-11-26): Ulysses disabled on NPU -- the Ulysses-2 shape did not leave enough memory on the 64 GB cards -- so the two ranks run tensor-parallel 2 with sp-degree pinned to 1 (leaving the degrees unpinned would let sglang auto-select kv-gather sequence parallel again), mirroring the t2va case's cand-a3-tp2. Performance-mode speed kept from the default; if the resident encoders do not fit 2x64 GB alongside TP-2, the t2va a3 recipe's next knobs apply (attention-backend laser_attn, --component-residency text_encoder=layerwise-offload, Cache-DiT env). VALIDATION PENDING -- a3 selects this profile (default matches no hardware)."
                         },
                         "rtx5090-2gpu": {
                             "description": "2x RTX 5090 (32 GB) layerwise-offload recipe -- the lightweight, broadly-runnable topology for this case.",
@@ -8657,6 +8703,17 @@
                             "num_gpus": 4,
                             "serve_args": "--model-type diffusion --warmup-mode server --ulysses-degree 4 --component-attention-backends transformer=video_sparse_attn_h3 --performance-mode speed --enable-torch-compile false --revision 71a17d72c58ce3eeec418144de2a5a2090cb4c04",
                             "notes": "Since sgl-project/sglang#37662 (merged 2026-10-08) VSA-H3 runs only when selected for the transformer, as the cookbook's 4xGB300 command does; without it the DiT resolves to dense FA and skips the trained to_gate_compress branch. #41839, which this profile was written against, selected VSA-H3 itself, so from 2026-10-08 the profile silently measured dense attention while vLLM-Omni ran VSA. 4xH200, main 6576e50cd5, two interleaved rounds: dense FA 12.64/12.65 s (denoise 10.85 s) -> VSA-H3 10.01/9.99 s (denoise 8.23 s); vLLM-Omni --enforce-eager 10.95/11.00 s. Bisected first: the 09-30 tree (bd66ce3 + #41839 at 8362359) runs denoise 8.74 s and #37662's merge commit 10.54 s, both eight DiT forwards per request. The case adds the benchmark's standing sglang flags (server warmup, speed residency, compile off -- VSA-H3 rejects torch.compile). `--model-variant` must not be passed: FastH3 rejects it. Earlier: 2026-09-30 4xH200 with #41839 11.28 s; 4xGB300 8.085/8.081 s, 6.97 s with #41819."
+                        },
+                        "cand-a3-tp4": {
+                            "description": "First Ascend (a3) draft: 4 cards, tensor-parallel 4 (Ulysses disabled on NPU), VSA-H3 kept, resident (speed), eager.",
+                            "sglang_ref": "origin/main 6576e50cd5 (FastH3 V2 support merged as sgl-project/sglang#37662)",
+                            "num_gpus": 4,
+                            "serve_args": "--model-type diffusion --warmup-mode server --tp-size 4 --sp-degree 1 --component-attention-backends transformer=video_sparse_attn_h3 --performance-mode speed --enable-torch-compile false --revision 71a17d72c58ce3eeec418144de2a5a2090cb4c04",
+                            "hardware": [
+                                "a3"
+                            ],
+                            "policy_exception": "Same correctness exception as the default profile (checked 2026-08-07): MiniMax-H3's torch.compile path changes numerical output per the sglang cookbook, so it is excluded regardless of hardware -- VSA-H3 rejects torch.compile on every hardware.",
+                            "notes": "Draft for the Ascend rounds (2026-11-26): Ulysses disabled on NPU -- the Ulysses-4 shape did not leave enough memory on the 64 GB cards -- so the four ranks run tensor-parallel 4 with sp-degree pinned to 1 (leaving the degrees unpinned would let sglang auto-select sequence parallel again). The checkpoint's trained VSA sparsity stays selected (--component-attention-backends transformer=video_sparse_attn_h3, orthogonal to the parallel layout) and the pinned revision stays; --model-variant must not be passed (FastH3 rejects it). VALIDATION PENDING -- a3 selects this profile (default matches no hardware); TP-4 on torch_npu is unproven and the crash log guides the next knob."
                         }
                     }
                 },
@@ -8859,7 +8916,7 @@
             "guidance_scale": 1.0,
             "frameworks": {
                 "sglang": {
-                    "serve_args": "",
+                    "serve_args": "--model-type diffusion",
                     "command_profiles": {
                         "cand-a3-tp2": {
                             "description": "First Ascend (a3) draft: 2 cards, tensor-parallel 2 (weights ~64 GB bf16 exceed one 64 GB card).",
@@ -9276,7 +9333,7 @@
         },
         {
             "id": "joyai_echo_1024",
-            "model": "jdopensource/JoyAI-Echo",
+            "model": "jd-opensource/JoyAI-Echo",
             "task": "image-edit",
             "label": "JoyAI-Echo",
             "prompt": "A cinematic shot of a futuristic city at dusk, neon lights reflecting on wet streets",
@@ -9320,7 +9377,7 @@
             "guidance_scale": 1.0,
             "frameworks": {
                 "sglang": {
-                    "serve_args": ""
+                    "serve_args": "--trust-remote-code"
                 }
             },
             "report_framework_statuses": {
@@ -10034,7 +10091,7 @@
         },
         {
             "id": "hunyuanvideo_t2v_720p",
-            "model": "hunyuanvideo-community/HunyuanVideo",
+            "model": "Tencent-Hunyuan/HunyuanVideo",
             "task": "text-to-video",
             "label": "HunyuanVideo",
             "prompt": "A slow camera pan across a futuristic city at dusk, neon lights reflecting on wet streets",
@@ -10185,7 +10242,19 @@
             "fps": 24,
             "frameworks": {
                 "sglang": {
-                    "serve_args": ""
+                    "serve_args": "",
+                    "command_profiles": {
+                        "cand-a3-tp2": {
+                            "description": "First Ascend (a3) draft: 2 cards, tensor-parallel 2 (30B MoE bf16 ~60 GB weights exceed one 64 GB card).",
+                            "sglang_ref": "current-main",
+                            "num_gpus": 2,
+                            "serve_args": "--model-type diffusion --warmup-mode server --tp-size 2 --enable-torch-compile false",
+                            "hardware": [
+                                "a3"
+                            ],
+                            "notes": "Draft for the first Ascend round (2026-11-25): the run OOMed on one 910C ('Tried to allocate 2.56 GiB ... 57.61 GiB already allocated') -- 30B MoE bf16 ~60 GB weights on a 64 GB card leave no room for activations. num_gpus 2 + tp-size 2 shards the weights (~30 GB/card). VALIDATION PENDING -- a3 selects this profile (default matches no hardware). If the OOM persists past sharding, the crash log's allocation site guides the next knob (dit_cpu_offload). Derived from default plus tp-size."
+                        }
+                    }
                 }
             },
             "report_framework_statuses": {
@@ -10205,7 +10274,7 @@
         },
         {
             "id": "lingbot_world_t2v",
-            "model": "robbyant/lingbot-world-fast-diffusers",
+            "model": "FastVideo/LingBot-World-Fast-Diffusers",
             "task": "text-to-video",
             "label": "lingbot-world-fast-diffusers",
             "prompt": "A slow camera pan across a futuristic city at dusk, neon lights reflecting on wet streets",

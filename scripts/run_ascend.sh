@@ -68,33 +68,39 @@ TAG="${TAG:-ascend${DBF_HARDWARE_PROFILE}}"
 # the box's python3 in both heredoc and file forms without success, so the
 # verified output is baked in. Regenerate after changing the case set:
 #   python3 scripts/group_cases.py <case ids in run order>
-CASE_GROUPS="qwen_image_21_t2i_1024 qwen_image_21_t2i_1024_2gpu qwen_image_21_edit_1024
-zimage_turbo_t2i_1024
+
+#qwen_image_21_t2i_1024 qwen_image_21_t2i_1024_2gpu qwen_image_21_edit_1024
+#zimage_turbo_t2i_1024
+#cosmos3_nano_t2i_720p cosmos3_nano_t2v_720p_189f cosmos3_nano_i2v_720p_189f
+#ltx2.5_twostage_t2v_2gpus
+#flux1_dev_t2i_1024
+#flux2_klein_4b_t2i_1024
+#flux3_image_klein_t2i_1024 - can't repair, because we can't run it
+#qwen_image_t2i_1024
+#qwen_image_edit_2511_1024
+#qwen_image_layered_1024
+#glm_image_t2i_1024
+#zimage_t2i_1024
+#ernie_image_t2i_1024
+#joyai_image_edit_1024
+#hidream_o1_image_t2i_1024
+#anima_base_t2i_1024
+#ltx2_t2v_720p
+#wan21_t2v_13b_720p
+#wan21_i2v_14b_480p
+#wan22_ti2v_5b_720p
+#wan22_ti2v_5b_fullattn
+
+CASE_GROUPS="
 ideogram4_t2i_1024_2gpu_tp
 wan22_t2v_a14b_720p
-ltx2.5_twostage_t2v_2gpus
-cosmos3_nano_t2i_720p cosmos3_nano_t2v_720p_189f cosmos3_nano_i2v_720p_189f
-minimax_h3_t2va_5s minimax_h3_t2va_5s_4gpu minimax_h3_t2va_480p_1gpu minimax_h3_ref2va_5s
-minimax_h3_fasth3_v2_t2va_5s
-flux1_dev_t2i_1024
+minimax_h3_t2va_5s minimax_h3_t2va_5s_4gpu minimax_h3_t2va_480p_1gpu minimax_h3_ref2va_5s minimax_h3_fasth3_v2_t2va_5s
 flux2_dev_t2i_1024
-flux2_klein_4b_t2i_1024
-flux3_image_klein_t2i_1024
-qwen_image_t2i_1024
 qwen_image_edit_2509_1024
-qwen_image_edit_2511_1024
-qwen_image_layered_1024
-glm_image_t2i_1024
-zimage_t2i_1024
-ernie_image_t2i_1024
 hunyuan_image_30_t2i_1024
 hunyuan_image_30_instruct_t2i_1024
-joyai_image_edit_1024
 joyai_echo_1024
 llada_image_t2i_1024
-hidream_o1_image_t2i_1024
-anima_base_t2i_1024
-ltx2_t2v_720p
 ltx23_t2v_720p
 vdn_minimax_h3_t2v
 helios_base_t2v
@@ -102,12 +108,8 @@ helios_distilled_t2v
 helios_mid_t2v
 pika_h3_flex_t2v
 fasth3_omni_t2v
-wan21_t2v_13b_720p
 wan21_t2v_14b_720p
-wan21_i2v_14b_480p
 wan22_i2v_a14b_720p
-wan22_ti2v_5b_720p
-wan22_ti2v_5b_fullattn
 turbowan21_t2v_13b
 hunyuanvideo_t2v_720p
 fasthunyuan_t2v

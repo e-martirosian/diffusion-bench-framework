@@ -75,6 +75,29 @@
           "notes": "Mirrors the cookbook's 4x-class Ulysses4 resident recipe scaled to num_gpus; NOT validated at num_gpus=2 -- validate (incl. OOM risk) before publishing.",
           "policy_exception": "Correctness exception, not a speed tradeoff: MiniMax-H3's torch.compile path changes numerical output per the sglang cookbook (docs/cookbook/diffusion/MiniMax/MiniMax-H3.mdx, checked 2026-08-07) -- compile is not enabled by any recommended lossless preset for this model and must not be used to generate consistency ground truth. --enable-torch-compile stays false in every profile for this case until upstream fixes the numerics."
         },
+        "cand-a3-tp2": {
+          "description": "First Ascend (a3) draft: 2 cards, tensor-parallel 2, laser attention, encoder layerwise-offload, Cache-DiT TaylorSeer.",
+          "sglang_ref": "current-main",
+          "num_gpus": 2,
+          "serve_args": "--model-type diffusion --warmup-mode server --model-variant fl2va --tp-size 2 --sp-degree 1 --dit-cpu-offload false --attention-backend laser_attn --component-residency text_encoder=layerwise-offload --enable-torch-compile false",
+          "hardware": [
+            "a3"
+          ],
+          "extra_env": {
+            "SGLANG_CACHE_DIT_ENABLED": "true",
+            "SGLANG_CACHE_DIT_FN": "2",
+            "SGLANG_CACHE_DIT_BN": "1",
+            "SGLANG_CACHE_DIT_WARMUP": "4",
+            "SGLANG_CACHE_DIT_RDT": "0.4",
+            "SGLANG_CACHE_DIT_MC": "4",
+            "SGLANG_CACHE_DIT_TAYLORSEER": "true",
+            "SGLANG_CACHE_DIT_TS_ORDER": "2",
+            "HCCL_BUFFSIZE": "256",
+            "SGLANG_DIFFUSION_TEST_FORCE_HOST_AVAILABLE_GIB": "64"
+          },
+          "policy_exception": "Capacity exception, not a tuning choice: a 910C card has 64 GB HBM and the resident two-card default assumes ~183 GB B200-class cards (62 GB DiT + 48 GB Qwen3-VL-32B encoder + VAEs do not fit resident on 2x64 GB); TP-2 shards the DiT weights and only the Qwen3-VL encoder streams from host, the DiT stays resident per rank (--dit-cpu-offload false). Derived 2026-11 from the validated sglang NPU serving config (DiffusionServerArgs minimax_h3_t2va_2npu). Same compile exception as every profile in this case (checked 2026-08-07): MiniMax-H3's torch.compile path changes numerical output per the sglang cookbook, so --enable-torch-compile stays false.",
+          "notes": "Draft for the Ascend rounds (2026-11-26): derived from the validated sglang NPU serving config (DiffusionServerArgs minimax_h3_t2va_2npu). num_gpus 2 + tp-size 2 shards the ~62 GB DiT (~31 GB/card); sp-degree pinned to 1 -- the two ranks are used for tensor parallel, no sequence parallelism; laser_attn is the Ascend attention backend; the 48 GB Qwen3-VL-32B text encoder streams via layerwise-offload. Cache-DiT TaylorSeer (FN 2, BN 1, warmup 4, RDT 0.4, MC 4, order 2), HCCL_BUFFSIZE=256 and SGLANG_DIFFUSION_TEST_FORCE_HOST_AVAILABLE_GIB=64 (host memory the offload path may budget) come from the same config. VALIDATION PENDING -- a3 selects this profile (default matches no hardware); the Ulysses-2 default is the B200-class resident recipe and does not fit 64 GB cards."
+        },
         "rtx5090-2gpu": {
           "description": "2x RTX 5090 (32 GB) layerwise-offload recipe -- the lightweight, broadly-runnable topology for this case.",
           "hardware": [

@@ -13,7 +13,7 @@
   "frameworks": {
     "sglang": {
       "status": "supported",
-      "serve_args": "",
+      "serve_args": "--model-type diffusion",
       "command_profiles": {
         "cand-a3-tp2": {
           "description": "First Ascend (a3) draft: 2 cards, tensor-parallel 2 (weights ~64 GB bf16 exceed one 64 GB card).",

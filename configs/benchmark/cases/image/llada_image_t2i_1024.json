@@ -13,7 +13,7 @@
   "frameworks": {
     "sglang": {
       "status": "supported",
-      "serve_args": ""
+      "serve_args": "--trust-remote-code"
     },
     "vllm-omni": {
       "status": "not_run",

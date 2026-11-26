@@ -42,6 +42,10 @@ GPU_NAMES = {
     "mi355x": "AMD Instinct MI355X, 294896 MiB, 6.16.6",
     "mi350x": "AMD Instinct MI350X, 294896 MiB, 6.16.6",
     "mi300x": "AMD Instinct MI300X, 196592 MiB, 6.16.6",
+    # Ascend boxes report through npu-smi; the A3 class is carried by the
+    # hardware-profile env (DBF_HARDWARE_PROFILE=a3), the name keeps the token
+    # derivable the same way an nvidia-smi row is.
+    "a3": "Ascend910C (A3), 65536 MiB, 8.1.RC1",
 }
 os.environ.pop(HARDWARE_PROFILE_ENV, None)
 
@@ -67,7 +71,7 @@ def builder_pick(profiles, hw):
 check("every policy class has an nvidia-smi name here", set(bbc.POLICY_HARDWARE) <= set(GPU_NAMES),
       f"missing {sorted(set(bbc.POLICY_HARDWARE) - set(GPU_NAMES))}")
 check("GB200 and GB300 are policy hardware", {"gb200", "gb300"} <= set(bbc.DATACENTER_HARDWARE))
-for hw in ("gb300", "gb200", "b300", "b200"):
+for hw in ("gb300", "gb200", "b300", "b200", "a3"):
     got = _hardware_profile_candidates({"gpus": [GPU_NAMES[hw]]})
     check(f"a {hw} box derives only {hw}", got == [hw], str(got))
 

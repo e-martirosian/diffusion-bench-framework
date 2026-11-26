@@ -96,6 +96,17 @@
           "notes": "Ref2VA partition: the reference image arrives as a conditions[] entry with role=reference (see configs/sample/minimax_h3.py), which is what selects the ref2va checkpoint. Same parallelism as the t2va profile; added 2026-08-26 to cover the second H3 serving mode for single-request latency.",
           "policy_exception": "Correctness exception, not a speed tradeoff: MiniMax-H3's torch.compile path changes numerical output per the sglang cookbook (docs/cookbook/diffusion/MiniMax/MiniMax-H3.mdx, checked 2026-08-07) -- compile is not enabled by any recommended lossless preset for this model and must not be used to generate consistency ground truth. --enable-torch-compile stays false in every profile for this case until upstream fixes the numerics."
         },
+        "cand-a3-tp2": {
+          "description": "First Ascend (a3) draft: 2 cards, tensor-parallel 2 (Ulysses disabled on NPU), resident (speed), eager.",
+          "sglang_ref": "current-main",
+          "num_gpus": 2,
+          "serve_args": "--model-type diffusion --warmup-mode server --model-variant ref2va --tp-size 2 --sp-degree 1 --performance-mode speed --enable-torch-compile false",
+          "hardware": [
+            "a3"
+          ],
+          "policy_exception": "Same correctness exception as the default profile (checked 2026-08-07): MiniMax-H3's torch.compile path changes numerical output per the sglang cookbook, so it is excluded regardless of hardware.",
+          "notes": "Draft for the Ascend rounds (2026-11-26): Ulysses disabled on NPU -- the Ulysses-2 shape did not leave enough memory on the 64 GB cards -- so the two ranks run tensor-parallel 2 with sp-degree pinned to 1 (leaving the degrees unpinned would let sglang auto-select kv-gather sequence parallel again), mirroring the t2va case's cand-a3-tp2. Performance-mode speed kept from the default; if the resident encoders do not fit 2x64 GB alongside TP-2, the t2va a3 recipe's next knobs apply (attention-backend laser_attn, --component-residency text_encoder=layerwise-offload, Cache-DiT env). VALIDATION PENDING -- a3 selects this profile (default matches no hardware)."
+        },
         "rtx5090-2gpu": {
           "description": "2x RTX 5090 (32 GB) layerwise-offload recipe -- the lightweight, broadly-runnable topology for this case.",
           "hardware": [
